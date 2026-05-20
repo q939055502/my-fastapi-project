@@ -12,6 +12,22 @@ from src.core.rate_limit import apply_rate_limit
 router = APIRouter()
 
 
+@router.post("/", summary="创建租户")
+@apply_rate_limit("10/minute")
+def create_tenant(request: Request, current_user = Depends(PermissionControl.has_permission)):
+    return success(msg="租户创建成功")
+
+
+@router.put("/{tenant_id}", summary="更新租户")
+@apply_rate_limit("30/minute")
+def update_tenant(
+    request: Request,
+    tenant_id: int,
+    current_user = Depends(PermissionControl.has_permission),
+):
+    return success(msg="租户更新成功")
+
+
 @router.get("/", summary="获取租户列表")
 @apply_rate_limit("60/minute")
 def list_tenants(
@@ -33,22 +49,6 @@ def get_tenant(
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(data={})
-
-
-@router.post("/", summary="创建租户")
-@apply_rate_limit("10/minute")
-def create_tenant(request: Request, current_user = Depends(PermissionControl.has_permission)):
-    return success(msg="租户创建成功")
-
-
-@router.put("/{tenant_id}", summary="更新租户")
-@apply_rate_limit("30/minute")
-def update_tenant(
-    request: Request,
-    tenant_id: int,
-    current_user = Depends(PermissionControl.has_permission),
-):
-    return success(msg="租户更新成功")
 
 
 @router.delete("/{tenant_id}", summary="删除租户")

@@ -14,6 +14,29 @@ from src.core.rate_limit import apply_rate_limit
 router = APIRouter()
 
 
+@router.post("/", summary="创建套餐")
+@apply_rate_limit("10/minute")
+def create_plan(
+    request: Request,
+    plan_in: TenantPlanCreate,
+    current_user = Depends(PermissionControl.has_permission),
+):
+    plan_data = tenant_plan_service.create_plan(plan_in)
+    return success(data=plan_data, msg="套餐创建成功")
+
+
+@router.put("/{plan_id}", summary="更新套餐")
+@apply_rate_limit("30/minute")
+def update_plan(
+    request: Request,
+    plan_id: int,
+    plan_in: TenantPlanUpdate,
+    current_user = Depends(PermissionControl.has_permission),
+):
+    tenant_plan_service.update_plan(plan_id, plan_in)
+    return success(msg="套餐更新成功")
+
+
 @router.get("/list", summary="获取套餐列表")
 @apply_rate_limit("60/minute")
 def list_plans(
@@ -40,29 +63,6 @@ def get_plan(
 ):
     plan_data = tenant_plan_service.get_plan_detail(plan_id)
     return success(data=plan_data)
-
-
-@router.post("/", summary="创建套餐")
-@apply_rate_limit("10/minute")
-def create_plan(
-    request: Request,
-    plan_in: TenantPlanCreate,
-    current_user = Depends(PermissionControl.has_permission),
-):
-    plan_data = tenant_plan_service.create_plan(plan_in)
-    return success(data=plan_data, msg="套餐创建成功")
-
-
-@router.put("/{plan_id}", summary="更新套餐")
-@apply_rate_limit("30/minute")
-def update_plan(
-    request: Request,
-    plan_id: int,
-    plan_in: TenantPlanUpdate,
-    current_user = Depends(PermissionControl.has_permission),
-):
-    tenant_plan_service.update_plan(plan_id, plan_in)
-    return success(msg="套餐更新成功")
 
 
 @router.delete("/{plan_id}", summary="删除套餐")

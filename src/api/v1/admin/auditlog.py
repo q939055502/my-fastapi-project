@@ -11,7 +11,7 @@ from src.core.rate_limit import apply_rate_limit
 router = APIRouter()
 
 
-@router.get("/list", summary="查看操作日志列表")
+@router.get("/list", summary="获取操作日志列表")
 @apply_rate_limit("30/minute")
 def get_audit_log_list(
     request: Request,

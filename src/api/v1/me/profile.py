@@ -23,24 +23,6 @@ class LogoutRequest(BaseModel):
     refresh_token: str | None = None
 
 
-@router.get("/profile", summary="查看个人信息")
-@apply_rate_limit("60/minute")
-def get_profile(request: Request, current_user: User = Depends(AuthControl.is_authed)):
-    user_dict = current_user.to_dict()
-    return success(data=user_dict)
-
-
-@router.put("/profile", summary="更新个人信息")
-@apply_rate_limit("30/minute")
-def update_profile(
-    request: Request,
-    user_in: UserUpdate,
-    current_user: User = Depends(AuthControl.is_authed),
-):
-    user_service.update_user(current_user.id, user_in)
-    return success(msg="个人信息更新成功")
-
-
 @router.post("/change_password", summary="修改密码")
 @apply_rate_limit("10/minute")
 def change_password(
@@ -92,3 +74,21 @@ def logout(
 def logout_all(request: Request, current_user: User = Depends(AuthControl.is_authed)):
     count = token_manager.revoke_user_all_tokens(current_user.id)
     return success(msg=f"已撤销 {count} 个令牌")
+
+
+@router.put("/profile", summary="更新个人信息")
+@apply_rate_limit("30/minute")
+def update_profile(
+    request: Request,
+    user_in: UserUpdate,
+    current_user: User = Depends(AuthControl.is_authed),
+):
+    user_service.update_user(current_user.id, user_in)
+    return success(msg="个人信息更新成功")
+
+
+@router.get("/profile", summary="获取个人信息")
+@apply_rate_limit("60/minute")
+def get_profile(request: Request, current_user: User = Depends(AuthControl.is_authed)):
+    user_dict = current_user.to_dict()
+    return success(data=user_dict)

@@ -14,6 +14,29 @@ from src.core.rate_limit import apply_rate_limit
 router = APIRouter()
 
 
+@router.post("/", summary="创建租户")
+@apply_rate_limit("10/minute")
+def create_tenant(
+    request: Request,
+    tenant_in: TenantCreate,
+    current_user = Depends(PermissionControl.has_permission),
+):
+    tenant_data = tenant_service.create_tenant(tenant_in)
+    return success(data=tenant_data, msg="租户创建成功")
+
+
+@router.put("/{tenant_id}", summary="更新租户")
+@apply_rate_limit("30/minute")
+def update_tenant(
+    request: Request,
+    tenant_id: int,
+    tenant_in: TenantUpdate,
+    current_user = Depends(PermissionControl.has_permission),
+):
+    tenant_service.update_tenant(tenant_id, tenant_in)
+    return success(msg="租户更新成功")
+
+
 @router.get("/list", summary="获取租户列表")
 @apply_rate_limit("60/minute")
 def list_tenants(
@@ -42,29 +65,6 @@ def get_tenant(
 ):
     tenant_data = tenant_service.get_tenant_detail(tenant_id)
     return success(data=tenant_data)
-
-
-@router.post("/", summary="创建租户")
-@apply_rate_limit("10/minute")
-def create_tenant(
-    request: Request,
-    tenant_in: TenantCreate,
-    current_user = Depends(PermissionControl.has_permission),
-):
-    tenant_data = tenant_service.create_tenant(tenant_in)
-    return success(data=tenant_data, msg="租户创建成功")
-
-
-@router.put("/{tenant_id}", summary="更新租户")
-@apply_rate_limit("30/minute")
-def update_tenant(
-    request: Request,
-    tenant_id: int,
-    tenant_in: TenantUpdate,
-    current_user = Depends(PermissionControl.has_permission),
-):
-    tenant_service.update_tenant(tenant_id, tenant_in)
-    return success(msg="租户更新成功")
 
 
 @router.delete("/{tenant_id}", summary="删除租户")
