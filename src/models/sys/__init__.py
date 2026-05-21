@@ -12,7 +12,7 @@ from .login_log import LoginLog
 from .operation_log import OperationLog
 from .system_config import SystemConfig
 from .associations import user_role_association, role_resource_association, user_tenant_association
-
+# 不导出关联表，需要使用的时候通过绝对导入导入关联表、例如dao层
 __all__ = [
     "User",
     "Role",
