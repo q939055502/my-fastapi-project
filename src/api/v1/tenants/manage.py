@@ -2,14 +2,13 @@
 租户管理接口（超级管理员专用）
 """
 
-from fastapi import APIRouter, Query, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 
-from src.core.response import success, success_page
-from src.core.dependency import PermissionControl
-from src.core.rate_limit import apply_rate_limit
+from src.core.auth import PermissionControl
+from src.core.handlers import success, success_page
+from src.core.plugins import apply_rate_limit
 
-
-router = APIRouter()
+router = APIRouter(tags=["租户管理-管理"])
 
 
 @router.post("/", summary="创建租户")

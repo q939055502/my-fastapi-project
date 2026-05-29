@@ -1,8 +1,9 @@
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
-from src.models.sys import Resource
-from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
+
 from src.core.storage.generic_repository import GenericRepository
+from src.models.iam import Resource
+from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
 
 
 class ResourceRepository(GenericRepository[Resource, ResourceCreate, ResourceUpdate]):
@@ -77,7 +78,7 @@ class ResourceRepository(GenericRepository[Resource, ResourceCreate, ResourceUpd
         return session.execute(query).first() is not None
 
     def get_resources_by_role(self, role_id: int, session: Session) -> list[Resource]:
-        from src.models.sys.associations import role_resource_association
+        from src.models.iam.associations import role_resource_association
         query = select(Resource).join(role_resource_association).where(
             and_(
                 role_resource_association.c.role_id == role_id,

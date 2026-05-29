@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from src.core.storage.generic_repository import GenericRepository
-from src.models.sys.system_config import SystemConfig
+from src.models.system import SystemConfig
 
 
 class SystemConfigRepository(GenericRepository):

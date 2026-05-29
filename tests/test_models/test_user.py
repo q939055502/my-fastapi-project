@@ -3,7 +3,7 @@
 """
 
 import pytest
-from src.models.sys.user import User
+from src.models.iam import User
 from src.repositories.sys.user_repository import user_repository
 
 

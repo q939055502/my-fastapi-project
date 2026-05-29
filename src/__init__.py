@@ -14,7 +14,7 @@ from fastapi import Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 
-from src.core.exceptions import SettingNotFound
+from src.core.handlers import SettingNotFound
 
 try:
     from src.core.config import settings
@@ -34,10 +34,14 @@ def create_app() -> FastAPI:
     - 路由注册（来自 app_config）
     - 启动/关闭事件
     """
-    from src.core.app_config import make_middlewares, register_exceptions, register_routers
-    from src.core.dependency import get_current_username
-    from src.core.init_app import init_data
-    from src.core.storage import cache_manager, token_manager, close_db
+    from src.core.app_config import (
+        make_middlewares,
+        register_exceptions,
+        register_routers,
+    )
+    from src.core.auth import get_current_username, token_manager
+    from src.core.handlers import init_data
+    from src.core.storage import cache_manager, close_db
 
     app = FastAPI(
         title=settings.APP_TITLE,

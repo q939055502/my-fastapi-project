@@ -3,7 +3,7 @@
 """
 
 import pytest
-from src.models.sys.role import Role
+from src.models.iam import Role
 
 
 def test_role_model_creation(db_session):

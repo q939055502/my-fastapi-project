@@ -4,21 +4,24 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi.exceptions import HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
 
+from src.core.auth import get_password_hash, verify_password
+from src.core.constants import (
+    HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
+)
 from src.core.storage.generic_repository import GenericRepository
-from src.models.sys import User
+from src.models.iam import User
 from src.schemas.sys.login import CredentialsSchema
 from src.schemas.sys.users import UserCreate, UserUpdate
-from src.core.security import get_password_hash, verify_password
 
 from .role_repository import role_repository
 
 
 class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
-    
+
     def __init__(self):
         super().__init__(model=User)
 
@@ -46,7 +49,7 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         )
         return result.scalars().first()
 
-    def get_with_roles(self, id: int, session: Session) -> Optional[User]:
+    def get_with_roles(self, id: int, session: Session) -> User | None:
         query = select(User).where(User.id == id)
         query = self._apply_soft_delete_filter(query)
         result = session.execute(
@@ -56,10 +59,10 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
 
     def create_user(self, obj_in: UserCreate, session: Session) -> User:
         obj_in.password = get_password_hash(password=obj_in.password)
-        
+
         obj_dict = obj_in.model_dump()
         obj_dict.pop('role_ids', None)
-        
+
         obj = self.create(obj_dict, session=session)
         return obj
 
@@ -68,15 +71,36 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         user.last_login = datetime.now()
 
     def authenticate(self, credentials: CredentialsSchema, session: Session) -> Optional["User"]:
+        from src.core.log import logger
+
         user = self.get_by_username(credentials.username, session=session)
+        logger.info(f"Authenticate attempt - username: {credentials.username}, user_found: {user is not None}")
+
         if not user:
-            raise HTTPException(status_code=400, detail="无效的用户名")
+            logger.warning(f"Authentication failed - user not found: {credentials.username}")
+            self._delay_for_security()
+            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户名或密码错误")
+
         verified = verify_password(credentials.password, user.password)
+        logger.info(f"Password verification - username: {credentials.username}, verified: {verified}")
+
         if not verified:
-            raise HTTPException(status_code=400, detail="密码错误")
+            logger.warning(f"Authentication failed - wrong password: {credentials.username}")
+            self._delay_for_security()
+            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户名或密码错误")
+
+        logger.info(f"User status check - username: {credentials.username}, is_active: {user.is_active}")
+
         if not user.is_active:
-            raise HTTPException(status_code=400, detail="用户已被禁用")
+            logger.warning(f"Authentication failed - user disabled: {credentials.username}")
+            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户已被禁用")
+
+        logger.info(f"Authentication successful - username: {credentials.username}, user_id: {user.id}")
         return user
+
+    def _delay_for_security(self):
+        import time
+        time.sleep(0.5)
 
     def update_roles(self, user: User, role_ids: list[int], session: Session) -> None:
         user.roles.clear()
@@ -88,7 +112,7 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
     def reset_password(self, user_id: int, session: Session) -> str:
         user_obj = self.get(id=user_id, session=session)
         if not user_obj:
-            raise HTTPException(status_code=404, detail="用户不存在")
+            raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
         new_password = self._generate_secure_password()
         user_obj.password = get_password_hash(password=new_password)
         return new_password

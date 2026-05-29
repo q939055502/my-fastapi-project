@@ -2,7 +2,7 @@
 """
 Schemas Package
 """
-from src.schemas.base import BaseSchema, Success, Fail
+from src.schemas.base import BaseSchema, Fail, Success
 
 __all__ = [
     "BaseSchema",

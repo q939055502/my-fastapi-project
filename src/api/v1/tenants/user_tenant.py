@@ -1,18 +1,15 @@
 # api/v1/tenants/user_tenant.py
-from fastapi import APIRouter, Depends, Request
-from typing import List
 
-from src.core.dependency import AuthControl
-from src.core.response import success, success_page
-from src.services.sys.user_tenant_service import user_tenant_service
+from fastapi import APIRouter, Depends, Request
+
+from src.core.auth import AuthControl
+from src.core.handlers import success
+from src.core.plugins import apply_rate_limit
+from src.models.iam import User
 from src.schemas.sys.user_tenant import (
     TenantCreate,
-    TenantUpdate,
-    UserTenantListResponse,
-    TenantMemberResponse
 )
-from src.core.rate_limit import apply_rate_limit
-from src.models.sys.user import User
+from src.services.sys.user_tenant_service import user_tenant_service
 
 router = APIRouter(prefix="/user-tenants", tags=["用户-租户关联"])
 

@@ -4,14 +4,13 @@
 
 from fastapi import APIRouter, Depends, Request
 
+from src.core.auth import PermissionControl
+from src.core.handlers import success
+from src.core.plugins import apply_rate_limit
 from src.schemas.sys.system_config import SystemConfigUpdate
 from src.services.sys.system_config_service import system_config_service
-from src.core.response import success
-from src.core.dependency import PermissionControl
-from src.core.rate_limit import apply_rate_limit
 
-
-router = APIRouter()
+router = APIRouter(tags=["平台管理-设置"])
 
 
 @router.put("/", summary="更新平台全局设置")

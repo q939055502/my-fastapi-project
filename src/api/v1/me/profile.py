@@ -2,20 +2,22 @@
 用户个人管理接口
 """
 
-from fastapi import APIRouter, Request, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from src.models.sys.user import User
+from src.core.auth import AuthControl, token_manager
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_UNAUTHORIZED,
+)
+from src.core.handlers import success
+from src.core.log import logger
+from src.core.plugins import apply_rate_limit
+from src.models.iam import User
 from src.schemas.sys.users import UpdatePassword, UserUpdate
 from src.services.sys.user_service import user_service
-from src.core.response import success
-from src.core.dependency import AuthControl
-from src.core.storage import token_manager
-from src.core.rate_limit import apply_rate_limit
-from src.core.log import logger
 
-
-router = APIRouter()
+router = APIRouter(tags=["个人中心"])
 
 
 class LogoutRequest(BaseModel):
@@ -36,7 +38,7 @@ def change_password(
         new_password=password_in.new_password,
     )
     if not result:
-        raise HTTPException(status_code=400, detail="旧密码错误")
+        raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="旧密码错误")
 
     token_manager.revoke_user_all_tokens(current_user.id)
     logger.info(f"密码修改成功，已强制所有设备下线 - user_id={current_user.id}")
@@ -53,19 +55,19 @@ def logout(
 ):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="认证失败")
+        raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="认证失败")
 
     access_token = auth_header[len("Bearer "):]
-    
+
     token_manager.revoke_access_token(access_token)
-    
+
     if logout_req.refresh_token:
         token_manager.revoke_refresh_token(logout_req.refresh_token)
         token_manager.remove_token_from_user_set(current_user.id, access_token, logout_req.refresh_token)
         logger.info(f"登出成功，refresh_token已撤销 - user_id={current_user.id}")
     else:
         logger.warning(f"登出成功，但未提供refresh_token，refresh_token仍然有效 - user_id={current_user.id}")
-    
+
     return success(msg="登出成功")
 
 

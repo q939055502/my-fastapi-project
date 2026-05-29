@@ -1,11 +1,18 @@
 
 from datetime import datetime
-from src.core.config import settings
+from typing import Any
 
-from typing import List, Optional, Dict, Any
-from sqlalchemy import Column, BigInteger, DateTime, Index, Integer, Sequence, Boolean, String
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Integer,
+    String,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+
+from src.core.config import settings
 from src.core.storage import Base
 
 
@@ -15,10 +22,9 @@ class BaseModel(Base):
 
     id = Column(Integer, primary_key=True)  # 主键会自动创建索引，不需要设置 index=True
 
-    def to_dict(self, m2m: bool = False, exclude_fields: List[str] | None = None) -> Dict[str, Any]:
+    def to_dict(self, exclude_fields: list[str] | None = None) -> dict[str, Any]:
         """
         将模型对象转换为字典
-        :param m2m: 是否包含多对多关系
         :param exclude_fields: 需要排除的字段
         :return: 模型字典
         """
@@ -33,9 +39,6 @@ class BaseModel(Base):
                 if isinstance(value, datetime):
                     value = value.strftime(settings.DATETIME_FORMAT)
                 d[field_name] = value
-
-        if m2m:
-            pass
 
         return d
 
@@ -55,6 +58,20 @@ class SoftDeleteMixin:
     """软删除混合类"""
     is_deleted = Column(Boolean, default=False, comment="软删除标识")
     delete_time = Column(DateTime(timezone=True), nullable=True, comment="删除时间")
+
+    def soft_delete(self):
+        """执行软删除"""
+        self.is_deleted = True
+        self.delete_time = datetime.now()
+
+    def restore(self):
+        """恢复已删除数据"""
+        self.is_deleted = False
+        self.delete_time = None
+
+    def is_deleted_status(self) -> bool:
+        """判断是否已被软删除"""
+        return self.is_deleted
 
 
 class RemarkMixin:

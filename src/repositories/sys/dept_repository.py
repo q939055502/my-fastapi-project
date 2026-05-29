@@ -1,9 +1,9 @@
+from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
-from sqlalchemy import select, delete, and_
 
-from src.core.storage.generic_repository import GenericRepository
 from src.core.log import logger
-from src.models.sys import Dept, DeptClosure
+from src.core.storage.generic_repository import GenericRepository
+from src.models.iam import Dept, DeptClosure
 from src.schemas.sys.depts import DeptCreate, DeptUpdate
 
 
@@ -12,11 +12,11 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
         super().__init__(model=Dept)
 
     def get_dept_tree(self, name: str, session: Session):
-        query = select(Dept).where(Dept.is_deleted == False)
-        
+        query = select(Dept).where(not Dept.is_deleted)
+
         if name:
             query = query.where(Dept.name.contains(name))
-        
+
         result = session.execute(query.order_by(Dept.sort))
         all_depts = result.scalars().all()
 
@@ -45,12 +45,12 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
             select(DeptClosure).where(DeptClosure.descendant == obj.parent_id)
         )
         parent_depts = result.scalars().all()
-        
+
         for i in parent_depts:
             logger.debug(
                 f"Processing dept closure: ancestor={i.ancestor}, descendant={i.descendant}"
             )
-        
+
         dept_closure_objs: list[DeptClosure] = []
         for item in parent_depts:
             dept_closure_objs.append(
@@ -77,7 +77,7 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
             session.execute(
                 delete(DeptClosure).where(
                     and_(
-                        (DeptClosure.ancestor == dept_obj.id) | 
+                        (DeptClosure.ancestor == dept_obj.id) |
                         (DeptClosure.descendant == dept_obj.id)
                     )
                 )

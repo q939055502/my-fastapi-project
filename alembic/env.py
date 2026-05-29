@@ -19,7 +19,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from src.core.storage import Base
-from src.models.sys import *  # noqa: F401, F403 - 导入所有模型
+from src.models import *  # noqa: F401, F403 - 导入所有模型
 
 target_metadata = Base.metadata
 

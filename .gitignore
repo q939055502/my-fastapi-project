@@ -50,9 +50,9 @@ env/
 logs/
 *.log
 
-# Storage
-storage/
-uploads/
+# Storage (使用绝对路径，避免误忽略 src/core/storage/)
+./storage/
+./uploads/
 
 # Testing
 .pytest_cache/

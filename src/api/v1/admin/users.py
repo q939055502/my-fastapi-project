@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Body, Query, Request
 
+from src.core.handlers import success, success_page
+from src.core.plugins import apply_rate_limit
 from src.schemas.sys.users import UserCreate, UserUpdate
 from src.services.sys.user_service import user_service
-from src.core.response import success, success_page
-from src.core.rate_limit import apply_rate_limit
 
-router = APIRouter()
+router = APIRouter(tags=["平台管理-用户"])
 
 
 @router.post("/", summary="创建用户")

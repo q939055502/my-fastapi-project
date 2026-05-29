@@ -1,8 +1,11 @@
-from typing import Optional
-from src.repositories.sys.resource_repository import resource_repository
-from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_NOT_FOUND,
+)
 from src.core.log import logger
 from src.core.storage import UnitOfWork
+from src.repositories.sys.resource_repository import resource_repository
+from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
 
 
 class ResourceService:
@@ -14,17 +17,17 @@ class ResourceService:
             resource = resource_repository.get_by_id(resource_id, uow.session)
             if not resource:
                 from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=404, detail="资源不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="资源不存在")
             return self._transform_resource(resource)
 
-    def get_resource_list(self, type: Optional[int] = None, name: str = "", page: int = 1, page_size: int = 10):
+    def get_resource_list(self, type: int | None = None, name: str = "", page: int = 1, page_size: int = 10):
         with UnitOfWork() as uow:
             filters = []
             if type:
                 filters.append(resource_repository.model.type == type)
             if name:
                 filters.append(resource_repository.model.name.contains(name))
-            
+
             total, resources = resource_repository.list(
                 page=page,
                 page_size=page_size,
@@ -38,8 +41,8 @@ class ResourceService:
         with UnitOfWork() as uow:
             if resource_repository.exists_by_code(resource_in.code, session=uow.session):
                 from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=400, detail="资源编码已存在")
-            
+                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="资源编码已存在")
+
             resource_data = resource_in.model_dump()
             resource = resource_repository.create(resource_data, uow.session)
             uow.commit()
@@ -49,12 +52,12 @@ class ResourceService:
         with UnitOfWork() as uow:
             if resource_in.code and resource_repository.exists_by_code(resource_in.code, exclude_id=resource_id, session=uow.session):
                 from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=400, detail="资源编码已存在")
-            
+                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="资源编码已存在")
+
             resource = resource_repository.update(resource_id, resource_in.model_dump(exclude_unset=True), uow.session)
             if not resource:
                 from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=404, detail="资源不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="资源不存在")
             uow.commit()
             return self._transform_resource(resource)
 
@@ -63,7 +66,7 @@ class ResourceService:
             success = resource_repository.delete(resource_id, uow.session)
             if not success:
                 from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=404, detail="资源不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="资源不存在")
             uow.commit()
 
     def get_resource_types(self):
@@ -90,7 +93,7 @@ class ResourceService:
             "created_at": resource.created_at.strftime("%Y-%m-%d %H:%M:%S"),
             "updated_at": resource.updated_at.strftime("%Y-%m-%d %H:%M:%S") if resource.updated_at else None
         }
-        
+
         return resource_dict
 
 

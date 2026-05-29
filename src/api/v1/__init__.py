@@ -4,36 +4,38 @@ API v1 版本路由注册
 
 from fastapi import APIRouter, Depends
 
-from src.core.dependency import PermissionControl, AuthControl
+from src.core.auth import AuthControl, PermissionControl
 
-# 公开接口（无需认证）
-from .public.info import router as public_info_router
+# 平台超管专属接口
+from .admin.auditlog import router as admin_auditlog_router
+from .admin.plans import router as admin_plans_router
+from .admin.settings import router as admin_settings_router
+from .admin.tenants import router as admin_tenants_router
 
 # 认证接口（登录、token管理）
 from .auth import router as auth_router
 
-# 平台超管专属接口
-from .admin.auditlog import router as admin_auditlog_router
-from .admin.tenants import router as admin_tenants_router
-from .admin.plans import router as admin_plans_router
-from .admin.settings import router as admin_settings_router
-
-# 通用资源接口（所有角色使用同一套，通过权限控制）
-from .users import router as users_router
-from .roles import router as roles_router
+# 通用接口（需登录）
+from .common.files import router as common_files_router
 from .depts import router as depts_router
-from .resources import router as resources_router
-from .tenant import router as common_tenant_router
 
 # 个人中心接口
 from .me.profile import router as me_profile_router
 
-# 通用接口（需登录）
-from .common.files import router as common_files_router
+# 手机号绑定接口
+from .phone_bindings import router as phone_bindings_router
+
+# 公开接口（无需认证）
+from .public.info import router as public_info_router
+from .resources import router as resources_router
+from .roles import router as roles_router
+from .tenant import router as common_tenant_router
 
 # SaaS 租户关联接口
 from .tenants.user_tenant import router as user_tenant_router
 
+# 通用资源接口（所有角色使用同一套，通过权限控制）
+from .users import router as users_router
 
 v1_router = APIRouter()
 
@@ -68,6 +70,11 @@ v1_router.include_router(common_tenant_router, prefix="/tenant", dependencies=[D
 # 👤 个人中心接口（需登录）
 # ============================================================
 v1_router.include_router(me_profile_router, prefix="/me", dependencies=[Depends(AuthControl.is_authed)])
+
+# ============================================================
+# 📱 手机号绑定接口（需登录）
+# ============================================================
+v1_router.include_router(phone_bindings_router, prefix="", dependencies=[Depends(AuthControl.is_authed)])
 
 # ============================================================
 # 🔄 通用接口（需登录）

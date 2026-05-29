@@ -8,10 +8,9 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Request
 
 from src.core.config import settings
-from src.core.rate_limit import apply_rate_limit
+from src.core.plugins import apply_rate_limit
 
-
-router = APIRouter()
+router = APIRouter(tags=["公开接口"])
 
 
 @router.get("/health", summary="健康检查")

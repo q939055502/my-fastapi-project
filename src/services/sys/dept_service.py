@@ -1,10 +1,14 @@
 from fastapi.exceptions import HTTPException
+from sqlalchemy import asc
 
-from src.repositories.sys.dept_repository import dept_repository
-from src.schemas.sys.depts import DeptCreate, DeptUpdate
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_NOT_FOUND,
+)
 from src.core.log import logger
 from src.core.storage import UnitOfWork
-from sqlalchemy import asc
+from src.repositories.sys.dept_repository import dept_repository
+from src.schemas.sys.depts import DeptCreate, DeptUpdate
 
 
 class DeptService:
@@ -39,7 +43,7 @@ class DeptService:
         with UnitOfWork() as uow:
             dept_obj = dept_repository.get(id=dept_id, session=uow.session)
             if not dept_obj:
-                raise HTTPException(status_code=404, detail="部门不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
 
             dept_dict = {}
             for column in dept_obj.__table__.columns:
@@ -58,7 +62,7 @@ class DeptService:
             if dept_in.parent_id != 0:
                 parent_dept = dept_repository.get(id=dept_in.parent_id, session=uow.session)
                 if not parent_dept:
-                    raise HTTPException(status_code=404, detail="父部门不存在")
+                    raise HTTPException(status_code=HTTP_NOT_FOUND, detail="父部门不存在")
 
             dept_repository.create_dept(obj_in=dept_in, session=uow.session)
 
@@ -68,15 +72,15 @@ class DeptService:
         with UnitOfWork() as uow:
             existing_dept = dept_repository.get(id=dept_id, session=uow.session)
             if not existing_dept:
-                raise HTTPException(status_code=404, detail="部门不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
 
             if dept_in.parent_id != 0:
                 parent_dept = dept_repository.get(id=dept_in.parent_id, session=uow.session)
                 if not parent_dept:
-                    raise HTTPException(status_code=404, detail="父部门不存在")
+                    raise HTTPException(status_code=HTTP_NOT_FOUND, detail="父部门不存在")
 
             if dept_in.parent_id == dept_id:
-                raise HTTPException(status_code=400, detail="父部门不能是自身")
+                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="父部门不能是自身")
 
             dept_repository.update_dept(dept_id=dept_id, obj_in=dept_in, session=uow.session)
 
@@ -86,7 +90,7 @@ class DeptService:
         with UnitOfWork() as uow:
             existing_dept = dept_repository.get(id=dept_id, session=uow.session)
             if not existing_dept:
-                raise HTTPException(status_code=404, detail="部门不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
 
             dept_repository.delete_dept(dept_id=dept_id, session=uow.session)
 
@@ -101,7 +105,7 @@ class DeptService:
         if name:
             filters.append(self.repository.model.name.contains(name))
 
-        filters.append(self.repository.model.is_deleted == False)
+        filters.append(not self.repository.model.is_deleted)
 
         return filters
 

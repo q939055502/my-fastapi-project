@@ -1,6 +1,5 @@
 import os
 import sys
-from typing import Optional
 
 from loguru import logger as loguru_logger
 
@@ -188,7 +187,7 @@ logging_config = LoggingConfig()
 logger = logging_config.setup_logger()
 
 
-def get_logger(tenant_id: Optional[int] = None) -> loguru_logger.__class__:
+def get_logger(tenant_id: int | None = None) -> loguru_logger.__class__:
     """获取带租户ID的日志实例
     Args:
         tenant_id: 租户ID，默认为 system（系统级操作）

@@ -1,15 +1,20 @@
 from fastapi.exceptions import HTTPException
-from sqlalchemy import and_, or_, desc
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
-from src.repositories.sys.dept_repository import dept_repository
-from src.repositories.sys.user_repository import user_repository
-from src.repositories.sys.role_repository import role_repository
-from src.schemas.sys.users import UserCreate, UserUpdate
+from src.core.auth import get_password_hash, verify_password
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_FORBIDDEN,
+    HTTP_NOT_FOUND,
+    ROLE_PLATFORM_NORMAL_USER,
+)
 from src.core.log import logger
-from src.core.storage import UnitOfWork
-from src.core.storage import cached, clear_user_cache
-from src.core.security import get_password_hash, verify_password
+from src.core.storage import UnitOfWork, cached, clear_user_cache
+from src.repositories.sys.dept_repository import dept_repository
+from src.repositories.sys.role_repository import role_repository
+from src.repositories.sys.user_repository import user_repository
+from src.schemas.sys.users import UserCreate, UserUpdate
 
 
 class UserService:
@@ -28,9 +33,25 @@ class UserService:
         for role in roles:
             if role.is_system:
                 raise HTTPException(
-                    status_code=403,
+                    status_code=HTTP_FORBIDDEN,
                     detail=f"禁止分配系统内置角色 '{role.name}'",
                 )
+
+    def _user_to_dict(self, user_obj, include_roles: bool = True) -> dict:
+        """将用户对象转换为字典，排除密码字段"""
+        user_dict = user_obj.to_dict(exclude_fields=["password"])
+
+        if include_roles and hasattr(user_obj, "roles"):
+            user_dict["roles"] = [
+                {
+                    "id": role.id,
+                    "name": role.name,
+                    "remark": role.remark
+                }
+                for role in user_obj.roles
+            ]
+
+        return user_dict
 
     def get_user_list(
         self,
@@ -63,39 +84,25 @@ class UserService:
         with UnitOfWork() as uow:
             user_obj = user_repository.get_with_roles(id=user_id, session=uow.session)
             if not user_obj:
-                raise HTTPException(status_code=404, detail=f"用户ID: {user_id} 不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
-            user_dict = {}
-            for column in user_obj.__table__.columns:
-                field_name = column.name
-                if field_name != "password":
-                    value = getattr(user_obj, field_name)
-                    user_dict[field_name] = value
-            
-            user_dict["roles"] = []
-            for role in user_obj.roles:
-                role_dict = {
-                    "id": role.id,
-                    "name": role.name,
-                    "remark": role.remark
-                }
-                user_dict["roles"].append(role_dict)
-
-            return user_dict
+            return self._user_to_dict(user_obj, include_roles=True)
 
     def create_user(self, user_in: UserCreate) -> dict:
+        self.logger.info(f"创建用户: {user_in.username}")
+
         with UnitOfWork() as uow:
             existing_user_by_username = user_repository.get_by_username(user_in.username, session=uow.session)
             if existing_user_by_username:
                 raise HTTPException(
-                    status_code=400,
+                    status_code=HTTP_BAD_REQUEST,
                     detail=f"用户名 '{user_in.username}' 已存在",
                 )
 
             existing_user_by_email = user_repository.get_by_email(user_in.email, session=uow.session)
             if existing_user_by_email:
                 raise HTTPException(
-                    status_code=400,
+                    status_code=HTTP_BAD_REQUEST,
                     detail=f"邮箱 '{user_in.email}' 已存在",
                 )
 
@@ -106,51 +113,42 @@ class UserService:
 
                 role_ids_to_assign = user_in.role_ids
                 if not role_ids_to_assign or len(role_ids_to_assign) == 0:
-                    from src.models.sys.role import Role
+                    from src.models.iam import Role
                     default_role = uow.session.execute(
-                        Role.__table__.select().where(Role.name == "平台普通用户")
+                        Role.__table__.select().where(Role.name == ROLE_PLATFORM_NORMAL_USER)
                     ).first()
                     if default_role:
                         role_ids_to_assign = [default_role.id]
+                        self.logger.info(f"用户 {user_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
 
                 user_repository.update_roles(new_user, role_ids_to_assign, session=uow.session)
 
                 uow.commit()
 
-                user_dict = {}
-                for column in new_user.__table__.columns:
-                    field_name = column.name
-                    if field_name != "password":
-                        value = getattr(new_user, field_name)
-                        user_dict[field_name] = value
-                
-                user_dict["roles"] = []
-                for role in new_user.roles:
-                    role_dict = {
-                        "id": role.id,
-                        "name": role.name
-                    }
-                    user_dict["roles"].append(role_dict)
-                
-                return user_dict
+                result = self._user_to_dict(new_user, include_roles=True)
+                self.logger.info(f"用户创建成功: {user_in.username}")
+                return result
             except IntegrityError as e:
                 uow.rollback()
+                self.logger.error(f"用户创建失败: {user_in.username}, 错误: {e}")
                 raise HTTPException(
-                    status_code=400,
+                    status_code=HTTP_BAD_REQUEST,
                     detail="用户创建失败，可能用户名或邮箱已存在",
                 ) from e
 
     def update_user(self, user_id: int, user_in: UserUpdate) -> None:
+        self.logger.info(f"更新用户: user_id={user_id}")
+
         with UnitOfWork() as uow:
             user = user_repository.get(id=user_id, session=uow.session)
             if not user:
-                raise HTTPException(status_code=404, detail=f"用户ID: {user_id} 不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
             if user_in.username and user_in.username != user.username:
                 existing_user = user_repository.get_by_username(user_in.username, session=uow.session)
                 if existing_user:
                     raise HTTPException(
-                        status_code=400,
+                        status_code=HTTP_BAD_REQUEST,
                         detail=f"用户名 '{user_in.username}' 已存在",
                     )
 
@@ -158,7 +156,7 @@ class UserService:
                 existing_user = user_repository.get_by_email(user_in.email, session=uow.session)
                 if existing_user:
                     raise HTTPException(
-                        status_code=400,
+                        status_code=HTTP_BAD_REQUEST,
                         detail=f"邮箱 '{user_in.email}' 已存在",
                     )
 
@@ -169,45 +167,57 @@ class UserService:
             if user_in.role_ids is not None:
                 if len(user_in.role_ids) == 0:
                     raise HTTPException(
-                        status_code=400,
+                        status_code=HTTP_BAD_REQUEST,
                         detail="用户必须至少绑定一个角色",
                     )
-                
+
                 user_repository.update_roles(user, user_in.role_ids, session=uow.session)
 
             uow.commit()
 
         clear_user_cache(user_id)
+        self.logger.info(f"用户更新成功: user_id={user_id}")
 
     def delete_user(self, user_id: int) -> None:
+        self.logger.info(f"删除用户: user_id={user_id}")
+
         with UnitOfWork() as uow:
             success = user_repository.delete(id=user_id, session=uow.session)
             if not success:
-                raise HTTPException(status_code=404, detail=f"用户ID: {user_id} 不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
             uow.commit()
 
         clear_user_cache(user_id)
+        self.logger.info(f"用户删除成功: user_id={user_id}")
 
     def reset_user_password(self, user_id: int) -> str:
+        self.logger.info(f"重置用户密码: user_id={user_id}")
+
         with UnitOfWork() as uow:
             result = user_repository.reset_password(user_id, session=uow.session)
             uow.commit()
-            return result
+
+        self.logger.info(f"用户密码重置成功: user_id={user_id}")
+        return result
 
     def change_user_password(self, user_id: int, old_password: str, new_password: str) -> bool:
+        self.logger.info(f"修改用户密码: user_id={user_id}")
+
         with UnitOfWork() as uow:
             user = user_repository.get(id=user_id, session=uow.session)
             if not user:
-                raise HTTPException(status_code=404, detail="用户不存在")
-            
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
+
             if not verify_password(old_password, user.password):
+                self.logger.warning(f"用户密码修改失败: 旧密码错误, user_id={user_id}")
                 return False
-            
+
             user.password = get_password_hash(new_password)
             uow.commit()
-        
+
         clear_user_cache(user_id)
+        self.logger.info(f"用户密码修改成功: user_id={user_id}")
         return True
 
     def _build_user_search_filters(
@@ -233,29 +243,13 @@ class UserService:
         data = []
 
         for obj in items:
-            user_dict = {}
-            for column in obj.__table__.columns:
-                field_name = column.name
-                if field_name != "password":
-                    value = getattr(obj, field_name)
-                    user_dict[field_name] = value
-            
-            user_dict["roles"] = []
-            for role in obj.roles:
-                role_dict = {
-                    "id": role.id,
-                    "name": role.name
-                }
-                user_dict["roles"].append(role_dict)
+            user_dict = self._user_to_dict(obj, include_roles=True)
 
             dept_id = user_dict.pop("dept_id", None)
             if dept_id:
                 dept_obj = dept_repository.get(id=dept_id, session=session)
                 if dept_obj:
-                    dept_dict = {}
-                    for column in dept_obj.__table__.columns:
-                        dept_dict[column.name] = getattr(dept_obj, column.name)
-                    user_dict["dept"] = dept_dict
+                    user_dict["dept"] = dept_obj.to_dict()
                 else:
                     user_dict["dept"] = {}
             else:

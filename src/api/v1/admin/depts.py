@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Query, Request
 
+from src.core.handlers import success
+from src.core.plugins import apply_rate_limit
+from src.schemas.sys.depts import DeptCreate, DeptUpdate
 from src.services.sys.dept_service import dept_service
-from src.core.response import success
-from src.schemas.sys.depts import *
-from src.core.rate_limit import apply_rate_limit
 
-router = APIRouter()
+router = APIRouter(tags=["平台管理-部门"])
 
 
 @router.post("/", summary="创建部门")

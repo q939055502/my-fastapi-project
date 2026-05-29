@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from src.core.storage.generic_repository import GenericRepository
-from src.models.sys.tenant import Tenant
+from src.models.tenant import Tenant
 from src.schemas.sys.tenant import TenantCreate, TenantUpdate
 
 

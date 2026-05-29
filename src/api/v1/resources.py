@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Query, Body, Request
-from src.core.response import success, success_page
-from src.core.rate_limit import apply_rate_limit
-from src.services.sys.resource_service import resource_service
-from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
+from fastapi import APIRouter, Query, Request
 
-router = APIRouter()
+from src.core.handlers import success, success_page
+from src.core.plugins import apply_rate_limit
+from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
+from src.services.sys.resource_service import resource_service
+
+router = APIRouter(tags=["资源管理"])
 
 
 @router.post("/", summary="创建资源")

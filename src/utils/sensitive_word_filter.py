@@ -7,8 +7,8 @@ import json
 
 import ahocorasick
 
-from src.core.log import logger
 from src.core.config import settings
+from src.core.log import logger
 
 
 class SensitiveWordFilter:

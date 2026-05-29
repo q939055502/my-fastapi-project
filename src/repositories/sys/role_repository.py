@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from src.core.storage.generic_repository import GenericRepository
-from src.models.sys import Role
+from src.models.iam import Role
 from src.schemas.sys.roles import RoleCreate, RoleUpdate
 
 
@@ -26,9 +26,9 @@ class RoleRepository(GenericRepository[Role, RoleCreate, RoleUpdate]):
         self, role: Role, resource_ids: list[int], session: Session
     ) -> None:
         role.resources.clear()
-        
+
         from .resource_repository import resource_repository
-        
+
         for resource_id in resource_ids:
             resource_obj = resource_repository.get_by_id(resource_id, session=session)
             if resource_obj:

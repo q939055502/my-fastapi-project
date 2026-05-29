@@ -1,10 +1,14 @@
 from fastapi.exceptions import HTTPException
+from sqlalchemy import asc
 
-from src.repositories.sys.tenant_repository import tenant_repository
-from src.schemas.sys.tenant import TenantCreate, TenantUpdate
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_NOT_FOUND,
+)
 from src.core.log import logger
 from src.core.storage import UnitOfWork
-from sqlalchemy import asc
+from src.repositories.sys.tenant_repository import tenant_repository
+from src.schemas.sys.tenant import TenantCreate, TenantUpdate
 
 
 class TenantService:
@@ -41,7 +45,7 @@ class TenantService:
         with UnitOfWork() as uow:
             tenant_obj = tenant_repository.get(id=tenant_id, session=uow.session)
             if not tenant_obj:
-                raise HTTPException(status_code=404, detail="租户不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
 
             return self._transform_tenant_detail(tenant_obj)
 
@@ -50,7 +54,7 @@ class TenantService:
             existing_tenant = tenant_repository.is_exist(tenant_in.code, session=uow.session)
             if existing_tenant:
                 raise HTTPException(
-                    status_code=400,
+                    status_code=HTTP_BAD_REQUEST,
                     detail="The tenant with this code already exists in the system.",
                 )
 
@@ -64,13 +68,13 @@ class TenantService:
         with UnitOfWork() as uow:
             existing_tenant = tenant_repository.get(id=tenant_id, session=uow.session)
             if not existing_tenant:
-                raise HTTPException(status_code=404, detail="租户不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
 
             if tenant_in.code and tenant_in.code != existing_tenant.code:
                 existing_by_code = tenant_repository.is_exist(tenant_in.code, session=uow.session)
                 if existing_by_code:
                     raise HTTPException(
-                        status_code=400,
+                        status_code=HTTP_BAD_REQUEST,
                         detail="The tenant code already exists in the system.",
                     )
 
@@ -81,7 +85,7 @@ class TenantService:
         with UnitOfWork() as uow:
             existing_tenant = tenant_repository.get(id=tenant_id, session=uow.session)
             if not existing_tenant:
-                raise HTTPException(status_code=404, detail="租户不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
 
             tenant_repository.delete(id=tenant_id, session=uow.session)
 

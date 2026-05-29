@@ -1,10 +1,15 @@
 from fastapi.exceptions import HTTPException
+from sqlalchemy import asc
 
-from src.repositories.sys.role_repository import role_repository
-from src.schemas.sys.roles import RoleCreate, RoleUpdate
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_FORBIDDEN,
+    HTTP_NOT_FOUND,
+)
 from src.core.log import logger
 from src.core.storage import UnitOfWork
-from sqlalchemy import asc
+from src.repositories.sys.role_repository import role_repository
+from src.schemas.sys.roles import RoleCreate, RoleUpdate
 
 
 class RoleService:
@@ -40,7 +45,7 @@ class RoleService:
         with UnitOfWork() as uow:
             role_obj = role_repository.get(id=role_id, session=uow.session)
             if not role_obj:
-                raise HTTPException(status_code=404, detail="角色不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色不存在")
 
             role_dict = {}
             for column in role_obj.__table__.columns:
@@ -68,14 +73,14 @@ class RoleService:
         with UnitOfWork() as uow:
             if getattr(role_in, "is_system", False):
                 raise HTTPException(
-                    status_code=403,
+                    status_code=HTTP_FORBIDDEN,
                     detail="禁止创建系统内置角色",
                 )
 
             existing_role = role_repository.is_exist(role_in.name, session=uow.session)
             if existing_role:
                 raise HTTPException(
-                    status_code=400,
+                    status_code=HTTP_BAD_REQUEST,
                     detail="The role with this name already exists in the system.",
                 )
 
@@ -87,11 +92,11 @@ class RoleService:
         with UnitOfWork() as uow:
             existing_role = role_repository.get(id=role_id, session=uow.session)
             if not existing_role:
-                raise HTTPException(status_code=404, detail="角色不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色不存在")
 
             if existing_role.is_system:
                 raise HTTPException(
-                    status_code=403,
+                    status_code=HTTP_FORBIDDEN,
                     detail="系统内置角色不可修改",
                 )
 
@@ -99,7 +104,7 @@ class RoleService:
                 existing_by_name = role_repository.is_exist(role_in.name, session=uow.session)
                 if existing_by_name:
                     raise HTTPException(
-                        status_code=400,
+                        status_code=HTTP_BAD_REQUEST,
                         detail="The role name already exists in the system.",
                     )
 
@@ -110,11 +115,11 @@ class RoleService:
         with UnitOfWork() as uow:
             role_obj = role_repository.get(id=role_id, session=uow.session)
             if not role_obj:
-                raise HTTPException(status_code=404, detail="角色不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色不存在")
 
             if role_obj.is_system:
                 raise HTTPException(
-                    status_code=403,
+                    status_code=HTTP_FORBIDDEN,
                     detail="系统内置角色不可修改权限",
                 )
 
@@ -125,11 +130,11 @@ class RoleService:
         with UnitOfWork() as uow:
             existing_role = role_repository.get(id=role_id, session=uow.session)
             if not existing_role:
-                raise HTTPException(status_code=404, detail="角色不存在")
+                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色不存在")
 
             if existing_role.is_system:
                 raise HTTPException(
-                    status_code=403,
+                    status_code=HTTP_FORBIDDEN,
                     detail="系统内置角色不可删除",
                 )
 

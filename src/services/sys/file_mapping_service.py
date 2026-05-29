@@ -3,7 +3,13 @@ from pathlib import Path
 
 from fastapi import HTTPException, UploadFile
 
-from src.core.ctx import CTX_USER_ID
+from src.core.auth import CTX_USER_ID
+from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
+)
 from src.core.log import logger
 from src.core.storage import UnitOfWork
 from src.repositories.sys.file_mapping_repository import file_mapping_repository
@@ -75,33 +81,33 @@ class FileService:
             raise
         except Exception as e:
             self.logger.error(f"文件上传失败: {str(e)}")
-            raise HTTPException(status_code=500, detail="文件上传失败") from e
+            raise HTTPException(status_code=HTTP_INTERNAL_SERVER_ERROR, detail="文件上传失败") from e
 
     def _authenticate_user(self, session):
         user_id = CTX_USER_ID.get()
         if not user_id:
-            raise HTTPException(status_code=401, detail="用户未认证")
+            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="Authentication Required")
 
         user = user_repository.get(user_id, session=session)
         if not user:
-            raise HTTPException(status_code=404, detail="用户不存在")
+            raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
 
         return user
 
     def _validate_file_security(self, file: UploadFile) -> None:
         if not file.filename:
-            raise HTTPException(status_code=400, detail="文件名不能为空")
+            raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="文件名不能为空")
 
         file_ext = Path(file.filename).suffix.lower()
 
         if file_ext in DANGEROUS_EXTENSIONS:
             raise HTTPException(
-                status_code=400, detail=f"不允许上传的文件类型: {file_ext}"
+                status_code=HTTP_BAD_REQUEST, detail=f"不允许上传的文件类型: {file_ext}"
             )
 
         if file_ext and file_ext not in ALLOWED_EXTENSIONS:
             raise HTTPException(
-                status_code=400,
+                status_code=HTTP_BAD_REQUEST,
                 detail=f"不支持的文件类型: {file_ext}，允许的类型: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
             )
 
@@ -114,7 +120,7 @@ class FileService:
 
         if len(content) > MAX_FILE_SIZE:
             raise HTTPException(
-                status_code=400,
+                status_code=HTTP_BAD_REQUEST,
                 detail=f"文件大小超过限制 {MAX_FILE_SIZE // (1024 * 1024)}MB",
             )
 

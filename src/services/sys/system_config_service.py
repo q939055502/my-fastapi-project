@@ -1,11 +1,14 @@
 from fastapi.exceptions import HTTPException
+from sqlalchemy import asc, select
 
-from src.repositories.sys.system_config_repository import system_config_repository
-from src.schemas.sys.system_config import SystemConfigUpdate
-from src.models.sys.system_config import SystemConfig
+from src.core.constants import (
+    HTTP_NOT_FOUND,
+)
 from src.core.log import logger
 from src.core.storage import UnitOfWork
-from sqlalchemy import asc, select
+from src.models.system import SystemConfig
+from src.repositories.sys.system_config_repository import system_config_repository
+from src.schemas.sys.system_config import SystemConfigUpdate
 
 
 class SystemConfigService:
@@ -39,7 +42,7 @@ class SystemConfigService:
             for code, value in config_update.configs.items():
                 config_obj = system_config_repository.get_by_code(code, session=uow.session)
                 if not config_obj:
-                    raise HTTPException(status_code=404, detail=f"配置项不存在: {code}")
+                    raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"配置项不存在: {code}")
 
                 config_obj.value = value
 

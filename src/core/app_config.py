@@ -11,24 +11,22 @@
 """
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.middleware import Middleware
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.exc import IntegrityError
 
-from src.core.rate_limit import limiter
-from src.core.exceptions import (
+from src.core.config import settings
+from src.core.handlers import (
     DoesNotExist,
     DoesNotExistHandle,
-    HTTPException,
+    GlobalExceptionHandle,
     HttpExcHandle,
-    IntegrityError,
     IntegrityHandle,
-    RequestValidationError,
-    RequestValidationHandle,
-    ResponseValidationError,
-    ResponseValidationHandle,
     RateLimitExceededHandle,
+    RequestValidationHandle,
+    ResponseValidationHandle,
 )
 from src.core.middlewares import (
     BackGroundTaskMiddleware,
@@ -36,13 +34,13 @@ from src.core.middlewares import (
     RequestLoggingMiddleware,
     SecurityHeadersMiddleware,
 )
-from src.core.config import settings
+from src.core.plugins import limiter
 
 
 def make_middlewares():
     """
     配置 FastAPI 中间件列表
-    
+
     中间件执行顺序（从外到内）：
     1. CORS - 跨域资源共享
     2. SecurityHeaders - 安全响应头
@@ -78,12 +76,14 @@ def make_middlewares():
 def register_exceptions(app: FastAPI):
     """
     注册全局异常处理器
-    
+
     将自定义异常处理类注册到 FastAPI 应用中
     使其在对应的异常抛出时被自动调用
     """
-    from src.core.exceptions import JWTErrorHandle
     import jwt
+    from fastapi import HTTPException
+
+    from src.core.handlers import JWTErrorHandle
 
     app.add_exception_handler(DoesNotExist, DoesNotExistHandle)
     app.add_exception_handler(HTTPException, HttpExcHandle)
@@ -93,6 +93,7 @@ def register_exceptions(app: FastAPI):
     app.add_exception_handler(jwt.InvalidTokenError, JWTErrorHandle)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, RateLimitExceededHandle)
+    app.add_exception_handler(Exception, GlobalExceptionHandle)
 
 
 def register_routers(app: FastAPI, prefix: str = "/api"):

@@ -1,14 +1,14 @@
 import logging
 
-from fastapi import APIRouter, Query, Body, Request
+from fastapi import APIRouter, Query, Request
 
-from src.services.sys.role_service import role_service
-from src.core.response import success, success_page
+from src.core.handlers import success, success_page
+from src.core.plugins import apply_rate_limit
 from src.schemas.sys.roles import RoleCreate, RoleUpdate
-from src.core.rate_limit import apply_rate_limit
+from src.services.sys.role_service import role_service
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(tags=["角色管理"])
 
 
 @router.post("/", summary="创建角色")

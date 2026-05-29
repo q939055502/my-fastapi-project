@@ -1,14 +1,14 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Query, Request
-from sqlalchemy import and_, or_, select, func
+from sqlalchemy import func, select
 
-from src.models.sys.system import AuditLog
-from src.core.response import success_page
+from src.core.handlers import success_page
+from src.core.plugins import apply_rate_limit
 from src.core.storage import UnitOfWork
-from src.core.rate_limit import apply_rate_limit
+from src.models.system import AuditLog
 
-router = APIRouter()
+router = APIRouter(tags=["平台管理-审计日志"])
 
 
 @router.get("/list", summary="获取操作日志列表")

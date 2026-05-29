@@ -1,26 +1,27 @@
 from datetime import datetime
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from sqlalchemy import select, and_, delete
 
-from src.models.sys import Tenant, TenantPlan, User
-from src.models.sys.associations import user_tenant_association
+from sqlalchemy import and_, delete, select
+from sqlalchemy.orm import Session
+
+from src.models.iam import User
+from src.models.tenant import Tenant, TenantMember
 
 
 class UserTenantRepository:
-    def get_user_tenants(self, user_id: int, session: Session) -> List[dict]:
+    def get_user_tenants(self, user_id: int, session: Session) -> list[dict]:
         query = select(
             Tenant,
-            user_tenant_association.c.is_owner,
-            user_tenant_association.c.joined_at
+            TenantMember.is_owner,
+            TenantMember.joined_at
         ).join(
-            user_tenant_association,
+            TenantMember,
             and_(
-                user_tenant_association.c.tenant_id == Tenant.id,
-                user_tenant_association.c.user_id == user_id
+                TenantMember.tenant_id == Tenant.id,
+                TenantMember.user_id == user_id
             )
         ).where(
-            Tenant.is_deleted == False
+            not Tenant.is_deleted,
+            not TenantMember.is_deleted
         )
 
         result = session.execute(query)
@@ -37,19 +38,20 @@ class UserTenantRepository:
             for row in rows
         ]
 
-    def get_tenant_members(self, tenant_id: int, session: Session) -> List[dict]:
+    def get_tenant_members(self, tenant_id: int, session: Session) -> list[dict]:
         query = select(
             User,
-            user_tenant_association.c.is_owner,
-            user_tenant_association.c.joined_at
+            TenantMember.is_owner,
+            TenantMember.joined_at
         ).join(
-            user_tenant_association,
+            TenantMember,
             and_(
-                user_tenant_association.c.user_id == User.id,
-                user_tenant_association.c.tenant_id == tenant_id
+                TenantMember.user_id == User.id,
+                TenantMember.tenant_id == tenant_id
             )
         ).where(
-            User.is_deleted == False
+            not User.is_deleted,
+            not TenantMember.is_deleted
         )
 
         result = session.execute(query)
@@ -76,31 +78,33 @@ class UserTenantRepository:
         return members
 
     def is_user_in_tenant(self, user_id: int, tenant_id: int, session: Session) -> bool:
-        query = select(user_tenant_association).where(
+        query = select(TenantMember).where(
             and_(
-                user_tenant_association.c.user_id == user_id,
-                user_tenant_association.c.tenant_id == tenant_id
+                TenantMember.user_id == user_id,
+                TenantMember.tenant_id == tenant_id,
+                not TenantMember.is_deleted
             )
         )
         result = session.execute(query).first()
         return result is not None
 
     def is_tenant_owner(self, user_id: int, tenant_id: int, session: Session) -> bool:
-        query = select(user_tenant_association).where(
+        query = select(TenantMember).where(
             and_(
-                user_tenant_association.c.user_id == user_id,
-                user_tenant_association.c.tenant_id == tenant_id,
-                user_tenant_association.c.is_owner == True
+                TenantMember.user_id == user_id,
+                TenantMember.tenant_id == tenant_id,
+                TenantMember.is_owner,
+                not TenantMember.is_deleted
             )
         )
         result = session.execute(query).first()
         return result is not None
 
-    def get_tenant_by_code(self, code: str, session: Session) -> Optional[Tenant]:
+    def get_tenant_by_code(self, code: str, session: Session) -> Tenant | None:
         query = select(Tenant).where(
             and_(
                 Tenant.code == code,
-                Tenant.is_deleted == False
+                not Tenant.is_deleted
             )
         )
         result = session.execute(query).scalars().first()
@@ -113,22 +117,22 @@ class UserTenantRepository:
         is_owner: bool = False,
         session: Session = None
     ) -> None:
-        stmt = user_tenant_association.insert().values(
+        tenant_member = TenantMember(
             user_id=user_id,
             tenant_id=tenant_id,
             is_owner=is_owner,
             joined_at=datetime.now()
         )
-        session.execute(stmt)
+        session.add(tenant_member)
 
     def remove_user_from_tenant(self, user_id: int, tenant_id: int, session: Session) -> bool:
         if self.is_tenant_owner(user_id, tenant_id, session):
             return False
 
-        stmt = delete(user_tenant_association).where(
+        stmt = delete(TenantMember).where(
             and_(
-                user_tenant_association.c.user_id == user_id,
-                user_tenant_association.c.tenant_id == tenant_id
+                TenantMember.user_id == user_id,
+                TenantMember.tenant_id == tenant_id
             )
         )
         session.execute(stmt)
@@ -148,23 +152,24 @@ class UserTenantRepository:
 
         return tenant
 
-    def get_user_tenant_relation(self, user_id: int, tenant_id: int, session: Session) -> Optional[dict]:
+    def get_user_tenant_relation(self, user_id: int, tenant_id: int, session: Session) -> dict | None:
         query = select(
-            user_tenant_association
+            TenantMember
         ).where(
             and_(
-                user_tenant_association.c.user_id == user_id,
-                user_tenant_association.c.tenant_id == tenant_id
+                TenantMember.user_id == user_id,
+                TenantMember.tenant_id == tenant_id,
+                not TenantMember.is_deleted
             )
         )
         result = session.execute(query).first()
 
         if result:
             return {
-                "user_id": result.user_id,
-                "tenant_id": result.tenant_id,
-                "is_owner": result.is_owner,
-                "joined_at": result.joined_at
+                "user_id": result.TenantMember.user_id,
+                "tenant_id": result.TenantMember.tenant_id,
+                "is_owner": result.TenantMember.is_owner,
+                "joined_at": result.TenantMember.joined_at
             }
         return None
 

@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Query, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 
-from src.core.response import success, success_page
-from src.core.dependency import AuthControl
-from src.core.rate_limit import apply_rate_limit
+from src.core.auth import AuthControl
+from src.core.handlers import success, success_page
+from src.core.plugins import apply_rate_limit
 
-router = APIRouter()
+router = APIRouter(tags=["租户管理"])
 
 
 @router.put("/{tenant_id}", summary="更新租户")

@@ -1,10 +1,10 @@
 """文件映射仓库 - 管理文件ID和文件信息的映射关系"""
 
-from sqlalchemy.orm import Session
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from src.core.storage.generic_repository import GenericRepository
-from src.models.sys import FileMapping
+from src.models.system import FileMapping
 
 
 class FileMappingCreate:
