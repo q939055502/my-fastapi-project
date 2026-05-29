@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
@@ -8,7 +8,7 @@ class TenantConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """租户个性化配置模型"""
     __tablename__ = "tenant_config"
 
-    tenant_id = Column(Integer, ForeignKey("tenant.id"), nullable=False, unique=True, index=True, comment="租户ID")
+    tenant_id = Column(BigInteger, ForeignKey("tenant.id"), nullable=False, unique=True, index=True, comment="租户ID")
 
     logo = Column(String(500), nullable=True, comment="租户Logo URL")
     name = Column(String(100), nullable=True, comment="自定义租户名称")

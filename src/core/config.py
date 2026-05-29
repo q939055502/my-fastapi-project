@@ -63,12 +63,21 @@ class Settings(BaseSettings):
 
     # ========== 数据库配置 ==========
     DATABASE_URL: str = ""
-    DB_ENGINE: str = "postgres"
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = ""
-    DB_NAME: str = "housing_db"
+    DB_ENGINE: str = "mysql" # 数据库引擎，可选值: postgres, mysql, sqlite
+
+    # ========== MySQL 配置 ==========
+    MYSQL_HOST: str = "localhost"
+    MYSQL_PORT: int = 3307
+    MYSQL_USER: str = "app_user"
+    MYSQL_PASSWORD: str = "123456"
+    MYSQL_DATABASE: str = "app_db"
+
+    # ========== PostgreSQL 配置 ==========
+    POSTGRES_HOST: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_USER: str = "app_user"
+    POSTGRES_PASSWORD: str = "123456"
+    POSTGRES_DB: str = "app_db"
 
     # ========== Swagger 配置 ==========
     SWAGGER_UI_USERNAME: str = "admin"
@@ -76,7 +85,7 @@ class Settings(BaseSettings):
     SUPER_ADMIN_PASSWORD: str = "qaz123456"
 
     # ========== Redis 配置 ==========
-    REDIS_URL: str = "redis://localhost:6378/1"
+    REDIS_URL: str = "redis://:123456@localhost:6378/0"
     CACHE_TTL: int = 300
 
     # ========== 其他配置 ==========
@@ -168,9 +177,11 @@ class Settings(BaseSettings):
         if self.DATABASE_URL:
             return self.DATABASE_URL
 
-        if self.DB_ENGINE == "postgres":
-            return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        else:
+        if self.DB_ENGINE == "mysql":
+            return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
+        elif self.DB_ENGINE == "postgres":
+            return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        else:  # sqlite 作为备用
             return f"sqlite:///{self.BASE_DIR}/db.sqlite3"
 
     @field_validator("COMPANY_ROLE_MAPPING", mode="before")
@@ -191,13 +202,36 @@ class Settings(BaseSettings):
                 return {"default": []}
         return v
 
-    @field_validator("DB_PASSWORD")
+    @field_validator("DB_ENGINE")
+    @classmethod
+    def validate_db_engine(cls, v):
+        """验证数据库引擎
+
+        Args:
+            v: 数据库引擎值
+
+        Returns:
+            str: 验证后的数据库引擎
+
+        Raises:
+            ValueError: 数据库引擎不支持时抛出
+        """
+        valid_engines = ["sqlite", "mysql", "postgres", "postgresql"]
+        if v.lower() not in valid_engines:
+            raise ValueError(f"不支持的数据库引擎: {v}，支持的引擎: {valid_engines}")
+        # 统一别名，postgres 和 postgresql 都使用 postgres
+        if v.lower() == "postgresql":
+            return "postgres"
+        return v.lower()
+
+    @field_validator("MYSQL_PASSWORD", "POSTGRES_PASSWORD")
     @classmethod
     def validate_db_password(cls, v, info):
         """验证数据库密码
 
         Args:
             v: 密码值
+            info: 验证信息
 
         Returns:
             str: 验证后的密码
@@ -270,7 +304,7 @@ class Settings(BaseSettings):
             raise ValueError("生产环境不能启用DEBUG模式")
 
         if self.DB_ENGINE == "sqlite":
-            raise ValueError("生产环境建议使用PostgreSQL而非SQLite")
+            raise ValueError("生产环境建议使用PostgreSQL或MySQL而非SQLite")
 
         if "localhost" in self.CORS_ORIGINS:
             raise ValueError("生产环境不应允许localhost的CORS访问")

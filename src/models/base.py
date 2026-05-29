@@ -3,10 +3,10 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
-    Integer,
     String,
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -20,7 +20,7 @@ class BaseModel(Base):
     """SQLAlchemy 基础模型类"""
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True)  # 主键会自动创建索引，不需要设置 index=True
+    id = Column(BigInteger, primary_key=True, autoincrement=True)  # 主键会自动创建索引，不需要设置 index=True
 
     def to_dict(self, exclude_fields: list[str] | None = None) -> dict[str, Any]:
         """

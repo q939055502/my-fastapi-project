@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class BaseRole(BaseModel):
     id: int
-    name: str
+    name: str = Field(..., description="角色/职位名称")
     remark: str = ""
     users: list | None = []
     resources: list | None = []
@@ -14,11 +14,11 @@ class BaseRole(BaseModel):
 
 
 class RoleCreate(BaseModel):
-    name: str = Field(..., example="管理员", description="角色名称")
+    name: str = Field(..., example="管理员", description="角色/职位名称")
     remark: str = Field("", example="管理员角色", description="备注")
 
 
 class RoleUpdate(BaseModel):
-    name: str = Field(..., example="管理员", description="角色名称")
+    name: str = Field(..., example="管理员", description="角色/职位名称")
     remark: str = Field("", example="管理员角色", description="备注")
     resource_ids: list[int] = []

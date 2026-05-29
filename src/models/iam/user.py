@@ -1,5 +1,13 @@
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
@@ -26,7 +34,7 @@ class User(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     position = Column(String(50), nullable=True, comment="职位")
 
-    dept_id = Column(Integer, ForeignKey("iam_dept.id"), nullable=True, index=True, comment="部门ID")
+    dept_id = Column(BigInteger, ForeignKey("iam_dept.id"), nullable=True, index=True, comment="部门ID")
     dept = relationship("Dept", back_populates="users", foreign_keys=[dept_id])
 
     roles = relationship("Role", secondary=user_role_association, back_populates="users")
@@ -40,3 +48,4 @@ class User(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     def has_role(self, role_name: str) -> bool:
         """判断用户是否拥有指定角色"""
         return any(role.name == role_name for role in self.roles)
+

@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
     ForeignKey,
-    Integer,
     String,
     UniqueConstraint,
 )
@@ -26,14 +26,14 @@ class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """
     __tablename__ = "tenant_member"
 
-    user_id = Column(Integer, ForeignKey("iam_user.id"), nullable=False, index=True, comment="用户ID")
-    tenant_id = Column(Integer, ForeignKey("tenant.id"), nullable=False, index=True, comment="租户ID")
+    user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=False, index=True, comment="用户ID")
+    tenant_id = Column(BigInteger, ForeignKey("tenant.id"), nullable=False, index=True, comment="租户ID")
     is_owner = Column(Boolean, default=False, nullable=False, comment="是否为租户创建人")
     role = Column(String(50), default="member", nullable=False, comment="租户内角色")
     joined_at = Column(DateTime(timezone=True), default=datetime.now, nullable=False, comment="加入时间")
 
     is_sub_account = Column(Boolean, default=False, nullable=False, comment="是否为租户创建的子账号（属于租户资产）")
-    created_by_member_id = Column(Integer, ForeignKey("tenant_member.id"), nullable=True, index=True, comment="创建者成员ID")
+    created_by_member_id = Column(BigInteger, ForeignKey("tenant_member.id"), nullable=True, index=True, comment="创建者成员ID")
 
     __table_args__ = (
         UniqueConstraint('user_id', 'tenant_id', name='uq_tenant_member'),

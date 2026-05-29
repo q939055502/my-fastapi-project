@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, ForeignKey, Integer, String
+from sqlalchemy import JSON, BigInteger, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, SoftDeleteMixin, TimestampMixin
@@ -8,7 +8,7 @@ class TenantQuota(BaseModel, TimestampMixin, SoftDeleteMixin):
     """租户配额模型"""
     __tablename__ = "tenant_quota"
 
-    tenant_id = Column(Integer, ForeignKey("tenant.id"), nullable=False, unique=True, index=True, comment="租户ID")
+    tenant_id = Column(BigInteger, ForeignKey("tenant.id"), nullable=False, unique=True, index=True, comment="租户ID")
 
     max_users = Column(Integer, nullable=True, comment="最大用户数（null=无限制）")
     max_depts = Column(Integer, nullable=True, comment="最大部门数（null=无限制）")

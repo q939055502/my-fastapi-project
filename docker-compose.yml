@@ -1,11 +1,88 @@
+# AI，你先不管这个，只是备份，无任何作用，后续如果需要修改我会删除此注释的。
+
 version: '3.8'
 
+
 services:
+  # PostgreSQL 服务
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    environment:
+      # 生产也建议改默认用户名，不要用postgres
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: 123456  # 生产用复杂密码
+      POSTGRES_DB: app_db
+      TZ: Asia/Shanghai
+
+  # MySQL 服务（生产安全配置：非root用户 + 禁止远程root）
+  mysql:
+    image: mysql:8.0.36
+    container_name: mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+    environment:
+      # root密码保留（仅容器内部使用，禁止远程连接）
+      MYSQL_ROOT_PASSWORD: Admin@123456_789
+      # 项目专用普通用户（业务代码只用这个账号连接！）
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: 123456
+      # 自动创建的数据库
+      MYSQL_DATABASE: app_db
+      # 生产环境：删除 MYSQL_ROOT_HOST: % ！！！禁止远程root登录
+      TZ: Asia/Shanghai
+
+  # Redis 服务
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: always
+    # ====================== 端口配置 ======================
+    # 👇 【开发环境】保留：本地电脑可以用客户端连接 Redis
+    # 👇 【生产环境】必须删除这 2 行端口映射！外部无法访问，仅Docker内部可用
+    ports:
+      - "6378:6379"
+
+    # 数据持久化（不变）
+    volumes:
+      - ./redis/data:/data
+
+    # ====================== 安全核心配置 ======================
+    # 👇 开发/生产 都必须保留！安全加固
+    # 1. --requirepass ：设置Redis连接密码
+    # 2. --rename-command CONFIG "" ：禁用高危配置命令，防止黑客攻击
+    # 👇 【生产环境】必须把密码改成 高强度密码（大小写+数字+符号）
+    command: redis-server --requirepass 123456 --rename-command CONFIG ""
+    
+    # 时区（不变）
+    environment:
+      TZ: Asia/Shanghai
+      
+      
+      
+      
+      
+      
+
+  # FastAPI 应用
   app:
     build: .
+    container_name: fastapi-app
     env_file: .env
     ports:
       - "8000:8000"
+    depends_on:
+      - postgres
+      - mysql
+      - redis
     command: >
       sh -c "
       if [ \"$$APP_ENV\" = \"development\" ];
@@ -15,6 +92,5 @@ services:
         uvicorn src:app --host 0.0.0.0 --port 8000;
       fi
       "
-    # 🔥 开发环境才挂载，生产环境不要加！
     volumes:
       - .:/app

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
@@ -12,9 +12,9 @@ class Resource(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     code = Column(String(128), nullable=False, comment="资源编码：user/order")
     name = Column(String(128), nullable=False, comment="资源名称：用户管理")
-    tenant_id = Column(Integer, nullable=True, comment="租户ID（null=系统级）")
+    tenant_id = Column(BigInteger, nullable=True, comment="租户ID（null=系统级）")
     type = Column(Integer, nullable=False, comment="1=菜单 2=API 3=按钮")
-    parent_id = Column(Integer, ForeignKey("iam_resource.id"), nullable=True, comment="父资源ID")
+    parent_id = Column(BigInteger, ForeignKey("iam_resource.id"), nullable=True, comment="父资源ID")
 
     api_path = Column(String(255), nullable=True, comment="API路径：api/v1/goods/delete")
     api_method = Column(String(10), nullable=True, comment="请求方法：GET/POST/PUT/DELETE")

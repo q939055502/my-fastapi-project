@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
@@ -36,8 +36,8 @@ class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     name = Column(String(100), nullable=False, comment="租户名称")
     code = Column(String(50), unique=True, nullable=False, index=True, comment="租户编码")
-    plan_id = Column(Integer, ForeignKey("tenant_plan.id"), nullable=False, comment="套餐ID")
-    owner_user_id = Column(Integer, ForeignKey("iam_user.id"), nullable=False, comment="户主用户ID")
+    plan_id = Column(BigInteger, ForeignKey("tenant_plan.id"), nullable=False, comment="套餐ID")
+    owner_user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=False, comment="户主用户ID")
     status = Column(String(20), default="active", comment="状态：active/suspended/trial/expired")
 
     contact_name = Column(String(50), nullable=True, comment="联系人姓名")

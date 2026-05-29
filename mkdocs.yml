@@ -2,7 +2,7 @@ site_name: My FastAPI Project
 site_description: 企业级FastAPI后端项目
 site_author: A
 site_url: https://q939055502.github.io/my-fastapi-project/
-copyright: Copyright &copy; 2024 A | Based on <a href="https://github.com/JiayuXu0/FastAPI-Template">FastAPI-Template</a> by <a href="https://github.com/JiayuXu0">@JiayuXu0</a>
+# copyright: Copyright &copy; 2024 A | Based on <a href="https://github.com/JiayuXu0/FastAPI-Template">FastAPI-Template</a> by <a href="https://github.com/JiayuXu0">@JiayuXu0</a>
 
 # Repository
 repo_name: q939055502/my-fastapi-project
@@ -115,8 +115,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.emoji:
-      emoji_generator: material.extensions.emoji.to_svg
-      emoji_index: material.extensions.emoji.twemoji
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -147,11 +147,21 @@ nav:
   - 架构设计: architecture/index.md
   - API 文档:
     - api/index.md
-    - 认证授权: api/base.md
+    - 公开接口: api/public.md
+    - 认证授权: api/auth.md
+    - 管理员接口:
+      - 租户管理: api/admin_tenants.md
+      - 套餐管理: api/admin_plans.md
+      - 审计日志: api/admin_auditlog.md
+      - 系统设置: api/admin_settings.md
     - 用户管理: api/users.md
-    - 角色管理: api/role.md
-    - 文件管理: api/files.md
-    - API权限: api/api.md
+    - 角色/职位管理: api/roles.md
+    - 部门管理: api/depts.md
+    - 资源管理: api/resources.md
+    - 租户管理: api/tenant.md
+    - 个人中心: api/me.md
+    - 通用接口: api/common.md
+    - 租户关联: api/tenants.md
   - 更新日志: changelog.md
   - 常见问题: faq.md
 

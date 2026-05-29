@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
@@ -12,7 +12,7 @@ class PhoneBinding(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     __tablename__ = "phone_binding"
 
     phone = Column(String(20), unique=True, nullable=False, index=True, comment="手机号码")
-    user_id = Column(Integer, ForeignKey("iam_user.id"), nullable=False, index=True, comment="用户ID")
+    user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=False, index=True, comment="用户ID")
     is_primary = Column(Boolean, default=True, comment="是否主绑定（自有账号）")
     verified_at = Column(DateTime(timezone=True), nullable=True, comment="验证时间")
 

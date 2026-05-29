@@ -5,13 +5,13 @@ description = "FastAPI project template"
 authors = [
     {name = "Your Name", email = "your.email@example.com"}
 ]
-readme = "README.md"
+
 license = {text = "MIT"}
 requires-python = ">=3.11"
 keywords = [
     "fastapi", "backend", "template", "enterprise", "rbac", "fastapi-template",
     "三层架构", "权限管理", "UV", "python", "async", "jwt", "JiayuXu0",
-    "sqlalchemy", "postgres", "docker", "ci-cd",
+    "sqlalchemy", "postgres", "mysql", "sqlite", "docker", "ci-cd",
     "microservices", "api", "authentication", "authorization",
     "crud", "restful", "swagger", "openapi", "production-ready",
     "scalable", "secure", "modern", "clean-architecture","alembic"
@@ -31,9 +31,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "sqlalchemy[asyncio]>=2.0.0",
+    "sqlalchemy>=2.0.0",
     "fastapi>=0.100.0",
-    "sqlalchemy[asyncpg]>=2.0.0",
     "uvicorn[standard]>=0.23.0",
     "alembic>=1.10.0",
     "PyJWT>=2.8.0",
@@ -47,6 +46,9 @@ dependencies = [
     "apscheduler>=3.10.0",
     "asyncpg>=0.28.0",
     "aiosqlite>=0.19.0",
+    "asyncmy>=0.2.9",
+    "psycopg2-binary>=2.9.0",
+    "pymysql>=1.0.0",
     "setuptools>=68.0.0",
     "slowapi>=0.1.9",
     "redis>=4.5.0",
@@ -55,6 +57,8 @@ dependencies = [
     "pytest>=9.0.3",
     "pytest-html>=4.2.0",
     "httprunner>=2.2.3",
+    "mkdocs-gen-files>=0.6.1",
+    "greenlet>=3.5.0",
 ]
 
 [project.optional-dependencies]
