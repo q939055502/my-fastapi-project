@@ -5,7 +5,7 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.models.system import SystemConfig
 from src.repositories.sys.system_config_repository import system_config_repository
 from src.schemas.sys.system_config import SystemConfigUpdate
@@ -17,11 +17,11 @@ class SystemConfigService:
         self.logger = logger
 
     def get_all_configs(self) -> dict:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             query = select(SystemConfig)
             query = self.repository._apply_soft_delete_filter(query)
             query = query.order_by(asc(SystemConfig.sort), asc(SystemConfig.id))
-            result = uow.session.execute(query)
+            result = tm.session.execute(query)
             config_objs = result.scalars().all()
 
             configs = {}
@@ -38,15 +38,15 @@ class SystemConfigService:
             return configs
 
     def update_configs(self, config_update: SystemConfigUpdate) -> None:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             for code, value in config_update.configs.items():
-                config_obj = system_config_repository.get_by_code(code, session=uow.session)
+                config_obj = system_config_repository.get_by_code(code, session=tm.session)
                 if not config_obj:
                     raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"配置项不存在: {code}")
 
                 config_obj.value = value
 
-            uow.commit()
+            tm.commit()
 
 
 system_config_service = SystemConfigService()

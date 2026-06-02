@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.core.storage.generic_repository import GenericRepository
 from src.models.iam import Role
+from src.repositories.base import GenericRepository
 from src.schemas.sys.roles import RoleCreate, RoleUpdate
 
 

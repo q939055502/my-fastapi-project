@@ -8,7 +8,7 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.phone_binding_repository import phone_binding_repository
 from src.repositories.sys.user_repository import user_repository
 
@@ -30,17 +30,17 @@ class PhoneBindingService:
         """
         self.logger.info(f"绑定手机号: phone={phone}, user_id={user_id}, is_primary={is_primary}")
 
-        with UnitOfWork() as uow:
-            user = user_repository.get(id=user_id, session=uow.session)
+        with TransactionManager() as tm:
+            user = user_repository.get(id=user_id, session=tm.session)
             if not user:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
 
             if is_primary:
-                existing_primary = phone_binding_repository.get_primary_binding(phone, uow.session)
+                existing_primary = phone_binding_repository.get_primary_binding(phone, tm.session)
                 if existing_primary:
                     raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="该手机号已绑定自有账号")
             else:
-                existing_bindings = phone_binding_repository.get_by_phone(phone, uow.session)
+                existing_bindings = phone_binding_repository.get_by_phone(phone, tm.session)
                 for binding in existing_bindings:
                     if binding.user_id == user_id:
                         raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="该手机号已绑定")
@@ -49,10 +49,10 @@ class PhoneBindingService:
                 phone=phone,
                 user_id=user_id,
                 is_primary=is_primary,
-                session=uow.session
+                session=tm.session
             )
 
-            uow.commit()
+            tm.commit()
 
             self.logger.info(f"手机号绑定成功: phone={phone}, user_id={user_id}")
 
@@ -68,8 +68,8 @@ class PhoneBindingService:
         """解绑手机号"""
         self.logger.info(f"解绑手机号: binding_id={binding_id}, user_id={user_id}")
 
-        with UnitOfWork() as uow:
-            binding = phone_binding_repository.get(id=binding_id, session=uow.session)
+        with TransactionManager() as tm:
+            binding = phone_binding_repository.get(id=binding_id, session=tm.session)
             if not binding:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="绑定记录不存在")
 
@@ -79,15 +79,15 @@ class PhoneBindingService:
             if binding.is_primary:
                 raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="主绑定账号不允许解绑")
 
-            phone_binding_repository.delete(id=binding_id, session=uow.session)
-            uow.commit()
+            phone_binding_repository.delete(id=binding_id, session=tm.session)
+            tm.commit()
 
             self.logger.info(f"手机号解绑成功: binding_id={binding_id}")
 
     def get_user_bindings(self, user_id: int) -> list[dict[str, Any]]:
         """获取用户的所有手机号绑定记录"""
-        with UnitOfWork() as uow:
-            bindings = phone_binding_repository.get_by_user_id(user_id, uow.session)
+        with TransactionManager() as tm:
+            bindings = phone_binding_repository.get_by_user_id(user_id, tm.session)
 
             result = []
             for binding in bindings:
@@ -102,9 +102,9 @@ class PhoneBindingService:
 
     def get_phone_bindings(self, phone: str) -> dict[str, Any]:
         """获取手机号的所有绑定记录"""
-        with UnitOfWork() as uow:
-            primary = phone_binding_repository.get_primary_binding(phone, uow.session)
-            secondary = phone_binding_repository.get_secondary_bindings(phone, uow.session)
+        with TransactionManager() as tm:
+            primary = phone_binding_repository.get_primary_binding(phone, tm.session)
+            secondary = phone_binding_repository.get_secondary_bindings(phone, tm.session)
 
             result = {
                 "phone": phone,

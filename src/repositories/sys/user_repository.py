@@ -12,8 +12,8 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
 )
-from src.core.storage.generic_repository import GenericRepository
 from src.models.iam import User
+from src.repositories.base import GenericRepository
 from src.schemas.sys.login import CredentialsSchema
 from src.schemas.sys.users import UserCreate, UserUpdate
 

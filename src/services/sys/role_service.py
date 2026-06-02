@@ -7,7 +7,7 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.role_repository import role_repository
 from src.schemas.sys.roles import RoleCreate, RoleUpdate
 
@@ -24,7 +24,7 @@ class RoleService:
         name: str = "",
         remark: str = "",
     ) -> tuple[int, list[dict]]:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             search_filters = self._build_role_search_filters(
                 name=name, remark=remark
             )
@@ -32,7 +32,7 @@ class RoleService:
             total, items = self.repository.list(
                 page=page,
                 page_size=page_size,
-                session=uow.session,
+                session=tm.session,
                 filters=search_filters,
                 order_by=[asc(self.repository.model.id)],
             )
@@ -42,8 +42,8 @@ class RoleService:
             return total, data
 
     def get_role_detail(self, role_id: int) -> dict:
-        with UnitOfWork() as uow:
-            role_obj = role_repository.get(id=role_id, session=uow.session)
+        with TransactionManager() as tm:
+            role_obj = role_repository.get(id=role_id, session=tm.session)
             if not role_obj:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
 
@@ -70,27 +70,27 @@ class RoleService:
             return role_dict
 
     def create_role(self, role_in: RoleCreate) -> None:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             if getattr(role_in, "is_system", False):
                 raise HTTPException(
                     status_code=HTTP_FORBIDDEN,
                     detail="禁止创建系统内置角色/职位",
                 )
 
-            existing_role = role_repository.is_exist(role_in.name, session=uow.session)
+            existing_role = role_repository.is_exist(role_in.name, session=tm.session)
             if existing_role:
                 raise HTTPException(
                     status_code=HTTP_BAD_REQUEST,
                     detail="该角色/职位名称已存在",
                 )
 
-            role_repository.create(obj_in=role_in, session=uow.session)
+            role_repository.create(obj_in=role_in, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def update_role(self, role_id: int, role_in: RoleUpdate) -> None:
-        with UnitOfWork() as uow:
-            existing_role = role_repository.get(id=role_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_role = role_repository.get(id=role_id, session=tm.session)
             if not existing_role:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
 
@@ -101,19 +101,19 @@ class RoleService:
                 )
 
             if role_in.name != existing_role.name:
-                existing_by_name = role_repository.is_exist(role_in.name, session=uow.session)
+                existing_by_name = role_repository.is_exist(role_in.name, session=tm.session)
                 if existing_by_name:
                     raise HTTPException(
                         status_code=HTTP_BAD_REQUEST,
                         detail="该角色/职位名称已存在",
                     )
 
-            role_repository.update(id=role_id, obj_in=role_in, session=uow.session)
-            uow.commit()
+            role_repository.update(id=role_id, obj_in=role_in, session=tm.session)
+            tm.commit()
 
     def update_role_resources(self, role_id: int, resource_ids: list[int]) -> None:
-        with UnitOfWork() as uow:
-            role_obj = role_repository.get(id=role_id, session=uow.session)
+        with TransactionManager() as tm:
+            role_obj = role_repository.get(id=role_id, session=tm.session)
             if not role_obj:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
 
@@ -123,12 +123,12 @@ class RoleService:
                     detail="系统内置角色/职位不可修改权限",
                 )
 
-            role_repository.update_resources(role_obj, resource_ids, session=uow.session)
-            uow.commit()
+            role_repository.update_resources(role_obj, resource_ids, session=tm.session)
+            tm.commit()
 
     def delete_role(self, role_id: int) -> None:
-        with UnitOfWork() as uow:
-            existing_role = role_repository.get(id=role_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_role = role_repository.get(id=role_id, session=tm.session)
             if not existing_role:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
 
@@ -138,9 +138,9 @@ class RoleService:
                     detail="系统内置角色/职位不可删除",
                 )
 
-            role_repository.delete(id=role_id, session=uow.session)
+            role_repository.delete(id=role_id, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def _build_role_search_filters(
         self,

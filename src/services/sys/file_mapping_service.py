@@ -11,7 +11,7 @@ from src.core.constants import (
     HTTP_UNAUTHORIZED,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.file_mapping_repository import file_mapping_repository
 from src.repositories.sys.user_repository import user_repository
 from src.schemas.base import Success
@@ -41,8 +41,8 @@ class FileService:
 
     def upload_file(self, file: UploadFile) -> Success:
         try:
-            with UnitOfWork() as uow:
-                user = self._authenticate_user(uow.session)
+            with TransactionManager() as tm:
+                user = self._authenticate_user(tm.session)
 
                 self._validate_file_security(file)
 
@@ -59,10 +59,10 @@ class FileService:
                 self.logger.info(f"文件已保存 {file_path}")
 
                 self._save_file_mapping(
-                    {"file_id": file_id, "file_path": str(file_path)}, file, user.id, uow.session
+                    {"file_id": file_id, "file_path": str(file_path)}, file, user.id, tm.session
                 )
 
-                uow.commit()
+                tm.commit()
 
             response_data = {
                 "file_id": file_id,

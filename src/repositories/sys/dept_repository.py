@@ -2,8 +2,8 @@ from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
 
 from src.core.log import logger
-from src.core.storage.generic_repository import GenericRepository
 from src.models.iam import Dept, DeptClosure
+from src.repositories.base import GenericRepository
 from src.schemas.sys.depts import DeptCreate, DeptUpdate
 
 

@@ -1,38 +1,26 @@
-"""
-存储模块导出
+"""Storage module
 
-包含数据库、Redis缓存、文件存储等核心存储组件
+Provides database connection, cache management and transaction management.
+
+Core components:
+- database: SQLAlchemy database connection configuration
+- cache: Three-level cache system (L1 local memory + L2 Redis + L3 database)
+- transaction_manager: Transaction manager
 """
-from .database import (
-    Base,
-    SessionLocal,
-    close_db,
-    engine,
-    get_db,
-)
-from .database import (
-    init_db as init_database,
-)
-from .file_storage import StorageBackend, get_storage_backend, storage
-from .generic_repository import GenericRepository
-from .redis import cache_manager, cached, clear_role_cache, clear_user_cache
-from .unit_of_work import UnitOfWork, get_unit_of_work
+
+from .cache import CacheManager, cache_manager
+from .database import Base, SessionLocal, close_db, engine, get_db, init_db
+from .transaction_manager import TransactionManager, get_transaction_manager
 
 __all__ = [
     "Base",
-    "engine",
+    "CacheManager",
     "SessionLocal",
-    "get_db",
-    "init_database",
-    "close_db",
+    "TransactionManager",
     "cache_manager",
-    "cached",
-    "clear_user_cache",
-    "clear_role_cache",
-    "storage",
-    "get_storage_backend",
-    "StorageBackend",
-    "GenericRepository",
-    "UnitOfWork",
-    "get_unit_of_work",
+    "close_db",
+    "engine",
+    "get_db",
+    "get_transaction_manager",
+    "init_db",
 ]

@@ -6,7 +6,7 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.tenant_plan_repository import tenant_plan_repository
 from src.schemas.sys.tenant_plan import TenantPlanCreate, TenantPlanUpdate
 
@@ -22,13 +22,13 @@ class TenantPlanService:
         page_size: int = 10,
         name: str = "",
     ) -> tuple[int, list[dict]]:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             search_filters = self._build_plan_search_filters(name=name)
 
             total, items = self.repository.list(
                 page=page,
                 page_size=page_size,
-                session=uow.session,
+                session=tm.session,
                 filters=search_filters,
                 order_by=[asc(self.repository.model.sort), asc(self.repository.model.id)],
             )
@@ -38,54 +38,54 @@ class TenantPlanService:
             return total, data
 
     def get_plan_detail(self, plan_id: int) -> dict:
-        with UnitOfWork() as uow:
-            plan_obj = tenant_plan_repository.get(id=plan_id, session=uow.session)
+        with TransactionManager() as tm:
+            plan_obj = tenant_plan_repository.get(id=plan_id, session=tm.session)
             if not plan_obj:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="套餐不存在")
 
             return self._transform_plan_detail(plan_obj)
 
     def create_plan(self, plan_in: TenantPlanCreate) -> dict:
-        with UnitOfWork() as uow:
-            existing_plan = tenant_plan_repository.is_exist(plan_in.code, session=uow.session)
+        with TransactionManager() as tm:
+            existing_plan = tenant_plan_repository.is_exist(plan_in.code, session=tm.session)
             if existing_plan:
                 raise HTTPException(
                     status_code=HTTP_BAD_REQUEST,
                     detail="The plan with this code already exists in the system.",
                 )
 
-            new_plan = tenant_plan_repository.create(obj_in=plan_in, session=uow.session)
+            new_plan = tenant_plan_repository.create(obj_in=plan_in, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
             return self._transform_plan_detail(new_plan)
 
     def update_plan(self, plan_id: int, plan_in: TenantPlanUpdate) -> None:
-        with UnitOfWork() as uow:
-            existing_plan = tenant_plan_repository.get(id=plan_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_plan = tenant_plan_repository.get(id=plan_id, session=tm.session)
             if not existing_plan:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="套餐不存在")
 
             if plan_in.code and plan_in.code != existing_plan.code:
-                existing_by_code = tenant_plan_repository.is_exist(plan_in.code, session=uow.session)
+                existing_by_code = tenant_plan_repository.is_exist(plan_in.code, session=tm.session)
                 if existing_by_code:
                     raise HTTPException(
                         status_code=HTTP_BAD_REQUEST,
                         detail="The plan code already exists in the system.",
                     )
 
-            tenant_plan_repository.update(id=plan_id, obj_in=plan_in, session=uow.session)
-            uow.commit()
+            tenant_plan_repository.update(id=plan_id, obj_in=plan_in, session=tm.session)
+            tm.commit()
 
     def delete_plan(self, plan_id: int) -> None:
-        with UnitOfWork() as uow:
-            existing_plan = tenant_plan_repository.get(id=plan_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_plan = tenant_plan_repository.get(id=plan_id, session=tm.session)
             if not existing_plan:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="套餐不存在")
 
-            tenant_plan_repository.delete(id=plan_id, session=uow.session)
+            tenant_plan_repository.delete(id=plan_id, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def _build_plan_search_filters(self, name: str = "") -> list:
         filters = []

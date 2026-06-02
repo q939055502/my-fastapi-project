@@ -6,7 +6,7 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.dept_repository import dept_repository
 from src.schemas.sys.depts import DeptCreate, DeptUpdate
 
@@ -22,7 +22,7 @@ class DeptService:
         page_size: int = 10,
         name: str = "",
     ) -> tuple[int, list[dict]]:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             search_filters = self._build_dept_search_filters(
                 name=name
             )
@@ -30,7 +30,7 @@ class DeptService:
             total, items = self.repository.list(
                 page=page,
                 page_size=page_size,
-                session=uow.session,
+                session=tm.session,
                 filters=search_filters,
                 order_by=[asc(self.repository.model.sort)],
             )
@@ -40,8 +40,8 @@ class DeptService:
             return total, data
 
     def get_dept_detail(self, dept_id: int) -> dict:
-        with UnitOfWork() as uow:
-            dept_obj = dept_repository.get(id=dept_id, session=uow.session)
+        with TransactionManager() as tm:
+            dept_obj = dept_repository.get(id=dept_id, session=tm.session)
             if not dept_obj:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
 
@@ -54,47 +54,47 @@ class DeptService:
             return dept_dict
 
     def get_dept_tree(self, name: str = "") -> list[dict]:
-        with UnitOfWork() as uow:
-            return dept_repository.get_dept_tree(name=name, session=uow.session)
+        with TransactionManager() as tm:
+            return dept_repository.get_dept_tree(name=name, session=tm.session)
 
     def create_dept(self, dept_in: DeptCreate) -> None:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             if dept_in.parent_id != 0:
-                parent_dept = dept_repository.get(id=dept_in.parent_id, session=uow.session)
+                parent_dept = dept_repository.get(id=dept_in.parent_id, session=tm.session)
                 if not parent_dept:
                     raise HTTPException(status_code=HTTP_NOT_FOUND, detail="父部门不存在")
 
-            dept_repository.create_dept(obj_in=dept_in, session=uow.session)
+            dept_repository.create_dept(obj_in=dept_in, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def update_dept(self, dept_id: int, dept_in: DeptUpdate) -> None:
-        with UnitOfWork() as uow:
-            existing_dept = dept_repository.get(id=dept_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_dept = dept_repository.get(id=dept_id, session=tm.session)
             if not existing_dept:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
 
             if dept_in.parent_id != 0:
-                parent_dept = dept_repository.get(id=dept_in.parent_id, session=uow.session)
+                parent_dept = dept_repository.get(id=dept_in.parent_id, session=tm.session)
                 if not parent_dept:
                     raise HTTPException(status_code=HTTP_NOT_FOUND, detail="父部门不存在")
 
             if dept_in.parent_id == dept_id:
                 raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="父部门不能是自身")
 
-            dept_repository.update_dept(dept_id=dept_id, obj_in=dept_in, session=uow.session)
+            dept_repository.update_dept(dept_id=dept_id, obj_in=dept_in, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def delete_dept(self, dept_id: int) -> None:
-        with UnitOfWork() as uow:
-            existing_dept = dept_repository.get(id=dept_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_dept = dept_repository.get(id=dept_id, session=tm.session)
             if not existing_dept:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
 
-            dept_repository.delete_dept(dept_id=dept_id, session=uow.session)
+            dept_repository.delete_dept(dept_id=dept_id, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def _build_dept_search_filters(
         self,

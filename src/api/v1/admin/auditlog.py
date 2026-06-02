@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 
 from src.core.handlers import success_page
 from src.core.plugins import apply_rate_limit
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.models.system import AuditLog
 
 router = APIRouter(tags=["平台管理-审计日志"])
@@ -43,11 +43,11 @@ def get_audit_log_list(
     elif end_time:
         filters.append(AuditLog.created_at <= end_time)
 
-    with UnitOfWork() as uow:
+    with TransactionManager() as tm:
         count_query = select(func.count()).select_from(AuditLog)
         for filter_condition in filters:
             count_query = count_query.where(filter_condition)
-        count_result = uow.session.execute(count_query)
+        count_result = tm.session.execute(count_query)
         total = count_result.scalar()
 
         query = select(AuditLog)
@@ -55,7 +55,7 @@ def get_audit_log_list(
             query = query.where(filter_condition)
         offset = (page - 1) * page_size
         query = query.offset(offset).limit(page_size).order_by(AuditLog.created_at.desc())
-        result = uow.session.execute(query)
+        result = tm.session.execute(query)
         audit_log_objs = result.scalars().all()
 
         data = [audit_log.to_dict() for audit_log in audit_log_objs]

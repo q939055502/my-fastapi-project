@@ -23,7 +23,7 @@ from src.core.constants import (
     HTTP_UNAUTHORIZED,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 
 # 安全方案实例
 security = HTTPBasic()  # 用于Swagger UI的基本认证
@@ -107,13 +107,13 @@ class AuthControl:
             user_id = decode_data.get("user_id")
             logger.debug(f"JWT解码结果: user_id={user_id}")
 
-            with UnitOfWork() as uow:
+            with TransactionManager() as tm:
                 from sqlalchemy import select
                 from sqlalchemy.orm import selectinload
 
                 from src.models.iam import Role, User
 
-                result = uow.session.execute(
+                result = tm.session.execute(
                     select(User)
                     .options(
                         selectinload(User.roles).selectinload(Role.resources)

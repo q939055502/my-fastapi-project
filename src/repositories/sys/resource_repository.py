@@ -1,8 +1,8 @@
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
-from src.core.storage.generic_repository import GenericRepository
 from src.models.iam import Resource
+from src.repositories.base import GenericRepository
 from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
 
 

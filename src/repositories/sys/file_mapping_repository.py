@@ -3,8 +3,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.core.storage.generic_repository import GenericRepository
 from src.models.system import FileMapping
+from src.repositories.base import GenericRepository
 
 
 class FileMappingCreate:

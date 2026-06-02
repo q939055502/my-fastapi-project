@@ -8,7 +8,7 @@ from src.core.constants import (
     HTTP_UNAUTHORIZED,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.user_repository import user_repository
 from src.schemas.sys.login import CredentialsSchema, RefreshTokenRequest
 
@@ -20,10 +20,10 @@ class AuthService:
     def login(self, credentials: CredentialsSchema) -> dict[str, Any]:
         self.logger.info(f"用户登录尝试: username={credentials.username}")
 
-        with UnitOfWork() as uow:
-            user = user_repository.authenticate(credentials, session=uow.session)
-            user_repository.update_last_login(user.id, session=uow.session)
-            uow.commit()
+        with TransactionManager() as tm:
+            user = user_repository.authenticate(credentials, session=tm.session)
+            user_repository.update_last_login(user.id, session=tm.session)
+            tm.commit()
 
         access_token, refresh_token = create_token_pair(
             user_id=user.id, username=user.username
@@ -54,8 +54,8 @@ class AuthService:
         payload = verify_token(refresh_request.refresh_token, token_type="refresh")
         user_id = payload["user_id"]
 
-        with UnitOfWork() as uow:
-            user = user_repository.get(id=user_id, session=uow.session)
+        with TransactionManager() as tm:
+            user = user_repository.get(id=user_id, session=tm.session)
             if not user or not user.is_active:
                 raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户不存在或已被禁用")
 

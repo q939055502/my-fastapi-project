@@ -59,6 +59,7 @@ dependencies = [
     "httprunner>=2.2.3",
     "mkdocs-gen-files>=0.6.1",
     "greenlet>=3.5.0",
+    "cachetools>=7.1.4",
 ]
 
 [project.optional-dependencies]

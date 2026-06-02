@@ -6,7 +6,7 @@ from src.core.constants import (
     HTTP_NOT_FOUND,
 )
 from src.core.log import logger
-from src.core.storage import UnitOfWork
+from src.core.storage import TransactionManager
 from src.repositories.sys.tenant_repository import tenant_repository
 from src.schemas.sys.tenant import TenantCreate, TenantUpdate
 
@@ -23,7 +23,7 @@ class TenantService:
         name: str = "",
         status: int = None,
     ) -> tuple[int, list[dict]]:
-        with UnitOfWork() as uow:
+        with TransactionManager() as tm:
             search_filters = self._build_tenant_search_filters(
                 name=name, status=status
             )
@@ -31,7 +31,7 @@ class TenantService:
             total, items = self.repository.list(
                 page=page,
                 page_size=page_size,
-                session=uow.session,
+                session=tm.session,
                 filters=search_filters,
                 order_by=[asc(self.repository.model.id)],
                 eager_load=[self.repository.model.plan, self.repository.model.owner_user],
@@ -42,54 +42,54 @@ class TenantService:
             return total, data
 
     def get_tenant_detail(self, tenant_id: int) -> dict:
-        with UnitOfWork() as uow:
-            tenant_obj = tenant_repository.get(id=tenant_id, session=uow.session)
+        with TransactionManager() as tm:
+            tenant_obj = tenant_repository.get(id=tenant_id, session=tm.session)
             if not tenant_obj:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
 
             return self._transform_tenant_detail(tenant_obj)
 
     def create_tenant(self, tenant_in: TenantCreate) -> dict:
-        with UnitOfWork() as uow:
-            existing_tenant = tenant_repository.is_exist(tenant_in.code, session=uow.session)
+        with TransactionManager() as tm:
+            existing_tenant = tenant_repository.is_exist(tenant_in.code, session=tm.session)
             if existing_tenant:
                 raise HTTPException(
                     status_code=HTTP_BAD_REQUEST,
                     detail="The tenant with this code already exists in the system.",
                 )
 
-            new_tenant = tenant_repository.create(obj_in=tenant_in, session=uow.session)
+            new_tenant = tenant_repository.create(obj_in=tenant_in, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
             return self._transform_tenant_detail(new_tenant)
 
     def update_tenant(self, tenant_id: int, tenant_in: TenantUpdate) -> None:
-        with UnitOfWork() as uow:
-            existing_tenant = tenant_repository.get(id=tenant_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_tenant = tenant_repository.get(id=tenant_id, session=tm.session)
             if not existing_tenant:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
 
             if tenant_in.code and tenant_in.code != existing_tenant.code:
-                existing_by_code = tenant_repository.is_exist(tenant_in.code, session=uow.session)
+                existing_by_code = tenant_repository.is_exist(tenant_in.code, session=tm.session)
                 if existing_by_code:
                     raise HTTPException(
                         status_code=HTTP_BAD_REQUEST,
                         detail="The tenant code already exists in the system.",
                     )
 
-            tenant_repository.update(id=tenant_id, obj_in=tenant_in, session=uow.session)
-            uow.commit()
+            tenant_repository.update(id=tenant_id, obj_in=tenant_in, session=tm.session)
+            tm.commit()
 
     def delete_tenant(self, tenant_id: int) -> None:
-        with UnitOfWork() as uow:
-            existing_tenant = tenant_repository.get(id=tenant_id, session=uow.session)
+        with TransactionManager() as tm:
+            existing_tenant = tenant_repository.get(id=tenant_id, session=tm.session)
             if not existing_tenant:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
 
-            tenant_repository.delete(id=tenant_id, session=uow.session)
+            tenant_repository.delete(id=tenant_id, session=tm.session)
 
-            uow.commit()
+            tm.commit()
 
     def _build_tenant_search_filters(
         self,

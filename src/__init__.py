@@ -41,7 +41,7 @@ def create_app() -> FastAPI:
     )
     from src.core.auth import get_current_username, token_manager
     from src.core.handlers import init_data
-    from src.core.storage import cache_manager, close_db
+    from src.core.storage import close_db
 
     app = FastAPI(
         title=settings.APP_TITLE,
@@ -56,7 +56,6 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     def startup_event():
         """应用启动时执行的初始化任务"""
-        cache_manager.connect()
         token_manager.connect()
         init_data()
 
@@ -64,7 +63,6 @@ def create_app() -> FastAPI:
     def shutdown_event():
         """应用关闭时执行的清理任务"""
         token_manager.disconnect()
-        cache_manager.disconnect()
         close_db()
 
     @app.get("/docs", include_in_schema=False)

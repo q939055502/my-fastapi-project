@@ -1,12 +1,12 @@
-"""通用Repository基类
+"""Generic Repository Base Class
 
-提供基础的CRUD操作，但不含事务管理。
-事务管理由UnitOfWork统一控制。
+Provides basic CRUD operations without transaction management.
+Transaction management is controlled by TransactionManager.
 
-核心特性：
-- 双通道查询：list() 过滤软删除，list_all() 查询全量
-- 自适应删除：根据模型是否有软删除字段自动选择软删除或硬删除
-- 系统字段保护：is_system 字段不可被修改或删除
+Core features:
+- Dual-channel query: list() filters soft-deleted, list_all() queries all
+- Adaptive deletion: automatically selects soft or hard delete based on model
+- System field protection: is_system field cannot be modified or deleted
 """
 import builtins
 from datetime import datetime
@@ -24,14 +24,14 @@ PROTECTED_SYSTEM_FIELDS = {"id", "is_deleted", "delete_time", "is_system", "crea
 
 
 class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    """通用Repository基类
+    """Generic Repository Base Class
 
-    提供基础的CRUD操作，但不含commit。
-    事务管理由UnitOfWork统一控制。
+    Provides basic CRUD operations without commit.
+    Transaction management is controlled by TransactionManager.
 
-    核心特性：
-    - 双通道查询：默认过滤软删除，with_deleted 查询全量
-    - 自适应删除：根据模型是否有软删除字段自动选择删除方式
+    Core features:
+    - Dual-channel query: filters soft-deleted by default, with_deleted queries all
+    - Adaptive deletion: automatically selects deletion method based on soft-delete support
     """
 
     def __init__(self, model: type[ModelType]):

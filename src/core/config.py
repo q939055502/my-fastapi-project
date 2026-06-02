@@ -88,6 +88,11 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://:123456@localhost:6378/0"
     CACHE_TTL: int = 300
 
+    # ========== L1 本地缓存配置 ==========
+    L1_CACHE_ENABLED: bool = True
+    L1_CACHE_MAXSIZE: int = 1000
+    L1_CACHE_TTL: int = 300
+
     # ========== 其他配置 ==========
     DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
     COMPANY_ROLE_MAPPING: dict[str, list[int]] = {"default": []}
