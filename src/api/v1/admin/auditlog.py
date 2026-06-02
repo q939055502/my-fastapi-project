@@ -1,12 +1,10 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Query, Request
-from sqlalchemy import func, select
 
 from src.core.handlers import success_page
 from src.core.plugins import apply_rate_limit
-from src.core.storage import TransactionManager
-from src.models.system import AuditLog
+from src.services.sys.audit_log_service import audit_log_service
 
 router = APIRouter(tags=["平台管理-审计日志"])
 
@@ -25,38 +23,15 @@ def get_audit_log_list(
     start_time: datetime = Query(None, description="开始时间"),
     end_time: datetime = Query(None, description="结束时间"),
 ):
-    filters = []
-    if username:
-        filters.append(AuditLog.username.contains(username))
-    if module:
-        filters.append(AuditLog.module.contains(module))
-    if method:
-        filters.append(AuditLog.method.contains(method))
-    if summary:
-        filters.append(AuditLog.summary.contains(summary))
-    if status is not None:
-        filters.append(AuditLog.status == status)
-    if start_time and end_time:
-        filters.append(AuditLog.created_at.between(start_time, end_time))
-    elif start_time:
-        filters.append(AuditLog.created_at >= start_time)
-    elif end_time:
-        filters.append(AuditLog.created_at <= end_time)
-
-    with TransactionManager() as tm:
-        count_query = select(func.count()).select_from(AuditLog)
-        for filter_condition in filters:
-            count_query = count_query.where(filter_condition)
-        count_result = tm.session.execute(count_query)
-        total = count_result.scalar()
-
-        query = select(AuditLog)
-        for filter_condition in filters:
-            query = query.where(filter_condition)
-        offset = (page - 1) * page_size
-        query = query.offset(offset).limit(page_size).order_by(AuditLog.created_at.desc())
-        result = tm.session.execute(query)
-        audit_log_objs = result.scalars().all()
-
-        data = [audit_log.to_dict() for audit_log in audit_log_objs]
-        return success_page(data=data, total=total, page=page, page_size=page_size)
+    total, data = audit_log_service.get_list(
+        page=page,
+        page_size=page_size,
+        username=username,
+        module=module,
+        method=method,
+        summary=summary,
+        status=status,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    return success_page(data=data, total=total, page=page, page_size=page_size)

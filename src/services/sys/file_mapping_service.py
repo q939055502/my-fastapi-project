@@ -177,5 +177,10 @@ class FileService:
         else:
             return "document"
 
+    def get_file_info(self, file_id: str) -> dict | None:
+        """Get file information by file ID"""
+        with TransactionManager() as tm:
+            return file_mapping_repository.get_file_info(file_id, session=tm.session)
+
 
 file_service = FileService()
