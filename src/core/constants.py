@@ -17,8 +17,19 @@ ENV_PRODUCTION = "production"
 
 
 # ========== 业务状态常量 ==========
+# 用于表示启用/禁用的通用状态（Dept、Resource、DictType、DictData、TenantPlan、SystemConfig 等模型使用）
 STATUS_ENABLED = 1
 STATUS_DISABLED = 0
+
+# ========== 登录日志状态常量 ==========
+LOGIN_STATUS_SUCCESS = 1
+LOGIN_STATUS_FAILED = 0
+
+# ========== 租户状态常量 ==========
+TENANT_STATUS_ACTIVE = "active"
+TENANT_STATUS_SUSPENDED = "suspended"
+TENANT_STATUS_TRIAL = "trial"
+TENANT_STATUS_EXPIRED = "expired"
 
 
 # ========== 资源类型常量 ==========

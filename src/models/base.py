@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Integer,
     String,
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -77,4 +78,28 @@ class SoftDeleteMixin:
 class RemarkMixin:
     """备注描述混合类"""
     remark = Column(String(500), nullable=True, comment="备注")
+
+
+class EnableStatusMixin:
+    """启用/禁用状态 Mixin
+
+    适用于需要表示启用/禁用状态的模型，使用 STATUS_ENABLED/STATUS_DISABLED 常量
+    """
+    status = Column(Integer, default=1, comment="状态（使用 STATUS_* 常量：1=启用，0=禁用）")
+
+
+class TenantStatusMixin:
+    """租户状态 Mixin
+
+    适用于租户模型，表示租户的业务状态，使用 TENANT_STATUS_* 常量
+    """
+    status = Column(String(20), default="active", comment="状态（使用 TENANT_STATUS_* 常量：active/suspended/trial/expired）")
+
+
+class LoginStatusMixin:
+    """登录状态 Mixin
+
+    适用于登录日志模型，表示登录结果，使用 LOGIN_STATUS_* 常量
+    """
+    status = Column(Integer, nullable=False, comment="登录状态（使用 LOGIN_STATUS_* 常量：1=成功，0=失败）")
 

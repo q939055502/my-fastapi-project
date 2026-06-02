@@ -850,6 +850,60 @@ def init_system_config():
                         remark="会话超时时间（分钟）"
                     ),
                     SystemConfig(
+                        name="是否启用定时任务调度器",
+                        code="scheduler.enabled",
+                        value="true",
+                        type="boolean",
+                        group="scheduler",
+                        sort=1,
+                        remark="是否启用定时任务调度器"
+                    ),
+                    SystemConfig(
+                        name="登录日志保留天数",
+                        code="scheduler.login_log_retention_days",
+                        value="90",
+                        type="int",
+                        group="scheduler",
+                        sort=2,
+                        remark="登录日志保留天数"
+                    ),
+                    SystemConfig(
+                        name="操作日志保留天数",
+                        code="scheduler.operation_log_retention_days",
+                        value="180",
+                        type="int",
+                        group="scheduler",
+                        sort=3,
+                        remark="操作日志保留天数"
+                    ),
+                    SystemConfig(
+                        name="软删除数据保留天数",
+                        code="scheduler.soft_delete_retention_days",
+                        value="30",
+                        type="int",
+                        group="scheduler",
+                        sort=4,
+                        remark="软删除数据保留天数"
+                    ),
+                    SystemConfig(
+                        name="清理日志任务Cron",
+                        code="scheduler.clean_log_cron",
+                        value="0 2 * * *",
+                        type="string",
+                        group="scheduler",
+                        sort=5,
+                        remark="清理过期日志任务Cron表达式（默认：每天凌晨2点）"
+                    ),
+                    SystemConfig(
+                        name="清理软删除数据任务Cron",
+                        code="scheduler.clean_soft_delete_cron",
+                        value="0 3 * * 0",
+                        type="string",
+                        group="scheduler",
+                        sort=6,
+                        remark="清理软删除数据任务Cron表达式（默认：每周日凌晨3点）"
+                    ),
+                    SystemConfig(
                         name="邮件服务器地址",
                         code="mail.host",
                         value="smtp.example.com",

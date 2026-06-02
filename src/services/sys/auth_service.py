@@ -5,17 +5,97 @@ from fastapi.exceptions import HTTPException
 from src.core.auth import create_token_pair, token_manager, verify_token
 from src.core.config import settings
 from src.core.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_FORBIDDEN,
     HTTP_UNAUTHORIZED,
+    ROLE_PLATFORM_NORMAL_USER,
 )
 from src.core.log import logger
 from src.core.storage import TransactionManager
+from src.repositories.sys.role_repository import role_repository
 from src.repositories.sys.user_repository import user_repository
-from src.schemas.sys.login import CredentialsSchema, RefreshTokenRequest
+from src.schemas.sys.login import (
+    CredentialsSchema,
+    RefreshTokenRequest,
+    UserRegisterSchema,
+)
+from src.schemas.sys.users import UserCreate
 
 
 class AuthService:
     def __init__(self):
         self.logger = logger
+
+    def register(self, register_in: UserRegisterSchema) -> dict[str, Any]:
+        """
+        用户自主注册
+        """
+        self.logger.info(f"用户注册尝试: username={register_in.username}")
+
+        if not settings.ALLOW_USER_REGISTRATION:
+            raise HTTPException(status_code=HTTP_FORBIDDEN, detail="用户注册功能已关闭")
+
+        with TransactionManager() as tm:
+            existing_user_by_username = user_repository.get_by_username(register_in.username, session=tm.session)
+            if existing_user_by_username:
+                raise HTTPException(
+                    status_code=HTTP_BAD_REQUEST,
+                    detail=f"用户名 '{register_in.username}' 已存在",
+                )
+
+            existing_user_by_email = user_repository.get_by_email(register_in.email, session=tm.session)
+            if existing_user_by_email:
+                raise HTTPException(
+                    status_code=HTTP_BAD_REQUEST,
+                    detail=f"邮箱 '{register_in.email}' 已存在",
+                )
+
+            user_create = UserCreate(
+                username=register_in.username,
+                email=register_in.email,
+                password=register_in.password,
+                role_ids=[],
+            )
+
+            new_user = user_repository.create_user(obj_in=user_create, session=tm.session)
+
+            default_role = tm.session.execute(
+                role_repository.model.__table__.select()
+                .where(role_repository.model.name == ROLE_PLATFORM_NORMAL_USER)
+            ).first()
+            if default_role:
+                user_repository.update_roles(new_user, [default_role.id], session=tm.session)
+                self.logger.info(f"用户 {register_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
+
+            tm.commit()
+
+        result = {
+            "id": new_user.id,
+            "username": new_user.username,
+            "email": new_user.email,
+            "created_at": new_user.created_at,
+        }
+
+        self.logger.info(f"用户注册成功: username={register_in.username}, user_id={new_user.id}")
+
+        if settings.AUTO_LOGIN_AFTER_REGISTER:
+            access_token, refresh_token = create_token_pair(
+                user_id=new_user.id, username=new_user.username
+            )
+
+            access_ttl = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            refresh_ttl = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+
+            token_manager.store_access_token(access_token, new_user.id, access_ttl)
+            token_manager.store_refresh_token(refresh_token, new_user.id, access_token, refresh_ttl)
+            token_manager.add_user_token(new_user.id, access_token, refresh_token, refresh_ttl)
+
+            result["access_token"] = access_token
+            result["refresh_token"] = refresh_token
+            result["token_type"] = "bearer"
+            result["expires_in"] = access_ttl
+
+        return result
 
     def login(self, credentials: CredentialsSchema) -> dict[str, Any]:
         self.logger.info(f"用户登录尝试: username={credentials.username}")

@@ -9,6 +9,7 @@ FastAPI 应用入口模块
 
 启动命令：uvicorn src:app --reload
 """
+from __future__ import annotations
 
 from fastapi import Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
@@ -22,7 +23,7 @@ except ImportError as e:
     raise SettingNotFound("Can not import settings") from e
 
 
-def create_app() -> FastAPI:
+def create_app():
     """
     创建并配置 FastAPI 应用实例
 
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
     )
     from src.core.auth import get_current_username, token_manager
     from src.core.handlers import init_data
+    from src.core.scheduler import scheduler_manager
     from src.core.storage import close_db
 
     app = FastAPI(
@@ -58,11 +60,13 @@ def create_app() -> FastAPI:
         """应用启动时执行的初始化任务"""
         token_manager.connect()
         init_data()
+        scheduler_manager.start()
 
     @app.on_event("shutdown")
     def shutdown_event():
         """应用关闭时执行的清理任务"""
         token_manager.disconnect()
+        scheduler_manager.shutdown()
         close_db()
 
     @app.get("/docs", include_in_schema=False)

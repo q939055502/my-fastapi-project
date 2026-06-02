@@ -1,9 +1,15 @@
 from sqlalchemy import Column, Integer, String, Text
 
-from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.base import (
+    BaseModel,
+    EnableStatusMixin,
+    RemarkMixin,
+    SoftDeleteMixin,
+    TimestampMixin,
+)
 
 
-class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
+class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin):
     """平台全局配置模型"""
     __tablename__ = "system_config"
 
@@ -13,7 +19,6 @@ class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     type = Column(String(20), default="string", comment="配置类型：string/int/json/boolean")
     group = Column(String(50), nullable=True, index=True, comment="配置分组")
     sort = Column(Integer, default=0, comment="排序")
-    status = Column(Integer, default=1, comment="状态（1=启用，0=禁用）")
 
     @property
     def typed_value(self):

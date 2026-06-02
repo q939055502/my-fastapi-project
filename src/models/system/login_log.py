@@ -1,16 +1,14 @@
 from sqlalchemy import Column, DateTime, Integer, String
 
-from src.models.base import BaseModel, TimestampMixin
+from src.models.base import BaseModel, LoginStatusMixin, SoftDeleteMixin, TimestampMixin
 
 
-class LoginLog(BaseModel, TimestampMixin):
+class LoginLog(BaseModel, TimestampMixin, SoftDeleteMixin, LoginStatusMixin):
     """登录日志模型"""
     __tablename__ = "login_log"
 
     user_id = Column(Integer, nullable=True, index=True, comment="用户ID")
     username = Column(String(64), nullable=False, index=True, comment="用户名")
-
-    status = Column(Integer, nullable=False, comment="登录状态（1=成功，0=失败）")
     ip = Column(String(50), nullable=True, index=True, comment="登录IP")
     location = Column(String(200), nullable=True, comment="登录地点")
     device = Column(String(100), nullable=True, comment="设备信息")

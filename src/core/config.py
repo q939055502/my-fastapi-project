@@ -55,6 +55,15 @@ class Settings(BaseSettings):
     # ========== 路径配置 ==========
     LOG_DIR: str = "./logs"
 
+    # ========== 日志配置 ==========
+    LOG_ACCESS_RETENTION_DAYS: int = 30      # 访问日志保留天数
+    LOG_ERROR_RETENTION_DAYS: int = 90       # 错误日志保留天数
+    LOG_BUSINESS_RETENTION_DAYS: int = 30    # 业务日志保留天数
+    LOG_SECURITY_RETENTION_DAYS: int = 180   # 安全日志保留天数
+    LOG_AUDIT_RETENTION_DAYS: int = 365     # 审计日志保留天数
+    LOG_ROTATION_SIZE: str = "100 MB"        # 日志轮转大小
+    LOG_COMPRESSION: str = "zip"             # 日志压缩格式
+
     # ========== 安全配置 ==========
     SECRET_KEY: str = secrets.token_urlsafe(32)
     JWT_ALGORITHM: str = "HS256"
@@ -92,6 +101,21 @@ class Settings(BaseSettings):
     L1_CACHE_ENABLED: bool = True
     L1_CACHE_MAXSIZE: int = 1000
     L1_CACHE_TTL: int = 300
+
+    # ========== 注册配置 ==========
+    ALLOW_USER_REGISTRATION: bool = True
+    AUTO_LOGIN_AFTER_REGISTER: bool = True
+
+    # ========== 调度器配置 ==========
+    SCHEDULER_ENABLED: bool = True
+    # 日志清理配置（天）
+    SCHEDULER_LOGIN_LOG_RETENTION_DAYS: int = 90
+    SCHEDULER_OPERATION_LOG_RETENTION_DAYS: int = 180
+    # 软删除数据清理配置（天）
+    SCHEDULER_SOFT_DELETE_RETENTION_DAYS: int = 30
+    # Cron 表达式配置
+    SCHEDULER_CLEAN_LOG_CRON: str = "0 2 * * *"  # 每天凌晨 2 点执行
+    SCHEDULER_CLEAN_SOFT_DELETE_CRON: str = "0 3 * * 0"  # 每周日凌晨 3 点执行
 
     # ========== 其他配置 ==========
     DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"

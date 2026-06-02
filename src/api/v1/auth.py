@@ -1,5 +1,5 @@
 """
-认证接口（登录、Token刷新）
+认证接口（注册、登录、Token刷新）
 """
 
 from fastapi import APIRouter, Request
@@ -11,10 +11,27 @@ from src.schemas.sys.login import (
     JWTOut,
     RefreshTokenRequest,
     TokenRefreshOut,
+    UserRegisterSchema,
 )
 from src.services.sys.auth_service import auth_service
 
 router = APIRouter(tags=["认证"])
+
+
+@router.post("/register", summary="用户注册")
+@apply_rate_limit("10/minute")
+def user_register(request: Request, register_in: UserRegisterSchema):
+    """
+    用户自主注册接口
+
+    【类型】公开接口（无需登录）
+    【权限】无需认证
+    【限流】10次/分钟（防恶意注册）
+    【功能】创建新用户账户，默认分配普通用户角色
+    【自动登录】配置开启时，注册成功后自动返回登录Token
+    """
+    result = auth_service.register(register_in)
+    return success(data=result, msg="注册成功")
 
 
 @router.post("/login", summary="用户登录")

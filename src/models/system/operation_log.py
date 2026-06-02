@@ -1,9 +1,9 @@
 from sqlalchemy import JSON, Column, Integer, String, Text
 
-from src.models.base import BaseModel, TimestampMixin
+from src.models.base import BaseModel, SoftDeleteMixin, TimestampMixin
 
 
-class OperationLog(BaseModel, TimestampMixin):
+class OperationLog(BaseModel, TimestampMixin, SoftDeleteMixin):
     """业务操作日志模型"""
     __tablename__ = "operation_log"
 

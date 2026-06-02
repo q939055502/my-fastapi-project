@@ -1,12 +1,17 @@
 from sqlalchemy import BigInteger, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.base import (
+    BaseModel,
+    EnableStatusMixin,
+    RemarkMixin,
+    SoftDeleteMixin,
+    TimestampMixin,
+)
+from src.models.iam.associations import role_resource_association
 
-from .associations import role_resource_association
 
-
-class Resource(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
+class Resource(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin):
     """统一资源表（合并菜单、API、按钮）"""
     __tablename__ = "iam_resource"
 
@@ -22,7 +27,6 @@ class Resource(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     path = Column(String(255), comment="路由路径（仅菜单用）")
     icon = Column(String(64), comment="图标（仅菜单用）")
     sort = Column(Integer, default=0, comment="排序")
-    status = Column(Integer, default=1, comment="1启用 0禁用")
 
     scene = Column(String(20), default="admin", nullable=False, comment="场景：admin/app/merchant")
     is_system = Column(Boolean, default=False, nullable=False, comment="系统内置资源，创建后不可修改")

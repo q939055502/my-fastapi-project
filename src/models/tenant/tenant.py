@@ -3,10 +3,17 @@ from datetime import UTC, datetime
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.base import (
+    BaseModel,
+    EnableStatusMixin,
+    RemarkMixin,
+    SoftDeleteMixin,
+    TenantStatusMixin,
+    TimestampMixin,
+)
 
 
-class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
+class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin):
     """租户套餐模型"""
     __tablename__ = "tenant_plan"
 
@@ -20,7 +27,6 @@ class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     price = Column(Integer, comment="价格（分）")
     features = Column(Text, comment="功能特性描述")
     available_modules = Column(String(500), comment="可用模块列表")
-    status = Column(Integer, default=1, comment="1启用 0禁用")
     sort = Column(Integer, default=0, comment="排序")
 
     def get_price_display(self) -> str:
@@ -30,7 +36,7 @@ class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
         return f"{self.price / 100:.2f} 元"
 
 
-class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
+class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStatusMixin):
     """租户模型 - 独立存在，有专属户主"""
     __tablename__ = "tenant"
 
@@ -38,7 +44,6 @@ class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     code = Column(String(50), unique=True, nullable=False, index=True, comment="租户编码")
     plan_id = Column(BigInteger, ForeignKey("tenant_plan.id"), nullable=False, comment="套餐ID")
     owner_user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=False, comment="户主用户ID")
-    status = Column(String(20), default="active", comment="状态：active/suspended/trial/expired")
 
     contact_name = Column(String(50), nullable=True, comment="联系人姓名")
     contact_phone = Column(String(20), nullable=True, comment="联系人电话")
