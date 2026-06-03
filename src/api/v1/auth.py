@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter, Request
 
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.exceptions.exception import BusinessException
 from src.core.handlers import gen_swagger_response, success
 from src.core.handlers.response import ApiResponse
@@ -33,7 +33,7 @@ router = APIRouter(
     response_model=ApiResponse[UserRegisterOut],
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="用户名或邮箱已存在"
         ),
     },
@@ -51,7 +51,7 @@ def user_register(request: Request, register_in: UserRegisterSchema):
     """
     result = auth_service.register(register_in)
     if not result:
-        raise BusinessException(ErrorCode.DATA_ALREADY_EXIST)
+        raise BusinessException(ResponseCode.DATA_ALREADY_EXIST)
     return success(data=result, msg="注册成功")
 
 
@@ -61,12 +61,12 @@ def user_register(request: Request, register_in: UserRegisterSchema):
     response_model=ApiResponse[JWTOut],
     responses={
         200: gen_swagger_response(
-            codes=[ErrorCode.SUCCESS],
+            codes=[ResponseCode.SUCCESS],
             description="登录成功",
             example_data={"access_token": "xxx", "refresh_token": "yyy", "token_type": "bearer"}
         ),
         401: gen_swagger_response(
-            codes=[ErrorCode.UNAUTHORIZED, ErrorCode.TOKEN_EXPIRED, ErrorCode.TOKEN_FORMAT_INVALID],
+            codes=[ResponseCode.UNAUTHORIZED, ResponseCode.TOKEN_EXPIRED, ResponseCode.TOKEN_FORMAT_INVALID],
             description="未授权/Token异常"
         ),
     },
@@ -83,7 +83,7 @@ def login_access_token(request: Request, credentials: CredentialsSchema):
     """
     auth_data = auth_service.login(credentials)
     if not auth_data:
-        raise BusinessException(ErrorCode.UNAUTHORIZED)
+        raise BusinessException(ResponseCode.UNAUTHORIZED)
     data = JWTOut(**auth_data)
     return success(data=data.model_dump())
 
@@ -94,7 +94,7 @@ def login_access_token(request: Request, credentials: CredentialsSchema):
     response_model=ApiResponse[TokenRefreshOut],
     responses={
         401: gen_swagger_response(
-            codes=[ErrorCode.UNAUTHORIZED, ErrorCode.TOKEN_EXPIRED, ErrorCode.TOKEN_FORMAT_INVALID],
+            codes=[ResponseCode.UNAUTHORIZED, ResponseCode.TOKEN_EXPIRED, ResponseCode.TOKEN_FORMAT_INVALID],
             description="Token已过期或无效"
         ),
     },
@@ -111,6 +111,6 @@ def refresh_access_token(request: Request, refresh_request: RefreshTokenRequest)
     """
     auth_data = auth_service.refresh_token(refresh_request)
     if not auth_data:
-        raise BusinessException(ErrorCode.UNAUTHORIZED)
+        raise BusinessException(ResponseCode.UNAUTHORIZED)
     data = TokenRefreshOut(**auth_data)
     return success(data=data.model_dump())

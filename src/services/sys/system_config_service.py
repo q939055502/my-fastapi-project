@@ -1,9 +1,7 @@
-from fastapi.exceptions import HTTPException
 from sqlalchemy import asc, select
 
-from src.core.constants import (
-    HTTP_NOT_FOUND,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.storage import TransactionManager
 from src.models.system import SystemConfig
 from src.repositories.sys.system_config_repository import system_config_repository
@@ -40,7 +38,7 @@ class SystemConfigService:
             for code, value in config_update.configs.items():
                 config_obj = system_config_repository.get_by_code(code, session=tm.session)
                 if not config_obj:
-                    raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"配置项不存在: {code}")
+                    raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail=f"配置项不存在: {code}")
 
                 config_obj.value = value
 

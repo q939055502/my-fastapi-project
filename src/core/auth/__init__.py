@@ -17,19 +17,6 @@ from .auth_context import (
     get_current_tenant_id,
     get_current_user_id,
 )
-
-# 保留旧的 ContextVar 导出以保持向后兼容
-from .context import (
-    CTX_BG_TASKS,
-    CTX_MEMBER_ID,
-    CTX_REQUEST_ID,
-    CTX_TENANT_ID,
-    CTX_USER_ID,
-    clear_context,
-    set_current_member_id,
-    set_current_tenant_id,
-    set_current_user_id,
-)
 from .dependency import AuthControl, PermissionControl, get_current_username
 from .security import (
     check_perm_match,
@@ -63,7 +50,7 @@ __all__ = [
     "AuthControl",
     "PermissionControl",
     "get_current_username",
-    # auth_context (新方案)
+    # auth_context
     "AuthContext",
     "get_auth_context",
     "get_current_user_id",
@@ -71,16 +58,6 @@ __all__ = [
     "get_current_tenant_id",
     "get_current_request_id",
     "get_current_client_ip",
-    # context (旧方案，保持兼容)
-    "CTX_USER_ID",
-    "CTX_MEMBER_ID",
-    "CTX_TENANT_ID",
-    "CTX_BG_TASKS",
-    "CTX_REQUEST_ID",
-    "set_current_user_id",
-    "set_current_member_id",
-    "set_current_tenant_id",
-    "clear_context",
     # token
     "token_manager",
 ]

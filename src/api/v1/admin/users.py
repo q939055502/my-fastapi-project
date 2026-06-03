@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Body, Query, Request
 
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success, success_page
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -19,7 +19,7 @@ router = APIRouter(
     summary="创建用户",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="用户名或邮箱已存在"
         ),
     },
@@ -35,7 +35,7 @@ def create_user(request: Request, user_in: UserCreate):
     summary="更新用户",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="用户不存在"
         ),
     },
@@ -51,7 +51,7 @@ def update_user(request: Request, user_id: int, user_in: UserUpdate):
     summary="重置密码",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="用户不存在"
         ),
     },
@@ -87,7 +87,7 @@ def list_user(
     summary="获取用户详情",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="用户不存在"
         ),
     },
@@ -103,7 +103,7 @@ def get_user(request: Request, user_id: int):
     summary="删除用户",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="用户不存在"
         ),
     },

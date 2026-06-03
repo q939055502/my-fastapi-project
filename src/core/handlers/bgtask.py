@@ -6,7 +6,7 @@
 
 from starlette.background import BackgroundTasks
 
-from src.core.auth import CTX_BG_TASKS
+from src.core.handlers.bgtask_context import CTX_BG_TASKS
 
 
 class BgTasks:
@@ -19,7 +19,7 @@ class BgTasks:
         CTX_BG_TASKS.set(bg_tasks)
 
     @classmethod
-    def get_bg_tasks_obj(cls):
+    def get_bg_tasks_obj(cls) -> BackgroundTasks | None:
         """从上下文获取后台任务实例"""
         return CTX_BG_TASKS.get()
 
@@ -27,11 +27,12 @@ class BgTasks:
     def add_task(cls, func, *args, **kwargs):
         """添加后台任务"""
         bg_tasks = cls.get_bg_tasks_obj()
-        bg_tasks.add_task(func, *args, **kwargs)
+        if bg_tasks:
+            bg_tasks.add_task(func, *args, **kwargs)
 
     @classmethod
     def execute_tasks(cls):
         """执行后台任务，一般是请求结果返回之后执行"""
         bg_tasks = cls.get_bg_tasks_obj()
-        if bg_tasks.tasks:
+        if bg_tasks and bg_tasks.tasks:
             return bg_tasks()

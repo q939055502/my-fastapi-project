@@ -13,9 +13,8 @@ import jwt
 from passlib.context import CryptContext
 
 from src.core.config import settings
-from src.core.constants import (
-    HTTP_UNAUTHORIZED,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -67,21 +66,20 @@ def create_refresh_token(user_id: int, username: str) -> str:
 
 def verify_token(token: str, token_type: str = "access") -> dict:
     """验证令牌并返回载荷"""
-    from fastapi import HTTPException
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
 
         if payload.get("token_type") != token_type:
-            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="无效的Token")
+            raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token")
 
         return payload
 
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="登录已过期") from None
+        raise BusinessException(ResponseCode.UNAUTHORIZED, "登录已过期") from None
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="无效的Token") from None
+        raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token") from None
 
 
 def parse_jwt_token(token: str) -> dict | None:

@@ -2,15 +2,12 @@
 用户个人管理接口
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from src.core.auth import AuthControl, token_manager
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_UNAUTHORIZED,
-)
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.handlers import success
 from src.core.handlers.response import gen_swagger_response
 from src.core.log import logger
@@ -36,7 +33,7 @@ class LogoutRequest(BaseModel):
     summary="修改密码",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.PARAM_ERROR],
+            codes=[ResponseCode.PARAM_ERROR],
             description="旧密码错误"
         ),
     },
@@ -53,7 +50,7 @@ def change_password(
         new_password=password_in.new_password,
     )
     if not result:
-        raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="旧密码错误")
+        raise BusinessException(ResponseCode.PARAM_ERROR, detail="旧密码错误")
 
     token_manager.revoke_user_all_tokens(current_user.id)
     logger.info(f"密码修改成功，已强制所有设备下线 - user_id={current_user.id}")
@@ -70,7 +67,7 @@ def logout(
 ):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="认证失败")
+        raise BusinessException(ResponseCode.UNAUTHORIZED, detail="认证失败")
 
     access_token = auth_header[len("Bearer "):]
 

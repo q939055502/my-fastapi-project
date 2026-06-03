@@ -3,15 +3,12 @@ import string
 from datetime import datetime
 from typing import Optional
 
-from fastapi.exceptions import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.core.auth import get_password_hash, verify_password
-from src.core.constants import (
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.models.iam import User
 from src.repositories.base import GenericRepository
 from src.schemas.sys.login import CredentialsSchema
@@ -79,7 +76,7 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         if not user:
             logger.warning(f"Authentication failed - user not found: {credentials.username}")
             self._delay_for_security()
-            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户名或密码错误")
+            raise BusinessException(ResponseCode.UNAUTHORIZED, "用户名或密码错误")
 
         verified = verify_password(credentials.password, user.password)
         logger.info(f"Password verification - username: {credentials.username}, verified: {verified}")
@@ -87,13 +84,13 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         if not verified:
             logger.warning(f"Authentication failed - wrong password: {credentials.username}")
             self._delay_for_security()
-            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户名或密码错误")
+            raise BusinessException(ResponseCode.UNAUTHORIZED, "用户名或密码错误")
 
         logger.info(f"User status check - username: {credentials.username}, is_active: {user.is_active}")
 
         if not user.is_active:
             logger.warning(f"Authentication failed - user disabled: {credentials.username}")
-            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户已被禁用")
+            raise BusinessException(ResponseCode.UNAUTHORIZED, "用户已被禁用")
 
         logger.info(f"Authentication successful - username: {credentials.username}, user_id: {user.id}")
         return user
@@ -112,7 +109,7 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
     def reset_password(self, user_id: int, session: Session) -> str:
         user_obj = self.get(id=user_id, session=session)
         if not user_obj:
-            raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
+            raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, "用户不存在")
         new_password = self._generate_secure_password()
         user_obj.password = get_password_hash(password=new_password)
         return new_password

@@ -1,7 +1,5 @@
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_NOT_FOUND,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.sys.resource_repository import resource_repository
 from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
@@ -14,8 +12,7 @@ class ResourceService:
         with TransactionManager() as tm:
             resource = resource_repository.get_by_id(resource_id, tm.session)
             if not resource:
-                from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="资源不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="资源不存在")
             return self._transform_resource(resource)
 
     def get_resource_list(self, type: int | None = None, name: str = "", page: int = 1, page_size: int = 10):
@@ -38,8 +35,7 @@ class ResourceService:
     def create_resource(self, resource_in: ResourceCreate):
         with TransactionManager() as tm:
             if resource_repository.exists_by_code(resource_in.code, session=tm.session):
-                from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="资源编码已存在")
+                raise BusinessException(ResponseCode.PARAM_ERROR, detail="资源编码已存在")
 
             resource_data = resource_in.model_dump()
             resource = resource_repository.create(resource_data, tm.session)
@@ -49,13 +45,11 @@ class ResourceService:
     def update_resource(self, resource_id: int, resource_in: ResourceUpdate):
         with TransactionManager() as tm:
             if resource_in.code and resource_repository.exists_by_code(resource_in.code, exclude_id=resource_id, session=tm.session):
-                from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="资源编码已存在")
+                raise BusinessException(ResponseCode.PARAM_ERROR, detail="资源编码已存在")
 
             resource = resource_repository.update(resource_id, resource_in.model_dump(exclude_unset=True), tm.session)
             if not resource:
-                from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="资源不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="资源不存在")
             tm.commit()
             return self._transform_resource(resource)
 
@@ -63,8 +57,7 @@ class ResourceService:
         with TransactionManager() as tm:
             success = resource_repository.delete(resource_id, tm.session)
             if not success:
-                from fastapi.exceptions import HTTPException
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="资源不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="资源不存在")
             tm.commit()
 
     def get_resource_types(self):

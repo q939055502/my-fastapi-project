@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.core.auth import AuthControl
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -26,7 +26,7 @@ router = APIRouter(
     summary="创建租户",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="租户名称已存在"
         ),
     },
@@ -43,7 +43,7 @@ def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User 
     summary="邀请用户加入租户",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },
@@ -73,7 +73,7 @@ def get_my_tenants(request: Request, current_user: User = Depends(AuthControl.is
     summary="获取租户成员列表",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },
@@ -93,7 +93,7 @@ def get_tenant_members(request: Request, tenant_id: int, current_user: User = De
     summary="获取用户在租户中的身份",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },
@@ -114,7 +114,7 @@ def get_user_tenant_relation(
     summary="移除租户成员",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户或成员不存在"
         ),
     },

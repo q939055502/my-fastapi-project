@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from src.core.auth import AuthControl, get_current_user_id
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success
 from src.core.handlers.response import gen_swagger_response
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
@@ -32,7 +32,7 @@ def get_my_bindings(
     summary="绑定手机号",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="手机号已被绑定"
         ),
     },
@@ -52,7 +52,7 @@ def bind_phone(
     summary="解绑手机号",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="绑定记录不存在"
         ),
     },

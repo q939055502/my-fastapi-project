@@ -5,7 +5,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 
 from src.core.auth import PermissionControl
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success, success_page
 from src.core.handlers.response import ApiResponse, gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -29,7 +29,7 @@ router = APIRouter(
     response_model=ApiResponse[TenantPlanBase],
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="套餐名称已存在"
         ),
     },
@@ -50,7 +50,7 @@ def create_plan(
     response_model=ApiResponse,
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="套餐不存在"
         ),
     },
@@ -93,7 +93,7 @@ def list_plans(
     response_model=ApiResponse[TenantPlanBase],
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="套餐不存在"
         ),
     },
@@ -114,7 +114,7 @@ def get_plan(
     response_model=ApiResponse,
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="套餐不存在"
         ),
     },

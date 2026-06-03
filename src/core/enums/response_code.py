@@ -1,7 +1,8 @@
 from enum import IntEnum
 
 
-class ErrorCode(IntEnum):
+# 响应码枚举，具体响应消息在settings/response_msg.yaml中配置
+class ResponseCode(IntEnum):
     # 200 开头：业务成功/失败
     SUCCESS = 20000
     DATA_NOT_EXIST = 20001
@@ -47,4 +48,3 @@ class ErrorCode(IntEnum):
     SERVER_ERROR = 50000
     DATABASE_ERROR = 50001
     THIRD_PARTY_ERROR = 50002
-

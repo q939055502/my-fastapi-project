@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Query, Request
 
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success, success_page
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -22,7 +22,7 @@ router = APIRouter(
     summary="创建角色/职位",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="角色名称已存在"
         ),
     },
@@ -38,7 +38,7 @@ def create_role(request: Request, role_in: RoleCreate):
     summary="更新角色/职位",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="角色不存在"
         ),
     },
@@ -54,7 +54,7 @@ def update_role(request: Request, role_id: int, role_in: RoleUpdate):
     summary="更新角色/职位权限",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="角色不存在"
         ),
     },
@@ -86,7 +86,7 @@ def list_role(
     summary="获取角色/职位详情",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="角色不存在"
         ),
     },
@@ -102,7 +102,7 @@ def get_role(request: Request, role_id: int):
     summary="获取角色/职位权限",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="角色不存在"
         ),
     },
@@ -118,7 +118,7 @@ def get_role_authorized(request: Request, role_id: int):
     summary="删除角色/职位",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="角色不存在"
         ),
     },

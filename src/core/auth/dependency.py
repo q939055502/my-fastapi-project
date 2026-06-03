@@ -12,15 +12,13 @@ import re
 import secrets
 
 import jwt
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer
 
 from src.core.auth.token import token_manager
 from src.core.config import settings
-from src.core.constants import (
-    HTTP_FORBIDDEN,
-    HTTP_UNAUTHORIZED,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.log import get_ctx_logger
 from src.core.storage import TransactionManager
 
@@ -50,11 +48,7 @@ def get_current_username(
         credentials.password, settings.SWAGGER_UI_PASSWORD
     )
     if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=HTTP_UNAUTHORIZED,
-            detail="Authentication Required",
-            headers={"WWW-Authenticate": "Basic"},
-        )
+        raise BusinessException(ResponseCode.UNAUTHORIZED, "Authentication Required")
     return credentials.username
 
 
@@ -82,9 +76,7 @@ class AuthControl:
             if not access_token_str:
                 get_ctx_logger().debug("认证失败: 缺少token")
                 if raise_exc:
-                    raise HTTPException(
-                        status_code=HTTP_UNAUTHORIZED, detail="Missing authentication token"
-                    )
+                    raise BusinessException(ResponseCode.UNAUTHORIZED, "Missing authentication token")
                 return None
 
             # 1. 先从 Redis 验证令牌是否存在
@@ -94,7 +86,7 @@ class AuthControl:
             if not is_valid:
                 get_ctx_logger().debug("认证失败: 令牌无效或已撤销")
                 if raise_exc:
-                    raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="令牌已被撤销或失效")
+                    raise BusinessException(ResponseCode.UNAUTHORIZED, "令牌已被撤销或失效")
                 return None
 
             # 2. 再验证 JWT（作为额外安全检查）
@@ -125,7 +117,7 @@ class AuthControl:
             if not user:
                 get_ctx_logger().debug(f"认证失败: 用户不存在 user_id={user_id}")
                 if raise_exc:
-                    raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="Authentication failed")
+                    raise BusinessException(ResponseCode.UNAUTHORIZED, "Authentication failed")
                 return None
 
             get_ctx_logger().debug(f"用户认证成功: user_id={user.id}")
@@ -133,21 +125,21 @@ class AuthControl:
         except jwt.DecodeError as e:
             get_ctx_logger().debug(f"JWT解码错误: {str(e)}")
             if raise_exc:
-                raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="无效的Token") from e
+                raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token") from e
             return None
         except jwt.ExpiredSignatureError as e:
             get_ctx_logger().debug(f"JWT过期: {str(e)}")
             if raise_exc:
-                raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="登录已过期") from e
+                raise BusinessException(ResponseCode.UNAUTHORIZED, "登录已过期") from e
             return None
-        except HTTPException:
+        except BusinessException:
             if raise_exc:
                 raise
             return None
         except Exception as e:
             get_ctx_logger().debug(f"认证异常: {str(e)}")
             if raise_exc:
-                raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="认证失败") from e
+                raise BusinessException(ResponseCode.UNAUTHORIZED, "认证失败") from e
             return None
 
     @classmethod
@@ -212,9 +204,7 @@ class PermissionControl:
         roles = current_user.roles
 
         if not roles:
-            raise HTTPException(
-                status_code=HTTP_FORBIDDEN, detail="用户未绑定角色"
-            )
+            raise BusinessException(ResponseCode.FORBIDDEN, "用户未绑定角色")
 
         # 超级管理员特殊放行：如果用户有平台超级管理员角色，直接允许
         for role in roles:
@@ -232,4 +222,4 @@ class PermissionControl:
                 if re.match(pattern, path):
                     return
 
-        raise HTTPException(status_code=HTTP_FORBIDDEN, detail="无此API访问权限")
+        raise BusinessException(ResponseCode.FORBIDDEN, "无此API访问权限")

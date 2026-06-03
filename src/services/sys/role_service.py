@@ -1,11 +1,7 @@
-from fastapi.exceptions import HTTPException
 from sqlalchemy import asc
 
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_FORBIDDEN,
-    HTTP_NOT_FOUND,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.sys.role_repository import role_repository
 from src.schemas.sys.roles import RoleCreate, RoleUpdate
@@ -43,7 +39,7 @@ class RoleService:
         with TransactionManager() as tm:
             role_obj = role_repository.get(id=role_id, session=tm.session)
             if not role_obj:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
             role_dict = {}
             for column in role_obj.__table__.columns:
@@ -70,15 +66,15 @@ class RoleService:
     def create_role(self, role_in: RoleCreate) -> None:
         with TransactionManager() as tm:
             if getattr(role_in, "is_system", False):
-                raise HTTPException(
-                    status_code=HTTP_FORBIDDEN,
+                raise BusinessException(
+                    ResponseCode.FORBIDDEN,
                     detail="禁止创建系统内置角色/职位",
                 )
 
             existing_role = role_repository.is_exist(role_in.name, session=tm.session)
             if existing_role:
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail="该角色/职位名称已存在",
                 )
 
@@ -90,19 +86,19 @@ class RoleService:
         with TransactionManager() as tm:
             existing_role = role_repository.get(id=role_id, session=tm.session)
             if not existing_role:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
             if existing_role.is_system:
-                raise HTTPException(
-                    status_code=HTTP_FORBIDDEN,
+                raise BusinessException(
+                    ResponseCode.FORBIDDEN,
                     detail="系统内置角色/职位不可修改",
                 )
 
             if role_in.name != existing_role.name:
                 existing_by_name = role_repository.is_exist(role_in.name, session=tm.session)
                 if existing_by_name:
-                    raise HTTPException(
-                        status_code=HTTP_BAD_REQUEST,
+                    raise BusinessException(
+                        ResponseCode.PARAM_ERROR,
                         detail="该角色/职位名称已存在",
                     )
 
@@ -113,11 +109,11 @@ class RoleService:
         with TransactionManager() as tm:
             role_obj = role_repository.get(id=role_id, session=tm.session)
             if not role_obj:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
             if role_obj.is_system:
-                raise HTTPException(
-                    status_code=HTTP_FORBIDDEN,
+                raise BusinessException(
+                    ResponseCode.FORBIDDEN,
                     detail="系统内置角色/职位不可修改权限",
                 )
 
@@ -128,11 +124,11 @@ class RoleService:
         with TransactionManager() as tm:
             existing_role = role_repository.get(id=role_id, session=tm.session)
             if not existing_role:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="角色/职位不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
             if existing_role.is_system:
-                raise HTTPException(
-                    status_code=HTTP_FORBIDDEN,
+                raise BusinessException(
+                    ResponseCode.FORBIDDEN,
                     detail="系统内置角色/职位不可删除",
                 )
 

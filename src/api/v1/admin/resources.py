@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Request
 
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success, success_page
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -19,7 +19,7 @@ router = APIRouter(
     summary="创建资源",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="资源名称已存在"
         ),
     },
@@ -35,7 +35,7 @@ def create_resource(request: Request, resource_in: ResourceCreate):
     summary="更新资源",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="资源不存在"
         ),
     },
@@ -71,7 +71,7 @@ def get_resource_types(request: Request):
     summary="获取资源详情",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="资源不存在"
         ),
     },
@@ -87,7 +87,7 @@ def get_resource(request: Request, resource_id: int):
     summary="删除资源",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="资源不存在"
         ),
     },

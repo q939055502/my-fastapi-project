@@ -1,15 +1,10 @@
 import uuid
 from pathlib import Path
 
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 
-from src.core.auth import CTX_USER_ID
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.file_mapping_repository import file_mapping_repository
@@ -38,10 +33,10 @@ class FileService:
         self.uploads_dir = Path(UPLOADS_DIR)
         self.uploads_dir.mkdir(exist_ok=True)
 
-    def upload_file(self, file: UploadFile) -> Success:
+    def upload_file(self, file: UploadFile, user_id: int | None = None) -> Success:
         try:
             with TransactionManager() as tm:
-                user = self._authenticate_user(tm.session)
+                user = self._authenticate_user(tm.session, user_id)
 
                 self._validate_file_security(file)
 
@@ -76,37 +71,36 @@ class FileService:
                 msg="文件上传成功",
             )
 
-        except HTTPException:
+        except BusinessException:
             raise
         except Exception as e:
             logger.error(f"文件上传失败: {str(e)}")
-            raise HTTPException(status_code=HTTP_INTERNAL_SERVER_ERROR, detail="文件上传失败") from e
+            raise BusinessException(ResponseCode.SERVER_ERROR, detail="文件上传失败") from e
 
-    def _authenticate_user(self, session):
-        user_id = CTX_USER_ID.get()
+    def _authenticate_user(self, session, user_id: int | None):
         if not user_id:
-            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="Authentication Required")
+            raise BusinessException(ResponseCode.UNAUTHORIZED, detail="Authentication Required")
 
         user = user_repository.get(user_id, session=session)
         if not user:
-            raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
+            raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="用户不存在")
 
         return user
 
     def _validate_file_security(self, file: UploadFile) -> None:
         if not file.filename:
-            raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="文件名不能为空")
+            raise BusinessException(ResponseCode.PARAM_ERROR, detail="文件名不能为空")
 
         file_ext = Path(file.filename).suffix.lower()
 
         if file_ext in DANGEROUS_EXTENSIONS:
-            raise HTTPException(
-                status_code=HTTP_BAD_REQUEST, detail=f"不允许上传的文件类型: {file_ext}"
+            raise BusinessException(
+                ResponseCode.PARAM_ERROR, detail=f"不允许上传的文件类型: {file_ext}"
             )
 
         if file_ext and file_ext not in ALLOWED_EXTENSIONS:
-            raise HTTPException(
-                status_code=HTTP_BAD_REQUEST,
+            raise BusinessException(
+                ResponseCode.PARAM_ERROR,
                 detail=f"不支持的文件类型: {file_ext}，允许的类型: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
             )
 
@@ -118,8 +112,8 @@ class FileService:
         content = file.file.read()
 
         if len(content) > MAX_FILE_SIZE:
-            raise HTTPException(
-                status_code=HTTP_BAD_REQUEST,
+            raise BusinessException(
+                ResponseCode.PARAM_ERROR,
                 detail=f"文件大小超过限制 {MAX_FILE_SIZE // (1024 * 1024)}MB",
             )
 

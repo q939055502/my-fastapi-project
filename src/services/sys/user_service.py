@@ -1,14 +1,10 @@
-from fastapi.exceptions import HTTPException
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
 from src.core.auth import get_password_hash, verify_password
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_FORBIDDEN,
-    HTTP_NOT_FOUND,
-    ROLE_PLATFORM_NORMAL_USER,
-)
+from src.core.constants import ROLE_PLATFORM_NORMAL_USER
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.log import logger
 from src.core.storage.cache.cache_manager import cache_manager, clear_user_cache
 from src.core.storage.transaction_manager import TransactionManager
@@ -30,8 +26,8 @@ class UserService:
 
         for role in roles:
             if role.is_system:
-                raise HTTPException(
-                    status_code=HTTP_FORBIDDEN,
+                raise BusinessException(
+                    ResponseCode.FORBIDDEN,
                     detail=f"禁止分配系统内置角色 '{role.name}'",
                 )
 
@@ -82,7 +78,7 @@ class UserService:
         with TransactionManager() as tm:
             user_obj = user_repository.get_with_roles(id=user_id, session=tm.session)
             if not user_obj:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
             return self._user_to_dict(user_obj, include_roles=True)
 
@@ -92,15 +88,15 @@ class UserService:
         with TransactionManager() as tm:
             existing_user_by_username = user_repository.get_by_username(user_in.username, session=tm.session)
             if existing_user_by_username:
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail=f"用户名 '{user_in.username}' 已存在",
                 )
 
             existing_user_by_email = user_repository.get_by_email(user_in.email, session=tm.session)
             if existing_user_by_email:
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail=f"邮箱 '{user_in.email}' 已存在",
                 )
 
@@ -129,8 +125,8 @@ class UserService:
             except IntegrityError as e:
                 tm.rollback()
                 logger.error(f"用户创建失败: {user_in.username}, 错误: {e}")
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail="用户创建失败，可能用户名或邮箱已存在",
                 ) from e
 
@@ -140,21 +136,21 @@ class UserService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
             if user_in.username and user_in.username != user.username:
                 existing_user = user_repository.get_by_username(user_in.username, session=tm.session)
                 if existing_user:
-                    raise HTTPException(
-                        status_code=HTTP_BAD_REQUEST,
+                    raise BusinessException(
+                        ResponseCode.PARAM_ERROR,
                         detail=f"用户名 '{user_in.username}' 已存在",
                     )
 
             if user_in.email and user_in.email != user.email:
                 existing_user = user_repository.get_by_email(user_in.email, session=tm.session)
                 if existing_user:
-                    raise HTTPException(
-                        status_code=HTTP_BAD_REQUEST,
+                    raise BusinessException(
+                        ResponseCode.PARAM_ERROR,
                         detail=f"邮箱 '{user_in.email}' 已存在",
                     )
 
@@ -164,8 +160,8 @@ class UserService:
 
             if user_in.role_ids is not None:
                 if len(user_in.role_ids) == 0:
-                    raise HTTPException(
-                        status_code=HTTP_BAD_REQUEST,
+                    raise BusinessException(
+                        ResponseCode.PARAM_ERROR,
                         detail="用户必须至少绑定一个角色",
                     )
 
@@ -182,7 +178,7 @@ class UserService:
         with TransactionManager() as tm:
             success = user_repository.delete(id=user_id, session=tm.session)
             if not success:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
             tm.commit()
 
@@ -205,7 +201,7 @@ class UserService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="用户不存在")
 
             if not verify_password(old_password, user.password):
                 logger.warning(f"用户密码修改失败: 旧密码错误, user_id={user_id}")

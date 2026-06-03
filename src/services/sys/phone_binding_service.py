@@ -1,12 +1,7 @@
 from typing import Any
 
-from fastapi.exceptions import HTTPException
-
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_FORBIDDEN,
-    HTTP_NOT_FOUND,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.phone_binding_repository import phone_binding_repository
@@ -30,17 +25,17 @@ class PhoneBindingService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="用户不存在")
 
             if is_primary:
                 existing_primary = phone_binding_repository.get_primary_binding(phone, tm.session)
                 if existing_primary:
-                    raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="该手机号已绑定自有账号")
+                    raise BusinessException(ResponseCode.PARAM_ERROR, detail="该手机号已绑定自有账号")
             else:
                 existing_bindings = phone_binding_repository.get_by_phone(phone, tm.session)
                 for binding in existing_bindings:
                     if binding.user_id == user_id:
-                        raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="该手机号已绑定")
+                        raise BusinessException(ResponseCode.PARAM_ERROR, detail="该手机号已绑定")
 
             binding = phone_binding_repository.create_binding(
                 phone=phone,
@@ -68,13 +63,13 @@ class PhoneBindingService:
         with TransactionManager() as tm:
             binding = phone_binding_repository.get(id=binding_id, session=tm.session)
             if not binding:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="绑定记录不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="绑定记录不存在")
 
             if binding.user_id != user_id:
-                raise HTTPException(status_code=HTTP_FORBIDDEN, detail="无权解绑此手机号")
+                raise BusinessException(ResponseCode.FORBIDDEN, detail="无权解绑此手机号")
 
             if binding.is_primary:
-                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="主绑定账号不允许解绑")
+                raise BusinessException(ResponseCode.PARAM_ERROR, detail="主绑定账号不允许解绑")
 
             phone_binding_repository.delete(id=binding_id, session=tm.session)
             tm.commit()

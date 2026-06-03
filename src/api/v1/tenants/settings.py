@@ -5,7 +5,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.core.auth import PermissionControl
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -22,7 +22,7 @@ router = APIRouter(
     summary="更新租户配置",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },
@@ -41,7 +41,7 @@ def update_tenant_config(
     summary="更新租户配额",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },
@@ -60,7 +60,7 @@ def update_tenant_quota(
     summary="获取租户配置",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },
@@ -79,7 +79,7 @@ def get_tenant_config(
     summary="获取租户配额",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="租户不存在"
         ),
     },

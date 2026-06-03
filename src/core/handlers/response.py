@@ -10,7 +10,7 @@ from typing import Any, Generic, TypeVar
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.settings.response_msg import RESPONSE_MSG
 
 T = TypeVar("T")
@@ -49,7 +49,7 @@ class PaginationInfo(BaseModel):
 def success(data: T | None = None, msg: str = "操作成功", request_id: str | None = None) -> ApiResponse[T]:
     """返回成功响应"""
     return ApiResponse(
-        code=ErrorCode.SUCCESS,
+        code=ResponseCode.SUCCESS,
         msg=msg,
         data=data,
         request_id=request_id
@@ -82,7 +82,7 @@ def success_page(
 
 
 def fail(
-    code: ErrorCode,
+    code: ResponseCode,
     detail: Any | None = None,
     custom_msg: str | None = None,
     request_id: str | None = None
@@ -103,7 +103,7 @@ def fail(
 
 
 def gen_swagger_response(
-    codes: list[int | ErrorCode],
+    codes: list[int | ResponseCode],
     description: str = "业务响应结果",
     example_data: dict | None = None,
     is_pagination: bool = False
@@ -111,7 +111,7 @@ def gen_swagger_response(
     """
     🔥 自动生成 Swagger 响应示例
 
-    :param codes: 业务码列表 [ErrorCode.SUCCESS, ErrorCode.DATA_NOT_EXIST, ...]
+    :param codes: 业务码列表 [ResponseCode.SUCCESS, ResponseCode.DATA_NOT_EXIST, ...]
     :param description: Swagger 描述
     :param example_data: 自定义示例数据（成功响应时使用）
     :param is_pagination: 是否分页响应

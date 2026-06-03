@@ -1,10 +1,7 @@
-from fastapi.exceptions import HTTPException
 from sqlalchemy import asc
 
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_NOT_FOUND,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.sys.dept_repository import dept_repository
 from src.schemas.sys.depts import DeptCreate, DeptUpdate
@@ -41,7 +38,7 @@ class DeptService:
         with TransactionManager() as tm:
             dept_obj = dept_repository.get(id=dept_id, session=tm.session)
             if not dept_obj:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="部门不存在")
 
             dept_dict = {}
             for column in dept_obj.__table__.columns:
@@ -60,7 +57,7 @@ class DeptService:
             if dept_in.parent_id != 0:
                 parent_dept = dept_repository.get(id=dept_in.parent_id, session=tm.session)
                 if not parent_dept:
-                    raise HTTPException(status_code=HTTP_NOT_FOUND, detail="父部门不存在")
+                    raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="父部门不存在")
 
             dept_repository.create_dept(obj_in=dept_in, session=tm.session)
 
@@ -70,15 +67,15 @@ class DeptService:
         with TransactionManager() as tm:
             existing_dept = dept_repository.get(id=dept_id, session=tm.session)
             if not existing_dept:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="部门不存在")
 
             if dept_in.parent_id != 0:
                 parent_dept = dept_repository.get(id=dept_in.parent_id, session=tm.session)
                 if not parent_dept:
-                    raise HTTPException(status_code=HTTP_NOT_FOUND, detail="父部门不存在")
+                    raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="父部门不存在")
 
             if dept_in.parent_id == dept_id:
-                raise HTTPException(status_code=HTTP_BAD_REQUEST, detail="父部门不能是自身")
+                raise BusinessException(ResponseCode.PARAM_ERROR, detail="父部门不能是自身")
 
             dept_repository.update_dept(dept_id=dept_id, obj_in=dept_in, session=tm.session)
 
@@ -88,7 +85,7 @@ class DeptService:
         with TransactionManager() as tm:
             existing_dept = dept_repository.get(id=dept_id, session=tm.session)
             if not existing_dept:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="部门不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="部门不存在")
 
             dept_repository.delete_dept(dept_id=dept_id, session=tm.session)
 

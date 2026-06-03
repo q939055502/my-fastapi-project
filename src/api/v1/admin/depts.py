@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Request
 
-from src.core.enums.error_code import ErrorCode
+from src.core.enums.response_code import ResponseCode
 from src.core.handlers import success
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
@@ -19,7 +19,7 @@ router = APIRouter(
     summary="创建部门",
     responses={
         400: gen_swagger_response(
-            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            codes=[ResponseCode.DATA_ALREADY_EXIST],
             description="部门名称已存在"
         ),
     },
@@ -35,7 +35,7 @@ def create_dept(request: Request, dept_in: DeptCreate):
     summary="更新部门",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="部门不存在"
         ),
     },
@@ -58,7 +58,7 @@ def list_dept(request: Request, name: str = Query(None, description="部门名�
     summary="获取部门详情",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="部门不存在"
         ),
     },
@@ -74,7 +74,7 @@ def get_dept(request: Request, dept_id: int):
     summary="删除部门",
     responses={
         404: gen_swagger_response(
-            codes=[ErrorCode.DATA_NOT_EXIST],
+            codes=[ResponseCode.DATA_NOT_EXIST],
             description="部门不存在"
         ),
     },

@@ -1,10 +1,7 @@
-from fastapi.exceptions import HTTPException
 from sqlalchemy import asc
 
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_NOT_FOUND,
-)
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.sys.tenant_repository import tenant_repository
 from src.schemas.sys.tenant import TenantCreate, TenantUpdate
@@ -43,7 +40,7 @@ class TenantService:
         with TransactionManager() as tm:
             tenant_obj = tenant_repository.get(id=tenant_id, session=tm.session)
             if not tenant_obj:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
 
             return self._transform_tenant_detail(tenant_obj)
 
@@ -51,8 +48,8 @@ class TenantService:
         with TransactionManager() as tm:
             existing_tenant = tenant_repository.is_exist(tenant_in.code, session=tm.session)
             if existing_tenant:
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail="The tenant with this code already exists in the system.",
                 )
 
@@ -66,13 +63,13 @@ class TenantService:
         with TransactionManager() as tm:
             existing_tenant = tenant_repository.get(id=tenant_id, session=tm.session)
             if not existing_tenant:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
 
             if tenant_in.code and tenant_in.code != existing_tenant.code:
                 existing_by_code = tenant_repository.is_exist(tenant_in.code, session=tm.session)
                 if existing_by_code:
-                    raise HTTPException(
-                        status_code=HTTP_BAD_REQUEST,
+                    raise BusinessException(
+                        ResponseCode.PARAM_ERROR,
                         detail="The tenant code already exists in the system.",
                     )
 
@@ -83,7 +80,7 @@ class TenantService:
         with TransactionManager() as tm:
             existing_tenant = tenant_repository.get(id=tenant_id, session=tm.session)
             if not existing_tenant:
-                raise HTTPException(status_code=HTTP_NOT_FOUND, detail="租户不存在")
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
 
             tenant_repository.delete(id=tenant_id, session=tm.session)
 

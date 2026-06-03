@@ -1,15 +1,10 @@
 from typing import Any
 
-from fastapi.exceptions import HTTPException
-
 from src.core.auth import create_token_pair, token_manager, verify_token
 from src.core.config import settings
-from src.core.constants import (
-    HTTP_BAD_REQUEST,
-    HTTP_FORBIDDEN,
-    HTTP_UNAUTHORIZED,
-    ROLE_PLATFORM_NORMAL_USER,
-)
+from src.core.constants import ROLE_PLATFORM_NORMAL_USER
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions.exception import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.role_repository import role_repository
@@ -30,20 +25,20 @@ class AuthService:
         logger.info(f"用户注册尝试: username={register_in.username}")
 
         if not settings.ALLOW_USER_REGISTRATION:
-            raise HTTPException(status_code=HTTP_FORBIDDEN, detail="用户注册功能已关闭")
+            raise BusinessException(ResponseCode.FORBIDDEN, "用户注册功能已关闭")
 
         with TransactionManager() as tm:
             existing_user_by_username = user_repository.get_by_username(register_in.username, session=tm.session)
             if existing_user_by_username:
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail=f"用户名 '{register_in.username}' 已存在",
                 )
 
             existing_user_by_email = user_repository.get_by_email(register_in.email, session=tm.session)
             if existing_user_by_email:
-                raise HTTPException(
-                    status_code=HTTP_BAD_REQUEST,
+                raise BusinessException(
+                    ResponseCode.PARAM_ERROR,
                     detail=f"邮箱 '{register_in.email}' 已存在",
                 )
 
@@ -126,7 +121,7 @@ class AuthService:
     def refresh_token(self, refresh_request: RefreshTokenRequest) -> dict[str, Any]:
         refresh_data = token_manager.get_refresh_token_data(refresh_request.refresh_token)
         if not refresh_data:
-            raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="无效的Token")
+            raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token")
 
         payload = verify_token(refresh_request.refresh_token, token_type="refresh")
         user_id = payload["user_id"]
@@ -134,7 +129,7 @@ class AuthService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user or not user.is_active:
-                raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="用户不存在或已被禁用")
+                raise BusinessException(ResponseCode.UNAUTHORIZED, "用户不存在或已被禁用")
 
         old_access_token = refresh_data.get("linked_access")
 
