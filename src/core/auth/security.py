@@ -36,11 +36,14 @@ def generate_password() -> str:
     return password
 
 
-def create_access_token(*, data: dict):
+def create_access_token(*, data: dict, expires_delta: timedelta | None = None):
     """创建访问令牌"""
     payload = data.copy()
     payload["token_type"] = "access"
-    expire = datetime.now(UTC) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    if expires_delta:
+        expire = datetime.now(UTC) + expires_delta
+    else:
+        expire = datetime.now(UTC) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     payload["exp"] = expire
     encoded_jwt = jwt.encode(
         payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
@@ -93,14 +96,9 @@ def parse_jwt_token(token: str) -> dict | None:
 
 def create_token_pair(user_id: int, username: str) -> tuple[str, str]:
     """创建访问令牌和刷新令牌对"""
-    access_expire = datetime.now(UTC) + timedelta(
-        minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-    )
     access_payload = {
         "user_id": user_id,
         "username": username,
-        "exp": access_expire,
-        "token_type": "access",
     }
     access_token = create_access_token(data=access_payload)
 

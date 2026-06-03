@@ -126,7 +126,12 @@ class TokenManager:
         refresh_token: str,
         ttl_seconds: int
     ) -> bool:
-        """将令牌添加到用户令牌集合"""
+        """将令牌添加到用户令牌集合
+
+        设计说明：
+        - 只存储 refresh_token，因为通过 refresh_token 可以找到关联的 access_token
+        - 撤销用户所有令牌时，通过 refresh_token 批量清理关联的 access_token
+        """
         if not self._is_available():
             logger.warning("TokenManager: Redis未连接，无法添加用户令牌")
             return False

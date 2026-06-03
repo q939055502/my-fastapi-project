@@ -17,6 +17,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer
 
 from src.core.auth.token import token_manager
 from src.core.config import settings
+from src.core.constants import ROLE_PLATFORM_SUPER_ADMIN
 from src.core.enums.response_code import ResponseCode
 from src.core.exceptions.exception import BusinessException
 from src.core.log import get_ctx_logger
@@ -208,7 +209,7 @@ class PermissionControl:
 
         # 超级管理员特殊放行：如果用户有平台超级管理员角色，直接允许
         for role in roles:
-            if role.name == "平台超级管理员":
+            if role.name == ROLE_PLATFORM_SUPER_ADMIN:
                 return
 
         all_resources = []
