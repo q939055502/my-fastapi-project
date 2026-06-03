@@ -23,14 +23,11 @@ from src.schemas.sys.users import UserCreate
 
 
 class AuthService:
-    def __init__(self):
-        self.logger = logger
-
     def register(self, register_in: UserRegisterSchema) -> dict[str, Any]:
         """
         用户自主注册
         """
-        self.logger.info(f"用户注册尝试: username={register_in.username}")
+        logger.info(f"用户注册尝试: username={register_in.username}")
 
         if not settings.ALLOW_USER_REGISTRATION:
             raise HTTPException(status_code=HTTP_FORBIDDEN, detail="用户注册功能已关闭")
@@ -65,7 +62,7 @@ class AuthService:
             ).first()
             if default_role:
                 user_repository.update_roles(new_user, [default_role.id], session=tm.session)
-                self.logger.info(f"用户 {register_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
+                logger.info(f"用户 {register_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
 
             tm.commit()
 
@@ -76,7 +73,7 @@ class AuthService:
             "created_at": new_user.created_at,
         }
 
-        self.logger.info(f"用户注册成功: username={register_in.username}, user_id={new_user.id}")
+        logger.info(f"用户注册成功: username={register_in.username}, user_id={new_user.id}")
 
         if settings.AUTO_LOGIN_AFTER_REGISTER:
             access_token, refresh_token = create_token_pair(
@@ -98,7 +95,7 @@ class AuthService:
         return result
 
     def login(self, credentials: CredentialsSchema) -> dict[str, Any]:
-        self.logger.info(f"用户登录尝试: username={credentials.username}")
+        logger.info(f"用户登录尝试: username={credentials.username}")
 
         with TransactionManager() as tm:
             user = user_repository.authenticate(credentials, session=tm.session)
@@ -116,7 +113,7 @@ class AuthService:
         token_manager.store_refresh_token(refresh_token, user.id, access_token, refresh_ttl)
         token_manager.add_user_token(user.id, access_token, refresh_token, refresh_ttl)
 
-        self.logger.info(f"用户登录成功: username={credentials.username}, user_id={user.id}")
+        logger.info(f"用户登录成功: username={credentials.username}, user_id={user.id}")
 
         return {
             "access_token": access_token,
@@ -156,7 +153,7 @@ class AuthService:
         token_manager.store_refresh_token(new_refresh_token, user.id, access_token, refresh_ttl)
         token_manager.add_user_token(user.id, access_token, new_refresh_token, refresh_ttl)
 
-        self.logger.info(f"Token刷新成功: user_id={user_id}")
+        logger.info(f"Token刷新成功: user_id={user_id}")
 
         return {
             "access_token": access_token,
@@ -174,11 +171,11 @@ class AuthService:
             if user_id:
                 token_manager.remove_token_from_user_set(user_id, access_token, refresh_token)
 
-        self.logger.info("用户登出成功")
+        logger.info("用户登出成功")
 
     def logout_all(self, user_id: int) -> int:
         count = token_manager.revoke_user_all_tokens(user_id)
-        self.logger.info(f"用户从所有设备登出: user_id={user_id}, revoked_tokens={count}")
+        logger.info(f"用户从所有设备登出: user_id={user_id}, revoked_tokens={count}")
         return count
 
 

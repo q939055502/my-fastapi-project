@@ -2,15 +2,13 @@ from src.core.constants import (
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
 )
-from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.resource_repository import resource_repository
 from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
 
 
 class ResourceService:
-    def __init__(self):
-        self.logger = logger
+    pass
 
     def get_resource_detail(self, resource_id: int):
         with TransactionManager() as tm:

@@ -1,41 +1,51 @@
 """
 API v1 版本路由注册
+
+架构设计：
+- admin/    : 平台超管专属接口（管理所有租户）
+- client/   : 租户成员接口（管理当前租户）
+- common/   : 公共共用接口（个人中心、认证等）
 """
 
 from fastapi import APIRouter, Depends
 
 from src.core.auth import AuthControl, PermissionControl
 
-# 平台超管专属接口
+# ============================================================
+# 🏢 平台超管专属接口（admin）
+# ============================================================
 from .admin.auditlog import router as admin_auditlog_router
+from .admin.depts import router as admin_depts_router
 from .admin.plans import router as admin_plans_router
+from .admin.resources import router as admin_resources_router
+from .admin.roles import router as admin_roles_router
 from .admin.settings import router as admin_settings_router
 from .admin.tenants import router as admin_tenants_router
+from .admin.users import router as admin_users_router
 
-# 认证接口（登录、token管理）
+# ============================================================
+# 🔄 公共共用接口（common）
+# ============================================================
+# 认证接口
 from .auth import router as auth_router
+from .client.members import router as client_members_router
 
-# 通用接口（需登录）
+# ============================================================
+# 👥 租户成员接口（client）
+# ============================================================
+from .client.tenant import router as client_tenant_router
+
+# 通用文件接口
 from .common.files import router as common_files_router
-from .depts import router as depts_router
 
-# 个人中心接口
+# 个人中心
 from .me.profile import router as me_profile_router
 
-# 手机号绑定接口
+# 手机号绑定
 from .phone_bindings import router as phone_bindings_router
 
-# 公开接口（无需认证）
+# 公开接口
 from .public.info import router as public_info_router
-from .resources import router as resources_router
-from .roles import router as roles_router
-from .tenant import router as common_tenant_router
-
-# SaaS 租户关联接口
-from .tenants.user_tenant import router as user_tenant_router
-
-# 通用资源接口（所有角色使用同一套，通过权限控制）
-from .users import router as users_router
 
 v1_router = APIRouter()
 
@@ -43,28 +53,27 @@ v1_router = APIRouter()
 # 🔓 公开接口（无需认证）
 # ============================================================
 v1_router.include_router(public_info_router, prefix="/public")
-
-# ============================================================
-# 🔐 认证接口
-# ============================================================
 v1_router.include_router(auth_router, prefix="/auth")
 
 # ============================================================
-# 🏢 平台超管专属接口（需权限）
+# 🏢 平台超管专属接口（需平台权限）
 # ============================================================
-v1_router.include_router(admin_tenants_router, prefix="/admin/tenants", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(admin_plans_router, prefix="/admin/plans", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(admin_auditlog_router, prefix="/admin/auditlog", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(admin_settings_router, prefix="/admin/settings", dependencies=[Depends(PermissionControl.has_permission)])
+admin_deps = [Depends(PermissionControl.has_permission)]
+v1_router.include_router(admin_tenants_router, prefix="/admin/tenants", dependencies=admin_deps)
+v1_router.include_router(admin_users_router, prefix="/admin/users", dependencies=admin_deps)
+v1_router.include_router(admin_roles_router, prefix="/admin/roles", dependencies=admin_deps)
+v1_router.include_router(admin_depts_router, prefix="/admin/depts", dependencies=admin_deps)
+v1_router.include_router(admin_resources_router, prefix="/admin/resources", dependencies=admin_deps)
+v1_router.include_router(admin_plans_router, prefix="/admin/plans", dependencies=admin_deps)
+v1_router.include_router(admin_auditlog_router, prefix="/admin/auditlog", dependencies=admin_deps)
+v1_router.include_router(admin_settings_router, prefix="/admin/settings", dependencies=admin_deps)
 
 # ============================================================
-# 📦 通用资源接口（需权限，所有角色共用）
+# 👥 租户成员接口（需登录，租户内权限）
 # ============================================================
-v1_router.include_router(users_router, prefix="/users", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(roles_router, prefix="/roles", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(depts_router, prefix="/depts", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(resources_router, prefix="/resources", dependencies=[Depends(PermissionControl.has_permission)])
-v1_router.include_router(common_tenant_router, prefix="/tenant", dependencies=[Depends(PermissionControl.has_permission)])
+client_deps = [Depends(AuthControl.is_authed)]
+v1_router.include_router(client_tenant_router, prefix="/client/tenant", dependencies=client_deps)
+v1_router.include_router(client_members_router, prefix="/client/members", dependencies=client_deps)
 
 # ============================================================
 # 👤 个人中心接口（需登录）
@@ -74,17 +83,12 @@ v1_router.include_router(me_profile_router, prefix="/me", dependencies=[Depends(
 # ============================================================
 # 📱 手机号绑定接口（需登录）
 # ============================================================
-v1_router.include_router(phone_bindings_router, prefix="", dependencies=[Depends(AuthControl.is_authed)])
+v1_router.include_router(phone_bindings_router, prefix="/phone-bindings", dependencies=[Depends(AuthControl.is_authed)])
 
 # ============================================================
-# 🔄 通用接口（需登录）
+# 📄 通用文件接口（需登录）
 # ============================================================
 v1_router.include_router(common_files_router, prefix="/common/files", dependencies=[Depends(AuthControl.is_authed)])
-
-# ============================================================
-# 🏢 SaaS 租户关联接口
-# ============================================================
-v1_router.include_router(user_tenant_router, prefix="/tenants", dependencies=[Depends(AuthControl.is_authed)])
 
 
 __all__ = ["v1_router"]

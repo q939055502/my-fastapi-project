@@ -5,7 +5,6 @@ from src.core.constants import (
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
 )
-from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.dept_repository import dept_repository
 from src.schemas.sys.depts import DeptCreate, DeptUpdate
@@ -14,7 +13,6 @@ from src.schemas.sys.depts import DeptCreate, DeptUpdate
 class DeptService:
     def __init__(self):
         self.repository = dept_repository
-        self.logger = logger
 
     def get_dept_list(
         self,

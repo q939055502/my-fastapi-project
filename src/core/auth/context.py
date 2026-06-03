@@ -8,7 +8,7 @@ from contextvars import ContextVar
 CTX_USER_ID: ContextVar[int | None] = ContextVar("user_id", default=None)
 CTX_MEMBER_ID: ContextVar[int | None] = ContextVar("member_id", default=None)
 CTX_TENANT_ID: ContextVar[int | None] = ContextVar("tenant_id", default=None)
-CTX_BG_TASKS: ContextVar[object | None] = ContextVar("bg_tasks", default=None)
+CTX_BG_TASKS: ContextVar[object | None] = ContextVar("bg_tasks", default=None)# 后台任务这个放这里不合适是，但目前先不要改动
 CTX_REQUEST_ID: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 

@@ -35,7 +35,6 @@ DANGEROUS_EXTENSIONS: set[str] = {
 
 class FileService:
     def __init__(self):
-        self.logger = logger
         self.uploads_dir = Path(UPLOADS_DIR)
         self.uploads_dir.mkdir(exist_ok=True)
 
@@ -56,7 +55,7 @@ class FileService:
                 with open(file_path, "wb") as f:
                     f.write(content)
 
-                self.logger.info(f"文件已保存 {file_path}")
+                logger.info(f"文件已保存 {file_path}")
 
                 self._save_file_mapping(
                     {"file_id": file_id, "file_path": str(file_path)}, file, user.id, tm.session
@@ -80,7 +79,7 @@ class FileService:
         except HTTPException:
             raise
         except Exception as e:
-            self.logger.error(f"文件上传失败: {str(e)}")
+            logger.error(f"文件上传失败: {str(e)}")
             raise HTTPException(status_code=HTTP_INTERNAL_SERVER_ERROR, detail="文件上传失败") from e
 
     def _authenticate_user(self, session):
@@ -136,7 +135,7 @@ class FileService:
         try:
             file_id = response_data.get("file_id")
             if not file_id:
-                self.logger.warning("无法从响应中获取文件ID")
+                logger.warning("无法从响应中获取文件ID")
                 return
 
             file_type = self._determine_file_type(file.filename)
@@ -153,10 +152,10 @@ class FileService:
                 session=session,
             )
 
-            self.logger.info(f"已保存文件映射 {file_id} -> {file.filename}")
+            logger.info(f"已保存文件映射 {file_id} -> {file.filename}")
 
         except Exception as e:
-            self.logger.warning(f"保存文件映射失败: {str(e)}")
+            logger.warning(f"保存文件映射失败: {str(e)}")
 
     def _determine_file_type(self, filename: str) -> str:
         if not filename:

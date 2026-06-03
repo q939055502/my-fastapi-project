@@ -1,28 +1,61 @@
 from fastapi import APIRouter, Body, Query, Request
 
+from src.core.enums.error_code import ErrorCode
 from src.core.handlers import success, success_page
+from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
+from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 from src.schemas.sys.users import UserCreate, UserUpdate
 from src.services.sys.user_service import user_service
 
-router = APIRouter(tags=["平台管理-用户"])
+router = APIRouter(
+    tags=["平台管理-用户"],
+    responses=DEFAULT_ROUTER_RESPONSES,
+)
 
 
-@router.post("/", summary="创建用户")
+@router.post(
+    "/",
+    summary="创建用户",
+    responses={
+        400: gen_swagger_response(
+            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            description="用户名或邮箱已存在"
+        ),
+    },
+)
 @apply_rate_limit("30/minute")
 def create_user(request: Request, user_in: UserCreate):
     user_data = user_service.create_user(user_in)
     return success(data=user_data, msg="用户创建成功")
 
 
-@router.put("/{user_id}", summary="更新用户")
+@router.put(
+    "/{user_id}",
+    summary="更新用户",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="用户不存在"
+        ),
+    },
+)
 @apply_rate_limit("30/minute")
 def update_user(request: Request, user_id: int, user_in: UserUpdate):
     user_service.update_user(user_id, user_in)
     return success(msg="用户更新成功")
 
 
-@router.post("/reset_password", summary="重置密码")
+@router.put(
+    "/reset_password",
+    summary="重置密码",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="用户不存在"
+        ),
+    },
+)
 @apply_rate_limit("10/minute")
 def reset_password(request: Request, user_id: int = Body(..., description="用户ID", embed=True)):
     new_password = user_service.reset_user_password(user_id)
@@ -49,14 +82,32 @@ def list_user(
     return success_page(data=data, total=total, page=page, page_size=page_size)
 
 
-@router.get("/{user_id}", summary="获取用户详情")
+@router.get(
+    "/{user_id}",
+    summary="获取用户详情",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="用户不存在"
+        ),
+    },
+)
 @apply_rate_limit("60/minute")
 def get_user(request: Request, user_id: int):
     user_data = user_service.get_user_detail(user_id)
     return success(data=user_data)
 
 
-@router.delete("/{user_id}", summary="删除用户")
+@router.delete(
+    "/{user_id}",
+    summary="删除用户",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="用户不存在"
+        ),
+    },
+)
 @apply_rate_limit("30/minute")
 def delete_user(request: Request, user_id: int):
     user_service.delete_user(user_id)

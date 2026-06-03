@@ -5,7 +5,6 @@ from src.core.constants import (
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
 )
-from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.tenant_plan_repository import tenant_plan_repository
 from src.schemas.sys.tenant_plan import TenantPlanCreate, TenantPlanUpdate
@@ -14,7 +13,6 @@ from src.schemas.sys.tenant_plan import TenantPlanCreate, TenantPlanUpdate
 class TenantPlanService:
     def __init__(self):
         self.repository = tenant_plan_repository
-        self.logger = logger
 
     def get_plan_list(
         self,

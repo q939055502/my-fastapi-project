@@ -6,7 +6,6 @@ from src.core.constants import (
     HTTP_FORBIDDEN,
     HTTP_NOT_FOUND,
 )
-from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.sys.role_repository import role_repository
 from src.schemas.sys.roles import RoleCreate, RoleUpdate
@@ -15,7 +14,6 @@ from src.schemas.sys.roles import RoleCreate, RoleUpdate
 class RoleService:
     def __init__(self):
         self.repository = role_repository
-        self.logger = logger
 
     def get_role_list(
         self,

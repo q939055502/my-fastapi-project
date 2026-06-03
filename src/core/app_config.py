@@ -19,6 +19,8 @@ from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
 from src.core.handlers import (
+    BusinessException,
+    BusinessExceptionHandle,
     DoesNotExist,
     DoesNotExistHandle,
     GlobalExceptionHandle,
@@ -31,7 +33,7 @@ from src.core.handlers import (
 from src.core.middlewares import (
     BackGroundTaskMiddleware,
     HttpAuditLogMiddleware,
-    RequestLoggingMiddleware,
+    RequestContextMiddleware,
     SecurityHeadersMiddleware,
 )
 from src.core.plugins import limiter
@@ -44,7 +46,7 @@ def make_middlewares():
     中间件执行顺序（从外到内）：
     1. CORS - 跨域资源共享
     2. SecurityHeaders - 安全响应头
-    3. RequestLogging - 请求日志记录
+    3. RequestContext - 请求上下文管理（包含请求日志记录）
     4. BackGroundTask - 后台任务处理
     5. HttpAuditLog - HTTP 审计日志
     """
@@ -57,7 +59,7 @@ def make_middlewares():
             allow_headers=settings.CORS_ALLOW_HEADERS,
         ),
         Middleware(SecurityHeadersMiddleware),
-        Middleware(RequestLoggingMiddleware),
+        Middleware(RequestContextMiddleware),
         Middleware(BackGroundTaskMiddleware),
         Middleware(
             HttpAuditLogMiddleware,
@@ -85,6 +87,7 @@ def register_exceptions(app: FastAPI):
 
     from src.core.handlers import JWTErrorHandle
 
+    app.add_exception_handler(BusinessException, BusinessExceptionHandle)
     app.add_exception_handler(DoesNotExist, DoesNotExistHandle)
     app.add_exception_handler(HTTPException, HttpExcHandle)
     app.add_exception_handler(IntegrityError, IntegrityHandle)

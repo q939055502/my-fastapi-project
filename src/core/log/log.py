@@ -16,82 +16,59 @@ class LoggingConfig:
         self._ensure_log_dirs()
 
     def _ensure_log_dirs(self):
-        """确保所有日志分类目录存在"""
-        log_categories = ["access", "error", "business", "security", "audit"]
-        for category in log_categories:
-            category_dir = os.path.join(self.log_dir, category)
-            if not os.path.exists(category_dir):
-                os.makedirs(category_dir, exist_ok=True)
+        """确保日志目录存在"""
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir, exist_ok=True)
 
     def get_log_format(self):
-        """获取统一的日志格式（含tenant_id）"""
+        """获取统一的日志格式（带颜色，用于控制台）"""
         return (
-            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-            "<level>{level: <8}</level> | "
-            "<blue>{extra[tenant_id]: <12}</blue> | "
-            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
-            "<level>{message}</level>"
+            "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "      # 时间
+            "<level>{level: <8}</level> | "                          # 级别
+            "<yellow>{extra[request_id]: <36}</yellow> | "           # 请求ID
+            "<blue>{extra[tenant_id]: <10}</blue> | "                # 租户ID
+            "<magenta>{extra[user_id]: <8}</magenta> | "             # 用户ID
+            "<cyan>{extra[ip]: <15}</cyan> | "                       # IP
+            "<white>{extra[endpoint]: <30}</white> | "               # 接口
+            "<green>{extra[duration]: <8}</green> | "                # 耗时
+            "<red>{extra[business_code]: <8}</red> | "               # 业务码
+            "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "  # 代码位置
+            "<level>{message}</level>"                               # 日志信息
         )
 
     def get_file_format(self):
         """获取文件日志格式（无颜色）"""
         return (
-            "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
-            "{level: <8} | "
-            "{extra[tenant_id]: <12} | "
-            "{name}:{function}:{line} | "
-            "{message}"
+            "{time:YYYY-MM-DD HH:mm:ss.SSS} | "          # 时间
+            "{level: <8} | "                              # 级别
+            "{extra[request_id]: <36} | "                  # 请求ID
+            "{extra[tenant_id]: <10} | "                   # 租户ID
+            "{extra[user_id]: <8} | "                      # 用户ID
+            "{extra[ip]: <15} | "                          # IP
+            "{extra[endpoint]: <30} | "                    # 接口
+            "{extra[duration]: <8} | "                     # 耗时
+            "{extra[business_code]: <8} | "                # 业务码
+            "{name}:{function}:{line} | "                  # 代码位置（ERROR级别时显示）
+            "{message}"                                    # 日志信息
         )
 
-    def _get_access_filter(self, record):
-        """访问日志过滤器 - 只记录HTTP 请求相关"""
-        return "core.middlewares" in record["name"]
 
-    def _get_error_filter(self, record):
-        """错误日志过滤器 - 只记录ERROR 及以上级别"""
-        return record["level"].no >= 40
-
-    def _get_business_filter(self, record):
-        """业务日志过滤器 - 只记录业务服务相关"""
-        module = record["name"]
-        # 业务服务模块
-        if "services." in module:
-            return True
-        # API 层业务接口
-        if "api.v1." in module and any(keyword in module for keyword in ["users", "roles", "depts", "tenant", "resource", "plans"]):
-            return True
-        return False
-
-    def _get_security_filter(self, record):
-        """安全日志过滤器 - 只记录安全认证相关"""
-        module = record["name"]
-        message = record["message"].lower()
-        # 安全认证模块
-        if any(keyword in module for keyword in ["dependency", "security", "token_manager"]):
-            return True
-        # 登录、登出、认证相关
-        if any(keyword in message for keyword in ["认证", "登录", "logout", "login", "token", "令牌", "权限"]):
-            return True
-        return False
-
-    def _get_audit_filter(self, record):
-        """审计日志过滤器 - 只记录审计相关"""
-        module = record["name"]
-        message = record["message"].lower()
-        # 审计相关模块或关键词
-        if "audit" in module.lower():
-            return True
-        if any(keyword in message for keyword in ["审计", "audit", "创建", "删除", "更新", "create", "delete", "update"]):
-            return True
-        return False
 
     def setup_logger(self):
         """配置日志输出"""
         # 清除默认处理器
         loguru_logger.remove()
 
-        # 创建带默认tenant_id 的logger
-        logger_with_tenant = loguru_logger.bind(tenant_id="system")
+        # 创建带所有字段默认值的 logger
+        logger_with_tenant = loguru_logger.bind(
+            request_id="-",
+            tenant_id="system",
+            user_id="0",
+            ip="unknown",
+            endpoint="-",
+            duration="0ms",
+            business_code="-",
+        )
 
         # 控制台输出（带颜色）- 所有日志
         logger_with_tenant.add(
@@ -104,76 +81,18 @@ class LoggingConfig:
             enqueue=True,
         )
 
-        # ========== 日志分类输出 ==========
-
-        # 1. 访问日志 - HTTP 请求日志
+        # 统一文件日志 - 所有日志都输出到一个文件
         logger_with_tenant.add(
-            sink=f"{self.log_dir}/access/access_{{time:YYYY-MM-DD}}.log",
-            level="DEBUG",
-            format=self.get_file_format(),
-            rotation=settings.LOG_ROTATION_SIZE,
-            retention=f"{settings.LOG_ACCESS_RETENTION_DAYS} days",
-            compression=settings.LOG_COMPRESSION,
-            encoding="utf-8",
-            backtrace=False,
-            diagnose=False,
-            filter=self._get_access_filter,
-        )
-
-        # 2. 错误日志 - ERROR 及以上级别
-        logger_with_tenant.add(
-            sink=f"{self.log_dir}/error/error_{{time:YYYY-MM-DD}}.log",
-            level="ERROR",
-            format=self.get_file_format(),
-            rotation=settings.LOG_ROTATION_SIZE,
-            retention=f"{settings.LOG_ERROR_RETENTION_DAYS} days",
-            compression=settings.LOG_COMPRESSION,
-            encoding="utf-8",
-            backtrace=True,
-            diagnose=True,
-            filter=self._get_error_filter,
-        )
-
-        # 3. 业务日志 - 业务服务相关
-        logger_with_tenant.add(
-            sink=f"{self.log_dir}/business/business_{{time:YYYY-MM-DD}}.log",
-            level="DEBUG",
-            format=self.get_file_format(),
-            rotation=settings.LOG_ROTATION_SIZE,
-            retention=f"{settings.LOG_BUSINESS_RETENTION_DAYS} days",
-            compression=settings.LOG_COMPRESSION,
-            encoding="utf-8",
-            backtrace=True,
-            diagnose=False,
-            filter=self._get_business_filter,
-        )
-
-        # 4. 安全日志 - 安全认证相关
-        logger_with_tenant.add(
-            sink=f"{self.log_dir}/security/security_{{time:YYYY-MM-DD}}.log",
-            level="DEBUG",
-            format=self.get_file_format(),
-            rotation=settings.LOG_ROTATION_SIZE,
-            retention=f"{settings.LOG_SECURITY_RETENTION_DAYS} days",
-            compression=settings.LOG_COMPRESSION,
-            encoding="utf-8",
-            backtrace=False,
-            diagnose=False,
-            filter=self._get_security_filter,
-        )
-
-        # 5. 审计日志 - 审计相关
-        logger_with_tenant.add(
-            sink=f"{self.log_dir}/audit/audit_{{time:YYYY-MM-DD}}.log",
-            level="DEBUG",
-            format=self.get_file_format(),
-            rotation=settings.LOG_ROTATION_SIZE,
-            retention=f"{settings.LOG_AUDIT_RETENTION_DAYS} days",
-            compression=settings.LOG_COMPRESSION,
-            encoding="utf-8",
-            backtrace=False,
-            diagnose=False,
-            filter=self._get_audit_filter,
+            sink=f"{self.log_dir}/app_{{time:YYYY-MM-DD}}.log",  # 日志输出路径，{time:YYYY-MM-DD}自动按日期生成文件名
+            level="DEBUG",           # 日志级别：DEBUG及以上都记录
+            format=self.get_file_format(),  # 日志格式（无颜色，便于文件存储）
+            rotation=settings.LOG_ROTATION_SIZE,  # 日志轮转：文件达到指定大小后自动切割
+            retention="30 days",     # 日志保留时间：超过30天的日志自动删除
+            compression=settings.LOG_COMPRESSION,  # 压缩格式：轮转后的日志文件压缩格式（如zip）
+            encoding="utf-8",        # 文件编码：确保中文正常显示
+            backtrace=True,          # 回溯信息：异常时显示完整调用栈
+            diagnose=True,           # 诊断信息：显示变量值等调试信息（仅DEBUG级别）
+            enqueue=True,            # 异步写入：通过队列异步写入文件，不阻塞主线程
         )
 
         # 记录日志系统启动
@@ -187,12 +106,28 @@ logging_config = LoggingConfig()
 logger = logging_config.setup_logger()
 
 
-def get_logger(tenant_id: int | None = None) -> loguru_logger.__class__:
-    """获取带租户ID的日志实例
-    Args:
-        tenant_id: 租户ID，默认为 system（系统级操作）
+
+
+
+def get_ctx_logger() -> loguru_logger.__class__:
+    """获取带当前请求上下文的日志实例
+
+    自动从 ContextVar 获取当前的日志上下文，并绑定到 logger 上。
+    在 HTTP 请求中调用时，会自动包含 request_id、tenant_id、user_id 等信息。
+    在非 HTTP 环境（如定时任务）中调用时，使用默认值。
+
     Returns:
-        绑定了tenant_id 的logger 实例
+        绑定了当前上下文的 logger 实例
     """
-    tenant = tenant_id if tenant_id else "system"
-    return logger.bind(tenant_id=tenant)
+    from .log_context import get_log_context
+
+    ctx = get_log_context()
+    return logger.bind(
+        request_id=ctx.request_id,
+        tenant_id=ctx.tenant_id,
+        user_id=ctx.user_id,
+        ip=ctx.ip,
+        endpoint=ctx.endpoint,
+        duration=ctx.duration,
+        business_code=ctx.business_code,
+    )

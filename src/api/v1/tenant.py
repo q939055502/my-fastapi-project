@@ -1,13 +1,28 @@
 from fastapi import APIRouter, Depends, Query, Request
 
 from src.core.auth import AuthControl
+from src.core.enums.error_code import ErrorCode
 from src.core.handlers import success, success_page
+from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
+from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 
-router = APIRouter(tags=["租户管理"])
+router = APIRouter(
+    tags=["租户管理"],
+    responses=DEFAULT_ROUTER_RESPONSES,
+)
 
 
-@router.put("/{tenant_id}", summary="更新租户")
+@router.put(
+    "/{tenant_id}",
+    summary="更新租户",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="租户不存在"
+        ),
+    },
+)
 @apply_rate_limit("30/minute")
 def update_tenant(
     request: Request,
@@ -29,7 +44,16 @@ def list_tenants(
     return success_page(data=[], total=0, page=page, page_size=page_size)
 
 
-@router.get("/{tenant_id}", summary="获取租户详情")
+@router.get(
+    "/{tenant_id}",
+    summary="获取租户详情",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="租户不存在"
+        ),
+    },
+)
 @apply_rate_limit("60/minute")
 def get_tenant(
     request: Request,

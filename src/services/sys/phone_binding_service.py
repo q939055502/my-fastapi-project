@@ -14,9 +14,6 @@ from src.repositories.sys.user_repository import user_repository
 
 
 class PhoneBindingService:
-    def __init__(self):
-        self.logger = logger
-
     def bind_phone(self, phone: str, user_id: int, is_primary: bool = True) -> dict[str, Any]:
         """绑定手机号
 
@@ -28,7 +25,7 @@ class PhoneBindingService:
         Returns:
             绑定记录信息
         """
-        self.logger.info(f"绑定手机号: phone={phone}, user_id={user_id}, is_primary={is_primary}")
+        logger.info(f"绑定手机号: phone={phone}, user_id={user_id}, is_primary={is_primary}")
 
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
@@ -54,7 +51,7 @@ class PhoneBindingService:
 
             tm.commit()
 
-            self.logger.info(f"手机号绑定成功: phone={phone}, user_id={user_id}")
+            logger.info(f"手机号绑定成功: phone={phone}, user_id={user_id}")
 
             return {
                 "id": binding.id,
@@ -66,7 +63,7 @@ class PhoneBindingService:
 
     def unbind_phone(self, binding_id: int, user_id: int) -> None:
         """解绑手机号"""
-        self.logger.info(f"解绑手机号: binding_id={binding_id}, user_id={user_id}")
+        logger.info(f"解绑手机号: binding_id={binding_id}, user_id={user_id}")
 
         with TransactionManager() as tm:
             binding = phone_binding_repository.get(id=binding_id, session=tm.session)
@@ -82,7 +79,7 @@ class PhoneBindingService:
             phone_binding_repository.delete(id=binding_id, session=tm.session)
             tm.commit()
 
-            self.logger.info(f"手机号解绑成功: binding_id={binding_id}")
+            logger.info(f"手机号解绑成功: binding_id={binding_id}")
 
     def get_user_bindings(self, user_id: int) -> list[dict[str, Any]]:
         """获取用户的所有手机号绑定记录"""

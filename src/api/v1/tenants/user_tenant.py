@@ -3,18 +3,34 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.core.auth import AuthControl
+from src.core.enums.error_code import ErrorCode
 from src.core.handlers import success
+from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
+from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.iam import User
 from src.schemas.sys.user_tenant import (
     TenantCreate,
 )
 from src.services.sys.user_tenant_service import user_tenant_service
 
-router = APIRouter(prefix="/user-tenants", tags=["用户-租户关联"])
+router = APIRouter(
+    prefix="/user-tenants",
+    tags=["用户-租户关联"],
+    responses=DEFAULT_ROUTER_RESPONSES,
+)
 
 
-@router.post("/create", summary="创建租户")
+@router.post(
+    "/create",
+    summary="创建租户",
+    responses={
+        400: gen_swagger_response(
+            codes=[ErrorCode.DATA_ALREADY_EXIST],
+            description="租户名称已存在"
+        ),
+    },
+)
 @apply_rate_limit("10/minute")
 def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User = Depends(AuthControl.is_authed)):
     """创建新租户，当前用户自动成为户主"""
@@ -22,7 +38,16 @@ def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User 
     return success(data=tenant, msg="租户创建成功")
 
 
-@router.post("/{tenant_id}/invite", summary="邀请用户加入租户")
+@router.post(
+    "/{tenant_id}/invite",
+    summary="邀请用户加入租户",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="租户不存在"
+        ),
+    },
+)
 @apply_rate_limit("30/minute")
 def invite_user_to_tenant(
     request: Request,
@@ -43,7 +68,16 @@ def get_my_tenants(request: Request, current_user: User = Depends(AuthControl.is
     return success(data=tenants)
 
 
-@router.get("/{tenant_id}/members", summary="获取租户成员列表")
+@router.get(
+    "/{tenant_id}/members",
+    summary="获取租户成员列表",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="租户不存在"
+        ),
+    },
+)
 @apply_rate_limit("60/minute")
 def get_tenant_members(request: Request, tenant_id: int, current_user: User = Depends(AuthControl.is_authed)):
     """获取指定租户的所有成员"""
@@ -54,7 +88,16 @@ def get_tenant_members(request: Request, tenant_id: int, current_user: User = De
     return success(data=members)
 
 
-@router.get("/{tenant_id}/relation", summary="获取用户在租户中的身份")
+@router.get(
+    "/{tenant_id}/relation",
+    summary="获取用户在租户中的身份",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="租户不存在"
+        ),
+    },
+)
 @apply_rate_limit("60/minute")
 def get_user_tenant_relation(
     request: Request,
@@ -66,7 +109,16 @@ def get_user_tenant_relation(
     return success(data=relation)
 
 
-@router.delete("/{tenant_id}/members/{user_id}", summary="移除租户成员")
+@router.delete(
+    "/{tenant_id}/members/{user_id}",
+    summary="移除租户成员",
+    responses={
+        404: gen_swagger_response(
+            codes=[ErrorCode.DATA_NOT_EXIST],
+            description="租户或成员不存在"
+        ),
+    },
+)
 @apply_rate_limit("30/minute")
 def remove_tenant_member(
     request: Request,

@@ -10,14 +10,20 @@ from src.core.constants import (
     HTTP_BAD_REQUEST,
     HTTP_UNAUTHORIZED,
 )
+from src.core.enums.error_code import ErrorCode
 from src.core.handlers import success
+from src.core.handlers.response import gen_swagger_response
 from src.core.log import logger
 from src.core.plugins import apply_rate_limit
+from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.iam import User
 from src.schemas.sys.users import UpdatePassword, UserUpdate
 from src.services.sys.user_service import user_service
 
-router = APIRouter(tags=["个人中心"])
+router = APIRouter(
+    tags=["个人中心"],
+    responses=DEFAULT_ROUTER_RESPONSES,
+)
 
 
 class LogoutRequest(BaseModel):
@@ -25,7 +31,16 @@ class LogoutRequest(BaseModel):
     refresh_token: str | None = None
 
 
-@router.post("/change_password", summary="修改密码")
+@router.post(
+    "/change_password",
+    summary="修改密码",
+    responses={
+        400: gen_swagger_response(
+            codes=[ErrorCode.PARAM_ERROR],
+            description="旧密码错误"
+        ),
+    },
+)
 @apply_rate_limit("10/minute")
 def change_password(
     request: Request,

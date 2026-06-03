@@ -19,9 +19,6 @@ from src.schemas.sys.users import UserCreate, UserUpdate
 
 
 class UserService:
-    def __init__(self):
-        self.logger = logger
-
     def _check_system_role_assignment(self, role_ids: list[int], session) -> None:
         if not role_ids:
             return
@@ -90,7 +87,7 @@ class UserService:
             return self._user_to_dict(user_obj, include_roles=True)
 
     def create_user(self, user_in: UserCreate) -> dict:
-        self.logger.info(f"创建用户: {user_in.username}")
+        logger.info(f"创建用户: {user_in.username}")
 
         with TransactionManager() as tm:
             existing_user_by_username = user_repository.get_by_username(user_in.username, session=tm.session)
@@ -120,25 +117,25 @@ class UserService:
                     ).first()
                     if default_role:
                         role_ids_to_assign = [default_role.id]
-                        self.logger.info(f"用户 {user_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
+                        logger.info(f"用户 {user_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
 
                 user_repository.update_roles(new_user, role_ids_to_assign, session=tm.session)
 
                 tm.commit()
 
                 result = self._user_to_dict(new_user, include_roles=True)
-                self.logger.info(f"用户创建成功: {user_in.username}")
+                logger.info(f"用户创建成功: {user_in.username}")
                 return result
             except IntegrityError as e:
                 tm.rollback()
-                self.logger.error(f"用户创建失败: {user_in.username}, 错误: {e}")
+                logger.error(f"用户创建失败: {user_in.username}, 错误: {e}")
                 raise HTTPException(
                     status_code=HTTP_BAD_REQUEST,
                     detail="用户创建失败，可能用户名或邮箱已存在",
                 ) from e
 
     def update_user(self, user_id: int, user_in: UserUpdate) -> None:
-        self.logger.info(f"更新用户: user_id={user_id}")
+        logger.info(f"更新用户: user_id={user_id}")
 
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
@@ -177,10 +174,10 @@ class UserService:
             tm.commit()
 
         clear_user_cache(user_id)
-        self.logger.info(f"用户更新成功: user_id={user_id}")
+        logger.info(f"用户更新成功: user_id={user_id}")
 
     def delete_user(self, user_id: int) -> None:
-        self.logger.info(f"删除用户: user_id={user_id}")
+        logger.info(f"删除用户: user_id={user_id}")
 
         with TransactionManager() as tm:
             success = user_repository.delete(id=user_id, session=tm.session)
@@ -190,20 +187,20 @@ class UserService:
             tm.commit()
 
         clear_user_cache(user_id)
-        self.logger.info(f"用户删除成功: user_id={user_id}")
+        logger.info(f"用户删除成功: user_id={user_id}")
 
     def reset_user_password(self, user_id: int) -> str:
-        self.logger.info(f"重置用户密码: user_id={user_id}")
+        logger.info(f"重置用户密码: user_id={user_id}")
 
         with TransactionManager() as tm:
             result = user_repository.reset_password(user_id, session=tm.session)
             tm.commit()
 
-        self.logger.info(f"用户密码重置成功: user_id={user_id}")
+        logger.info(f"用户密码重置成功: user_id={user_id}")
         return result
 
     def change_user_password(self, user_id: int, old_password: str, new_password: str) -> bool:
-        self.logger.info(f"修改用户密码: user_id={user_id}")
+        logger.info(f"修改用户密码: user_id={user_id}")
 
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
@@ -211,14 +208,14 @@ class UserService:
                 raise HTTPException(status_code=HTTP_NOT_FOUND, detail="用户不存在")
 
             if not verify_password(old_password, user.password):
-                self.logger.warning(f"用户密码修改失败: 旧密码错误, user_id={user_id}")
+                logger.warning(f"用户密码修改失败: 旧密码错误, user_id={user_id}")
                 return False
 
             user.password = get_password_hash(new_password)
             tm.commit()
 
         clear_user_cache(user_id)
-        self.logger.info(f"用户密码修改成功: user_id={user_id}")
+        logger.info(f"用户密码修改成功: user_id={user_id}")
         return True
 
     def _build_user_search_filters(

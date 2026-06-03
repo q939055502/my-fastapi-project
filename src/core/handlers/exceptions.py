@@ -12,13 +12,8 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.constants import (
-    HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_NOT_FOUND,
-    HTTP_TOO_MANY_REQUESTS,
-    HTTP_UNAUTHORIZED,
-    HTTP_UNPROCESSABLE_ENTITY,
-)
+from src.core.enums.error_code import ErrorCode
+from src.core.exceptions.exception import BusinessException
 from src.core.handlers.response import fail
 
 
@@ -40,47 +35,60 @@ class SettingNotFound(Exception):
 
 def DoesNotExistHandle(req: Request, exc: DoesNotExist) -> JSONResponse:
     """处理资源不存在异常"""
-    msg = f"Object not found: {exc}, query_params: {req.query_params}" if settings.DEBUG else "请求的资源不存在"
-    return fail(msg=msg, code=HTTP_NOT_FOUND)
+    detail = f"Object not found: {exc}, query_params: {req.query_params}" if settings.DEBUG else None
+    return fail(code=ErrorCode.ENTITY_NOT_FOUND, detail=detail)
+
+
+def BusinessExceptionHandle(request: Request, exc: BusinessException) -> JSONResponse:
+    """处理业务异常"""
+    return fail(exc.code, exc.detail)
 
 
 def HttpExcHandle(request: Request, exc: HTTPException) -> JSONResponse:
     """处理HTTP异常"""
-    if exc.status_code == 401 and exc.headers and "WWW-Authenticate" in exc.headers:
-        response = fail(msg=exc.detail, code=exc.status_code)
+    if exc.status_code == 401:
+        response = fail(code=ErrorCode.UNAUTHORIZED)
+    elif exc.status_code == 403:
+        response = fail(code=ErrorCode.FORBIDDEN)
+    elif exc.status_code == 404:
+        response = fail(code=ErrorCode.ENTITY_NOT_FOUND)
+    elif exc.status_code == 422:
+        response = fail(code=ErrorCode.VALIDATION_ERROR)
+    else:
+        response = fail(code=ErrorCode.SERVER_ERROR, detail=exc.detail)
+
+    if exc.headers:
         response.headers.update(exc.headers)
-        return response
-    return fail(msg=exc.detail, code=exc.status_code)
+    return response
 
 
 def IntegrityHandle(request: Request, exc: IntegrityError) -> JSONResponse:
     """处理数据完整性异常"""
-    msg = f"IntegrityError: {exc}" if settings.DEBUG else "数据完整性错误，请检查输入数据"
-    return fail(msg=msg, code=HTTP_INTERNAL_SERVER_ERROR)
+    detail = f"IntegrityError: {exc}" if settings.DEBUG else None
+    return fail(code=ErrorCode.SERVER_ERROR, detail=detail)
 
 
 def RequestValidationHandle(_: Request, exc: RequestValidationError) -> JSONResponse:
     """处理请求验证异常"""
-    msg = f"RequestValidationError: {exc}" if settings.DEBUG else "请求参数验证失败，请检查输入格式"
-    return fail(msg=msg, code=HTTP_UNPROCESSABLE_ENTITY)
+    detail = str(exc.errors()) if settings.DEBUG else None
+    return fail(code=ErrorCode.VALIDATION_ERROR, detail=detail)
 
 
 def ResponseValidationHandle(_: Request, exc: ResponseValidationError) -> JSONResponse:
     """处理响应验证异常"""
-    msg = f"ResponseValidationError: {exc}" if settings.DEBUG else "服务器响应格式错误"
-    return fail(msg=msg, code=HTTP_INTERNAL_SERVER_ERROR)
+    detail = f"ResponseValidationError: {exc}" if settings.DEBUG else None
+    return fail(code=ErrorCode.SERVER_ERROR, detail=detail)
 
 
 def JWTErrorHandle(request: Request, exc: jwt.InvalidTokenError) -> JSONResponse:
     """处理JWT令牌错误"""
-    return fail(msg="无效的Token", code=HTTP_UNAUTHORIZED)
+    return fail(code=ErrorCode.TOKEN_FORMAT_INVALID)
 
 
 def RateLimitExceededHandle(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """处理限流异常"""
     response = fail(
-        msg="请求过于频繁，请稍后重试",
-        code=HTTP_TOO_MANY_REQUESTS,
+        code=ErrorCode.RATE_LIMIT_EXCEEDED,
         detail={"suggestion": "请等待一段时间后再试"}
     )
     if hasattr(exc, 'headers') and exc.headers:
@@ -90,5 +98,5 @@ def RateLimitExceededHandle(request: Request, exc: RateLimitExceeded) -> JSONRes
 
 def GlobalExceptionHandle(request: Request, exc: Exception) -> JSONResponse:
     """全局兜底异常处理"""
-    msg = f"Unexpected error: {exc}" if settings.DEBUG else "服务器响应格式错误"
-    return fail(msg=msg, code=HTTP_INTERNAL_SERVER_ERROR)
+    detail = f"Unexpected error: {exc}" if settings.DEBUG else None
+    return fail(code=ErrorCode.SERVER_ERROR, detail=detail)

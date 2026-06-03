@@ -9,8 +9,12 @@ from fastapi import APIRouter, Request
 
 from src.core.config import settings
 from src.core.plugins import apply_rate_limit
+from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 
-router = APIRouter(tags=["公开接口"])
+router = APIRouter(
+    tags=["公开接口"],
+    responses=DEFAULT_ROUTER_RESPONSES,
+)
 
 
 @router.get("/health", summary="健康检查")

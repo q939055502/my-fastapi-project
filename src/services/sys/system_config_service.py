@@ -4,7 +4,6 @@ from sqlalchemy import asc, select
 from src.core.constants import (
     HTTP_NOT_FOUND,
 )
-from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.models.system import SystemConfig
 from src.repositories.sys.system_config_repository import system_config_repository
@@ -14,7 +13,6 @@ from src.schemas.sys.system_config import SystemConfigUpdate
 class SystemConfigService:
     def __init__(self):
         self.repository = system_config_repository
-        self.logger = logger
 
     def get_all_configs(self) -> dict:
         with TransactionManager() as tm:

@@ -15,14 +15,13 @@ import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer
 
-from src.core.auth.context import CTX_USER_ID
 from src.core.auth.token import token_manager
 from src.core.config import settings
 from src.core.constants import (
     HTTP_FORBIDDEN,
     HTTP_UNAUTHORIZED,
 )
-from src.core.log import logger
+from src.core.log import get_ctx_logger
 from src.core.storage import TransactionManager
 
 # 安全方案实例
@@ -81,7 +80,7 @@ class AuthControl:
         """
         try:
             if not access_token_str:
-                logger.debug("认证失败: 缺少token")
+                get_ctx_logger().debug("认证失败: 缺少token")
                 if raise_exc:
                     raise HTTPException(
                         status_code=HTTP_UNAUTHORIZED, detail="Missing authentication token"
@@ -90,10 +89,10 @@ class AuthControl:
 
             # 1. 先从 Redis 验证令牌是否存在
             is_valid = token_manager.validate_access_token(access_token_str)
-            logger.debug(f"Redis验证令牌结果: {is_valid}")
+            get_ctx_logger().debug(f"Redis验证令牌结果: {is_valid}")
 
             if not is_valid:
-                logger.debug("认证失败: 令牌无效或已撤销")
+                get_ctx_logger().debug("认证失败: 令牌无效或已撤销")
                 if raise_exc:
                     raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="令牌已被撤销或失效")
                 return None
@@ -105,7 +104,7 @@ class AuthControl:
                 algorithms=[settings.JWT_ALGORITHM],
             )
             user_id = decode_data.get("user_id")
-            logger.debug(f"JWT解码结果: user_id={user_id}")
+            get_ctx_logger().debug(f"JWT解码结果: user_id={user_id}")
 
             with TransactionManager() as tm:
                 from sqlalchemy import select
@@ -121,24 +120,23 @@ class AuthControl:
                     .where(User.id == user_id)
                 )
                 user = result.scalars().first()
-                logger.debug(f"数据库查询结果: user={user}")
+                get_ctx_logger().debug(f"数据库查询结果: user={user}")
 
             if not user:
-                logger.debug(f"认证失败: 用户不存在 user_id={user_id}")
+                get_ctx_logger().debug(f"认证失败: 用户不存在 user_id={user_id}")
                 if raise_exc:
                     raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="Authentication failed")
                 return None
 
-            logger.debug(f"设置CTX_USER_ID: {user.id}")
-            CTX_USER_ID.set(int(user.id))
+            get_ctx_logger().debug(f"用户认证成功: user_id={user.id}")
             return user
         except jwt.DecodeError as e:
-            logger.debug(f"JWT解码错误: {str(e)}")
+            get_ctx_logger().debug(f"JWT解码错误: {str(e)}")
             if raise_exc:
                 raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="无效的Token") from e
             return None
         except jwt.ExpiredSignatureError as e:
-            logger.debug(f"JWT过期: {str(e)}")
+            get_ctx_logger().debug(f"JWT过期: {str(e)}")
             if raise_exc:
                 raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="登录已过期") from e
             return None
@@ -147,7 +145,7 @@ class AuthControl:
                 raise
             return None
         except Exception as e:
-            logger.debug(f"认证异常: {str(e)}")
+            get_ctx_logger().debug(f"认证异常: {str(e)}")
             if raise_exc:
                 raise HTTPException(status_code=HTTP_UNAUTHORIZED, detail="认证失败") from e
             return None
@@ -165,9 +163,9 @@ class AuthControl:
         Raises:
             HTTPException: 认证失败时抛出401错误
         """
-        logger.debug(f"is_authed 被调用，token credentials = {token.credentials[:50]}...")
+        get_ctx_logger().debug(f"is_authed 被调用，token credentials = {token.credentials[:50]}...")
         result = cls.authenticate_token(token.credentials)
-        logger.debug(f"认证结果: {result}")
+        get_ctx_logger().debug(f"认证结果: {result}")
         return result
 
     @classmethod

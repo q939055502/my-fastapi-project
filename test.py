@@ -1,40 +1,37 @@
-import logging
-import os
-import sys
-from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
+from contextvars import ContextVar
 
-# 日志根目录
-LOG_DIR = Path(__file__).parent.parent.parent / "logs"
-LOG_DIR.mkdir(exist_ok=True)
+# 定义 ContextVar
+auth_context_var: ContextVar[AuthContext] = ContextVar("auth_context")
 
-# 日志格式（保持你原有的格式）
-LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
-DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+def get_auth_context_var() -> AuthContext:
+    """获取当前上下文"""
+    return auth_context_var.get(AuthContext())
 
-# --------------------------
-# 核心：启用【按天轮转 + 自动保留7天】
-# --------------------------
-file_handler = TimedRotatingFileHandler(
-    filename=LOG_DIR / "app.log",
-    when="D",        # 按天切割
-    interval=1,      # 1天一个文件
-    backupCount=7,   # 只保留最近7天，自动删除老日志 ✅
-    encoding="utf-8",
-)
-file_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
+def set_auth_context_var(context: AuthContext) -> None:
+    """设置当前上下文"""
+    auth_context_var.set(context)
 
-# 控制台输出
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT))
 
-# 根日志配置
-def setup_logger():
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-    return logger
 
-# 全局导出
-logger = setup_logger()
+
+    from src.core.auth.context import set_auth_context_var, AuthContext
+
+async def dispatch(self, request: Request, call_next):
+    # ... 创建 context
+    set_auth_context_var(auth_context)  # 设置到 ContextVar
+    request.state.auth_context = auth_context  # 同时保留 request.state
+
+
+def get_logger() -> loguru_logger:
+    """获取带当前上下文的 logger"""
+    from src.core.auth.context import get_auth_context_var
+    ctx = get_auth_context_var()
+    return logger.bind(
+        request_id=ctx.request_id,
+        tenant_id=str(ctx.tenant_id) if ctx.tenant_id else "system",
+        user_id=str(ctx.user_id) if ctx.user_id else "0",
+        ip=ctx.client_ip,
+        endpoint=ctx.endpoint if hasattr(ctx, "endpoint") else "-",
+        duration="0ms",
+        business_code="-",
+    )

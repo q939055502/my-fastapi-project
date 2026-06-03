@@ -1,12 +1,10 @@
-import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import BinaryIO
 from urllib.parse import urljoin
 
 from src.core.config import settings
-
-logger = logging.getLogger(__name__)
+from src.core.log import logger
 
 
 class StorageBackend(ABC):
