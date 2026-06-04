@@ -1,21 +1,32 @@
-from sqlalchemy import BigInteger, Boolean, Column, String, UniqueConstraint
+from sqlalchemy import Column, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.base import (
+    BaseModel,
+    RemarkMixin,
+    SoftDeleteMixin,
+    SortMixin,
+    SystemMixin,
+    TimestampMixin,
+)
 
-from .associations import role_resource_association, user_role_association
+from .associations import (
+    role_permission_association,
+    role_resource_association,
+    user_role_association,
+)
 
 
-class Role(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
-    """角色模型"""
+class Role(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin):
+    """平台角色表"""
     __tablename__ = "iam_role"
     __table_args__ = (
-        UniqueConstraint('name', 'tenant_id', name='uq_role_name_tenant'),
+        UniqueConstraint('code', name='uq_role_code'),
     )
 
-    name = Column(String(20), nullable=False, comment="角色名称")
-    tenant_id = Column(BigInteger, nullable=True, comment="租户ID（null=系统级）")
-    is_system = Column(Boolean, default=False, nullable=False, comment="系统内置角色，创建后不可修改")
+    name = Column(String(50), nullable=False, comment="角色名称")
+    code = Column(String(50), nullable=False, index=True, comment="角色编码（唯一）")
 
     users = relationship("User", secondary=user_role_association, back_populates="roles")
     resources = relationship("Resource", secondary=role_resource_association, back_populates="roles")
+    permissions = relationship("Permission", secondary=role_permission_association, back_populates="roles")

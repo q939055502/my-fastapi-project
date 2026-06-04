@@ -54,6 +54,14 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         )
         return result.scalars().first()
 
+    def get_with_tenants(self, id: int, session: Session) -> User | None:
+        query = select(User).where(User.id == id)
+        query = self._apply_soft_delete_filter(query)
+        result = session.execute(
+            query.options(selectinload(User.tenant_memberships))
+        )
+        return result.scalars().first()
+
     def create_user(self, obj_in: UserCreate, session: Session) -> User:
         obj_in.password = get_password_hash(password=obj_in.password)
 

@@ -80,3 +80,33 @@ class UserRegisterOut(BaseModel):
     created_at: datetime = Field(..., description="创建时间")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TenantInfoSchema(BaseModel):
+    """租户信息Schema"""
+    tenant_id: int = Field(..., description="租户ID")
+    tenant_name: str = Field(..., description="租户名称")
+    tenant_code: str = Field(..., description="租户编码")
+    member_id: int = Field(..., description="成员ID")
+    role: str = Field(..., description="角色")
+    is_default: bool = Field(default=False, description="是否默认租户")
+
+
+class UserInfoSchema(BaseModel):
+    """用户基本信息Schema"""
+    id: int = Field(..., description="用户ID")
+    username: str = Field(..., description="用户名")
+    email: str = Field(..., description="邮箱")
+
+
+class LoginStep1Response(BaseModel):
+    """第一步登录响应Schema"""
+    temp_token: str = Field(..., description="临时登录凭证")
+    user: UserInfoSchema = Field(..., description="用户信息")
+    tenants: list[TenantInfoSchema] = Field(..., description="租户列表")
+
+
+class SelectTenantRequest(BaseModel):
+    """选择租户请求Schema"""
+    temp_token: str = Field(..., description="临时登录凭证")
+    tenant_id: int = Field(..., description="选择的租户ID")

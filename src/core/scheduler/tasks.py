@@ -11,7 +11,7 @@ from sqlalchemy import delete
 from src.core.config import settings
 from src.core.log import logger
 from src.core.storage import get_db
-from src.models.iam import Dept, PhoneBinding, Resource, Role, User
+from src.models.iam import Dept, Resource, Role, User, UserBind
 from src.models.system import DictData, DictType, LoginLog, OperationLog
 from src.models.tenant import Tenant, TenantMember, TenantPlan
 
@@ -70,7 +70,7 @@ def clean_soft_deleted_data():
                     Role,
                     Dept,
                     Resource,
-                    PhoneBinding,
+                    UserBind,
                     DictType,
                     DictData,
                     Tenant,

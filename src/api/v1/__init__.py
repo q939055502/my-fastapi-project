@@ -41,11 +41,11 @@ from .common.files import router as common_files_router
 # 个人中心
 from .me.profile import router as me_profile_router
 
-# 手机号绑定
-from .phone_bindings import router as phone_bindings_router
-
 # 公开接口
 from .public.info import router as public_info_router
+
+# 用户绑定（手机号/邮箱）
+from .user_binds import router as user_binds_router
 
 v1_router = APIRouter()
 
@@ -81,9 +81,9 @@ v1_router.include_router(client_members_router, prefix="/client/members", depend
 v1_router.include_router(me_profile_router, prefix="/me", dependencies=[Depends(AuthControl.is_authed)])
 
 # ============================================================
-# 📱 手机号绑定接口（需登录）
+# 📱 用户绑定接口（手机号/邮箱，需登录）
 # ============================================================
-v1_router.include_router(phone_bindings_router, prefix="/phone-bindings", dependencies=[Depends(AuthControl.is_authed)])
+v1_router.include_router(user_binds_router, prefix="/user-binds", dependencies=[Depends(AuthControl.is_authed)])
 
 # ============================================================
 # 📄 通用文件接口（需登录）

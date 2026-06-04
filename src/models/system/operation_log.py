@@ -1,14 +1,15 @@
-from sqlalchemy import JSON, Column, Integer, String, Text
+from sqlalchemy import JSON, Column, Integer, String
 
-from src.models.base import BaseModel, SoftDeleteMixin, TimestampMixin
+from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
 
 
-class OperationLog(BaseModel, TimestampMixin, SoftDeleteMixin):
+class OperationLog(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """业务操作日志模型"""
     __tablename__ = "operation_log"
 
     user_id = Column(Integer, nullable=False, index=True, comment="用户ID")
     username = Column(String(64), nullable=False, index=True, comment="用户名")
+    tenant_id = Column(Integer, nullable=True, index=True, comment="租户ID")
 
     module = Column(String(50), nullable=True, index=True, comment="业务模块")
     business_type = Column(String(50), nullable=True, comment="业务类型")
@@ -31,7 +32,3 @@ class OperationLog(BaseModel, TimestampMixin, SoftDeleteMixin):
     ip = Column(String(50), nullable=True, index=True, comment="IP地址")
     location = Column(String(200), nullable=True, comment="操作地点")
     user_agent = Column(String(500), nullable=True, comment="User Agent")
-
-    remark = Column(Text, nullable=True, comment="备注")
-
-    tenant_id = Column(Integer, nullable=True, index=True, comment="租户ID")

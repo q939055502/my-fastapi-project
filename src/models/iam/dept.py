@@ -6,11 +6,12 @@ from src.models.base import (
     EnableStatusMixin,
     RemarkMixin,
     SoftDeleteMixin,
+    SortMixin,
     TimestampMixin,
 )
 
 
-class Dept(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin):
+class Dept(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin):
     """部门模型"""
     __tablename__ = "iam_dept"
 
@@ -20,7 +21,6 @@ class Dept(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatus
     parent_id = Column(BigInteger, nullable=True, comment="父部门ID")
     level = Column(Integer, default=0, comment="部门层级")
     path = Column(String(500), nullable=True, comment="部门路径（如：1/2/3/）")
-    sort = Column(Integer, default=0, comment="排序")
     leader = Column(String(50), nullable=True, comment="部门负责人")
     phone = Column(String(20), nullable=True, comment="联系电话")
     email = Column(String(100), nullable=True, comment="部门邮箱")

@@ -14,7 +14,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.requests import Request
 from starlette.responses import Response
 
-from src.core.auth import AuthControl
+from src.core.auth import parse_jwt_token
 from src.core.auth.auth_context import AuthContext
 from src.core.log import create_log_context, logger, set_log_context
 
@@ -23,24 +23,24 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
     """请求上下文中间件 - 处理上下文设置和日志记录"""
 
     async def _get_user_info(self, request: Request) -> tuple:
-        """从请求中获取租户ID和用户ID"""
+        """从请求的 JWT 中获取用户信息"""
         tenant_id = None
         user_id = None
         member_id = None
+        username = ""
         try:
             auth_header = request.headers.get("Authorization", "")
             if auth_header.startswith("Bearer "):
                 token = auth_header[len("Bearer "):]
-                user_obj = AuthControl.authenticate_token(token, raise_exc=False)
-                if user_obj:
-                    if hasattr(user_obj, "tenant_id"):
-                        tenant_id = int(user_obj.tenant_id)
-                    if hasattr(user_obj, "id"):
-                        user_id = int(user_obj.id)
-                        member_id = int(user_obj.id)
+                payload = parse_jwt_token(token)
+                if payload:
+                    user_id = payload.get("user_id")
+                    username = payload.get("username", "")
+                    tenant_id = payload.get("tenant_id")
+                    member_id = payload.get("member_id")
         except Exception:
             pass
-        return tenant_id, user_id, member_id
+        return tenant_id, user_id, member_id, username
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
@@ -54,7 +54,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             request_id = str(uuid.uuid4())
 
         # 获取用户信息
-        tenant_id, user_id, member_id = await self._get_user_info(request)
+        tenant_id, user_id, member_id, username = await self._get_user_info(request)
 
         # 获取客户端IP
         client_ip = request.client.host if request.client else "unknown"
@@ -63,6 +63,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         auth_context = AuthContext(
             request_id=request_id,
             user_id=user_id,
+            username=username,
             tenant_id=tenant_id,
             member_id=member_id,
             client_ip=client_ip,

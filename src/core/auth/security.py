@@ -51,13 +51,15 @@ def create_access_token(*, data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def create_refresh_token(user_id: int, username: str) -> str:
+def create_refresh_token(user_id: int, username: str, tenant_id: int | None = None, member_id: int | None = None) -> str:
     """创建刷新令牌"""
     expire = datetime.now(UTC) + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
 
     payload = {
         "user_id": user_id,
         "username": username,
+        "tenant_id": tenant_id,
+        "member_id": member_id,
         "exp": expire,
         "token_type": "refresh",
     }
@@ -94,15 +96,17 @@ def parse_jwt_token(token: str) -> dict | None:
         return None
 
 
-def create_token_pair(user_id: int, username: str) -> tuple[str, str]:
+def create_token_pair(user_id: int, username: str, tenant_id: int | None = None, member_id: int | None = None) -> tuple[str, str]:
     """创建访问令牌和刷新令牌对"""
     access_payload = {
         "user_id": user_id,
         "username": username,
+        "tenant_id": tenant_id,
+        "member_id": member_id,
     }
     access_token = create_access_token(data=access_payload)
 
-    refresh_token = create_refresh_token(user_id, username)
+    refresh_token = create_refresh_token(user_id, username, tenant_id, member_id)
 
     return access_token, refresh_token
 

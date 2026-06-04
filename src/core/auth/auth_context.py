@@ -15,6 +15,7 @@ class AuthContext:
     """认证上下文对象"""
     request_id: str = "-"
     user_id: int | None = None
+    username: str = ""
     tenant_id: int | None = None
     member_id: int | None = None
     client_ip: str = "unknown"

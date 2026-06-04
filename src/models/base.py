@@ -103,3 +103,19 @@ class LoginStatusMixin:
     """
     status = Column(Integer, nullable=False, comment="登录状态（使用 LOGIN_STATUS_* 常量：1=成功，0=失败）")
 
+
+class SortMixin:
+    """排序字段 Mixin
+
+    适用于需要排序的模型，提供统一的排序字段
+    """
+    sort = Column(Integer, default=0, comment="排序")
+
+
+class SystemMixin:
+    """系统标识 Mixin
+
+    适用于需要区分系统内置和自定义的模型，系统内置数据不允许修改和删除
+    """
+    is_system = Column(Integer, default=0, comment="系统内置标识：0=否，1=是，系统内置数据不允许修改删除")
+

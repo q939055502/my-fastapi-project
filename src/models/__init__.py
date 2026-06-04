@@ -1,4 +1,5 @@
 
+
 """
 Models Package - 统一导出所有业务模型
 """
@@ -14,10 +15,18 @@ from src.models.base import (
 from src.models.iam import (
     Dept,
     DeptClosure,
-    PhoneBinding,
-    Resource,
+    Permission,
     Role,
     User,
+    UserBind,
+)
+
+# Order 订单模块
+from src.models.order import (
+    Order,
+    OrderLog,
+    OrderPayment,
+    OrderRefund,
 )
 
 # System 系统基础模块
@@ -35,9 +44,14 @@ from src.models.system import (
 from src.models.tenant import (
     Tenant,
     TenantConfig,
+    TenantHourlyUsage,
+    TenantInvite,
     TenantMember,
+    TenantPermission,
     TenantPlan,
     TenantQuota,
+    TenantRole,
+    TenantUsage,
 )
 
 __all__ = [
@@ -50,16 +64,21 @@ __all__ = [
     # IAM
     "User",
     "Role",
-    "Resource",
+    "Permission",
     "Dept",
     "DeptClosure",
-    "PhoneBinding",
+    "UserBind",
     # Tenant
     "Tenant",
     "TenantPlan",
     "TenantConfig",
     "TenantQuota",
+    "TenantUsage",
+    "TenantHourlyUsage",
     "TenantMember",
+    "TenantRole",
+    "TenantPermission",
+    "TenantInvite",
     # System
     "DictType",
     "DictData",
@@ -68,5 +87,9 @@ __all__ = [
     "SystemConfig",
     "AuditLog",
     "FileMapping",
+    # Order
+    "Order",
+    "OrderPayment",
+    "OrderRefund",
+    "OrderLog",
 ]
-

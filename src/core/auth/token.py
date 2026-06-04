@@ -11,6 +11,7 @@ Redis令牌管理器
 """
 
 import json
+import secrets
 
 import redis
 
@@ -26,6 +27,9 @@ class TokenManager:
     PREFIX_USER_TOKENS = "user:tokens"
     PREFIX_USER_DEVICE = "user:device"
     PREFIX_USER_PERM = "user:perm"
+    PREFIX_TEMP_LOGIN = "temp_login"
+
+    TEMP_LOGIN_EXPIRE_SECONDS = 300  # 临时凭证有效期：5分钟
 
     def __init__(self):
         self.redis: redis.Redis | None = None
@@ -348,6 +352,68 @@ class TokenManager:
             return True
         except Exception as e:
             logger.error(f"TokenManager: 清除用户权限失败: {str(e)}")
+            return False
+
+    def _get_temp_login_key(self, temp_token: str) -> str:
+        """获取临时登录凭证Key"""
+        return f"{self.PREFIX_TEMP_LOGIN}:{temp_token}"
+
+    def store_temp_login_token(
+        self,
+        user_id: int,
+        username: str,
+        tenant_memberships: list[dict]
+    ) -> str:
+        """存储临时登录凭证，返回临时token"""
+        if not self._is_available():
+            logger.warning("TokenManager: Redis未连接，无法存储临时凭证")
+            return ""
+
+        try:
+            # 生成强随机临时token
+            temp_token = secrets.token_urlsafe(32)
+            key = self._get_temp_login_key(temp_token)
+
+            value = json.dumps({
+                "user_id": user_id,
+                "username": username,
+                "tenant_memberships": tenant_memberships
+            })
+
+            self.redis.setex(key, self.TEMP_LOGIN_EXPIRE_SECONDS, value)
+            logger.debug(f"TokenManager: 存储临时登录凭证 user_id={user_id}")
+            return temp_token
+        except Exception as e:
+            logger.error(f"TokenManager: 存储临时凭证失败: {str(e)}")
+            return ""
+
+    def get_temp_login_token(self, temp_token: str) -> dict | None:
+        """获取临时登录凭证数据"""
+        if not self._is_available():
+            return None
+
+        try:
+            key = self._get_temp_login_key(temp_token)
+            data = self.redis.get(key)
+            if data:
+                return json.loads(data)
+            return None
+        except Exception as e:
+            logger.error(f"TokenManager: 获取临时凭证失败: {str(e)}")
+            return None
+
+    def revoke_temp_login_token(self, temp_token: str) -> bool:
+        """撤销临时登录凭证（单次使用后删除）"""
+        if not self._is_available():
+            return False
+
+        try:
+            key = self._get_temp_login_key(temp_token)
+            result = self.redis.delete(key)
+            logger.debug(f"TokenManager: 撤销临时登录凭证 result={result}")
+            return result > 0
+        except Exception as e:
+            logger.error(f"TokenManager: 撤销临时凭证失败: {str(e)}")
             return False
 
 

@@ -1,6 +1,5 @@
 from .dept_repository import dept_repository
 from .file_mapping_repository import file_mapping_repository
-from .phone_binding_repository import phone_binding_repository
 from .resource_repository import resource_repository
 from .role_repository import role_repository
 from .system_config_repository import system_config_repository
@@ -17,5 +16,4 @@ __all__ = [
     "tenant_repository",
     "tenant_plan_repository",
     "system_config_repository",
-    "phone_binding_repository",
 ]

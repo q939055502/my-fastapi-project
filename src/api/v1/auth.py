@@ -13,7 +13,9 @@ from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 from src.schemas.sys.login import (
     CredentialsSchema,
     JWTOut,
+    LoginStep1Response,
     RefreshTokenRequest,
+    SelectTenantRequest,
     TokenRefreshOut,
     UserRegisterOut,
     UserRegisterSchema,
@@ -57,7 +59,43 @@ def user_register(request: Request, register_in: UserRegisterSchema):
 
 @router.post(
     "/login",
-    summary="用户登录",
+    summary="第一步登录",
+    response_model=ApiResponse[LoginStep1Response],
+    responses={
+        200: gen_swagger_response(
+            codes=[ResponseCode.SUCCESS],
+            description="第一步登录成功",
+            example_data={
+                "temp_token": "xxx",
+                "user": {"id": 1, "username": "admin", "email": "admin@example.com"},
+                "tenants": [{"tenant_id": 1, "tenant_name": "公司A", "member_id": 1, "role": "owner"}]
+            }
+        ),
+        401: gen_swagger_response(
+            codes=[ResponseCode.UNAUTHORIZED],
+            description="未授权"
+        ),
+    },
+)
+@apply_rate_limit()
+def login_step1(request: Request, credentials: CredentialsSchema):
+    """
+    用户第一步登录接口
+
+    【类型】公开接口（无需登录）
+    【权限】无需认证
+    【限流】5次/分钟（防暴力破解）
+    【功能】验证用户名密码，返回临时凭证和租户列表
+    """
+    auth_data = auth_service.login_step1(credentials)
+    if not auth_data:
+        raise BusinessException(ResponseCode.UNAUTHORIZED)
+    return success(data=auth_data, msg="第一步登录成功")
+
+
+@router.post(
+    "/select-tenant",
+    summary="第二步登录（选择租户）",
     response_model=ApiResponse[JWTOut],
     responses={
         200: gen_swagger_response(
@@ -69,23 +107,27 @@ def user_register(request: Request, register_in: UserRegisterSchema):
             codes=[ResponseCode.UNAUTHORIZED, ResponseCode.TOKEN_EXPIRED, ResponseCode.TOKEN_FORMAT_INVALID],
             description="未授权/Token异常"
         ),
+        403: gen_swagger_response(
+            codes=[ResponseCode.FORBIDDEN],
+            description="无权访问该租户"
+        ),
     },
 )
 @apply_rate_limit()
-def login_access_token(request: Request, credentials: CredentialsSchema):
+def select_tenant(request: Request, select_request: SelectTenantRequest):
     """
-    用户登录接口
+    用户第二步登录接口（选择租户）
 
     【类型】公开接口（无需登录）
     【权限】无需认证
-    【限流】5次/分钟（防暴力破解）
-    【功能】验证用户名密码，返回 access_token 和 refresh_token
+    【限流】10次/分钟
+    【功能】验证临时凭证并选择租户，返回正式业务令牌
     """
-    auth_data = auth_service.login(credentials)
+    auth_data = auth_service.select_tenant(select_request)
     if not auth_data:
         raise BusinessException(ResponseCode.UNAUTHORIZED)
     data = JWTOut(**auth_data)
-    return success(data=data.model_dump())
+    return success(data=data.model_dump(), msg="登录成功")
 
 
 @router.post(
