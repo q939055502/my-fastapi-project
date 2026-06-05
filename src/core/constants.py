@@ -74,6 +74,7 @@ class RoleCodeConst:
     PLATFORM_ADMIN = DictItem(value="platform_admin", label="平台管理员", sort=2)
     PLATFORM_OPERATOR = DictItem(value="platform_operator", label="平台运营", sort=3)
     PLATFORM_AUDITOR = DictItem(value="platform_auditor", label="平台审计", sort=4)
+    PLATFORM_NORMAL_USER = DictItem(value="platform_normal_user", label="平台普通用户", sort=5)
 
     # 租户角色
     TENANT_OWNER = DictItem(value="tenant_owner", label="租户所有者", sort=1)

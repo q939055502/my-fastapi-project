@@ -1,7 +1,7 @@
 from sqlalchemy import asc
 
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.tenant.tenant_repository import tenant_repository
 from src.schemas.tenant.tenant import TenantCreate, TenantUpdate

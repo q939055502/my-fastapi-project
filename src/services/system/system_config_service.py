@@ -1,7 +1,7 @@
 from sqlalchemy import asc, select
 
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.models.system import SystemConfig
 from src.repositories.system.system_config_repository import system_config_repository

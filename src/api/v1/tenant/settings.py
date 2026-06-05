@@ -6,10 +6,9 @@ from fastapi import APIRouter, Depends, Request
 
 from src.core.auth import PermissionControl
 from src.core.enums.response_code import ResponseCode
-from src.core.handlers import success
-from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
-from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import gen_swagger_response, success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 
 router = APIRouter(
     tags=["租户管理-设置"],

@@ -5,11 +5,10 @@
 from fastapi import APIRouter, Request
 
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
-from src.core.handlers import gen_swagger_response, success
-from src.core.handlers.response import ApiResponse
+from src.core.exceptions import BusinessException
 from src.core.plugins import apply_rate_limit
-from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, gen_swagger_response, success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.schemas.auth.login import (
     JWTOut,
     LoginRequest,

@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import JSON, BigInteger, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
@@ -8,7 +8,7 @@ class OrderPayment(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """订单支付记录模型"""
     __tablename__ = "order_payment"
 
-    order_id = Column(Integer, ForeignKey("order.id"), nullable=False, index=True, comment="订单ID")
+    order_id = Column(BigInteger, ForeignKey("order.id"), nullable=False, index=True, comment="订单ID")
 
     payment_method = Column(String(20), nullable=False, comment="支付方式：wechat/alipay/manual/bank_transfer")
     payment_no = Column(String(100), nullable=True, unique=True, index=True, comment="支付流水号/交易号")

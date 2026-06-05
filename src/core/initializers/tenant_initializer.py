@@ -36,8 +36,8 @@ def init_plans():
                     max_depts=3,
                     max_storage=1024,
                     max_file_size=10,
-                    price=0,
-                    features="基础功能",
+                    price_year=0,
+                    available_features="基础功能",
                     available_modules="user,dept",
                     status=StatusConst.ENABLED.value,
                     sort=1
@@ -50,8 +50,8 @@ def init_plans():
                     max_depts=10,
                     max_storage=10240,
                     max_file_size=50,
-                    price=9900,
-                    features="标准功能",
+                    price_year=9900,
+                    available_features="标准功能",
                     available_modules="user,dept,dict",
                     status=StatusConst.ENABLED.value,
                     sort=2
@@ -64,8 +64,8 @@ def init_plans():
                     max_depts=50,
                     max_storage=102400,
                     max_file_size=100,
-                    price=29900,
-                    features="高级功能",
+                    price_year=29900,
+                    available_features="高级功能",
                     available_modules="user,dept,dict,file",
                     status=StatusConst.ENABLED.value,
                     sort=3
@@ -78,8 +78,8 @@ def init_plans():
                     max_depts=None,
                     max_storage=1048576,
                     max_file_size=500,
-                    price=99900,
-                    features="企业级功能",
+                    price_year=99900,
+                    available_features="企业级功能",
                     available_modules="user,dept,dict,file,log",
                     status=StatusConst.ENABLED.value,
                     sort=4
@@ -124,7 +124,6 @@ def init_default_tenant():
                     default_tenant = Tenant(
                         name="默认租户",
                         code="default",
-                        plan_id=1,
                         owner_user_id=user1.id,
                         status="active"
                     )

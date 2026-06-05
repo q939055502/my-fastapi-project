@@ -26,6 +26,6 @@ class Permission(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMi
         UniqueConstraint('code', name='uq_permission_code'),
     )
 
-    parent = relationship("Permission", remote_side=[id])
+    parent = relationship("Permission", remote_side="Permission.id")
     children = relationship("Permission", back_populates="parent")
     roles = relationship("Role", secondary=role_permission_association, back_populates="permissions")

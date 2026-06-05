@@ -2,9 +2,9 @@ from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
 from src.core.auth import get_password_hash, verify_password
-from src.core.constants import ROLE_PLATFORM_NORMAL_USER
+from src.core.constants import RoleCodeConst
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage.cache.cache_manager import cache_manager, clear_user_cache
 from src.core.storage.transaction_manager import TransactionManager
@@ -109,11 +109,11 @@ class UserService:
                 if not role_ids_to_assign or len(role_ids_to_assign) == 0:
                     from src.models.iam import Role
                     default_role = tm.session.execute(
-                        Role.__table__.select().where(Role.name == ROLE_PLATFORM_NORMAL_USER)
+                        Role.__table__.select().where(Role.code == RoleCodeConst.PLATFORM_NORMAL_USER.value)
                     ).first()
                     if default_role:
                         role_ids_to_assign = [default_role.id]
-                        logger.info(f"用户 {user_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
+                        logger.info(f"用户 {user_in.username} 自动分配默认角色: {RoleCodeConst.PLATFORM_NORMAL_USER.value}")
 
                 user_repository.update_roles(new_user, role_ids_to_assign, session=tm.session)
 

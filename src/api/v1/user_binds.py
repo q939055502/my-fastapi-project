@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from src.core.auth import AuthControl
-from src.core.handlers import success
-from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.iam import User
 
 router = APIRouter(

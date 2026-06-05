@@ -49,7 +49,7 @@ class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     tenant = relationship("Tenant", back_populates="memberships")
     created_by = relationship("TenantMember", remote_side="TenantMember.id", backref="created_sub_accounts")
     roles = relationship("TenantRole", secondary=tenant_member_role_association, back_populates="members")
-    invite = relationship("TenantInvite", back_populates="members")
+    invite = relationship("TenantInvite", back_populates="members", foreign_keys=[invite_id])
 
     def get_identity_label(self) -> str:
         """获取身份标签"""

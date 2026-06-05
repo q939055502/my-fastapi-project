@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.core.auth import get_password_hash, verify_password
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.models.iam import User
 from src.repositories.base import GenericRepository
 from src.schemas.auth.login import LoginRequest
@@ -23,14 +23,28 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         super().__init__(model=User)
 
     def get_by_email(self, email: str, session: Session) -> User | None:
-        query = select(User).where(User.email == email)
+        from src.models.iam.user_bind import UserBind
+        query = select(User).join(
+            UserBind, User.id == UserBind.user_id
+        ).where(
+            UserBind.bind_type == 1,
+            UserBind.value == email,
+            UserBind.status == "verified"
+        )
         query = self._apply_soft_delete_filter(query)
         result = session.execute(query)
         return result.scalars().first()
 
     def get_by_email_with_deleted(self, email: str, session: Session) -> User | None:
+        from src.models.iam.user_bind import UserBind
         result = session.execute(
-            select(User).where(User.email == email)
+            select(User).join(
+                UserBind, User.id == UserBind.user_id
+            ).where(
+                UserBind.bind_type == 1,
+                UserBind.value == email,
+                UserBind.status == "verified"
+            )
         )
         return result.scalars().first()
 
@@ -67,8 +81,23 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
 
         obj_dict = obj_in.model_dump()
         obj_dict.pop('role_ids', None)
+        email = obj_dict.pop('email', None)
 
         obj = self.create(obj_dict, session=session)
+
+        if email:
+            from src.models.iam.user_bind import UserBind
+            user_bind = UserBind(
+                user_id=obj.id,
+                bind_type=1,
+                value=email,
+                is_default=1,
+                status="verified",
+                source="register"
+            )
+            session.add(user_bind)
+            session.flush()
+
         return obj
 
     def update_last_login(self, id: int, session: Session) -> None:

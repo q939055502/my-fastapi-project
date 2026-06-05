@@ -4,12 +4,12 @@ from pathlib import Path
 from fastapi import UploadFile
 
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.log import logger
+from src.core.response import ApiResponse
 from src.core.storage import TransactionManager
 from src.repositories.iam.user_repository import user_repository
 from src.repositories.system.file_mapping_repository import file_mapping_repository
-from src.schemas.base import Success
 
 MAX_FILE_SIZE = 500 * 1024 * 1024
 UPLOADS_DIR = "uploads"
@@ -33,7 +33,7 @@ class FileService:
         self.uploads_dir = Path(UPLOADS_DIR)
         self.uploads_dir.mkdir(exist_ok=True)
 
-    def upload_file(self, file: UploadFile, user_id: int | None = None) -> Success:
+    def upload_file(self, file: UploadFile, user_id: int | None = None) -> ApiResponse:
         try:
             with TransactionManager() as tm:
                 user = self._authenticate_user(tm.session, user_id)
@@ -66,7 +66,8 @@ class FileService:
                 "file_path": str(file_path),
             }
 
-            return Success(
+            return ApiResponse(
+                code=20000,
                 data=response_data,
                 msg="文件上传成功",
             )

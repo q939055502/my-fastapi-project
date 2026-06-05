@@ -5,9 +5,9 @@
 from fastapi import APIRouter, Depends, Request
 
 from src.core.auth import PermissionControl
-from src.core.handlers import success
 from src.core.plugins import apply_rate_limit
-from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.schemas.system.system_config import SystemConfigUpdate
 from src.services.system.system_config_service import system_config_service
 

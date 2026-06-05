@@ -15,7 +15,6 @@
 
 from sqlalchemy import func, select
 
-from src.core.constants import StatusConst
 from src.core.log import logger
 from src.core.storage import get_db
 
@@ -34,27 +33,22 @@ def init_menus():
     """
     logger.info("开始初始化系统菜单...")
     for session in get_db():
-        from src.models.iam import Resource
+        from src.models.iam import Permission
 
-        # 检查是否已存在菜单资源（type=1）
+        # 检查是否已存在菜单资源（type=menu）
         result = session.execute(
-            select(Resource).where(Resource.type == 1)
+            select(Permission).where(Permission.type == "menu")
         )
         menus = result.scalars().first()
 
         if not menus:
             # 创建父菜单
-            parent_menu = Resource(
+            parent_menu = Permission(
                 code="system",
                 name="系统管理",
-                type=1,  # 菜单类型
+                type="menu",
                 parent_id=None,
-                path="/system",
-                icon="carbon:gui-management",
                 sort=1,
-                status=StatusConst.ENABLED.value,
-                scene="superadmin",
-                tenant_id=0,
                 is_system=True
             )
             session.add(parent_menu)
@@ -62,69 +56,44 @@ def init_menus():
 
             # 创建子菜单
             children_menu = [
-                Resource(
-                    code="user",
+                Permission(
+                    code="system:user",
                     name="用户管理",
-                    type=1,
+                    type="menu",
                     parent_id=parent_menu.id,
-                    path="/system/user",
-                    icon="material-symbols:person-outline-rounded",
                     sort=1,
-                    status=StatusConst.ENABLED.value,
-                    scene="superadmin",
-                    tenant_id=0,
                     is_system=True
                 ),
-                Resource(
-                    code="role",
+                Permission(
+                    code="system:role",
                     name="角色管理",
-                    type=1,
+                    type="menu",
                     parent_id=parent_menu.id,
-                    path="/system/role",
-                    icon="carbon:user-role",
                     sort=2,
-                    status=StatusConst.ENABLED.value,
-                    scene="superadmin",
-                    tenant_id=0,
                     is_system=True
                 ),
-                Resource(
-                    code="menu",
+                Permission(
+                    code="system:menu",
                     name="菜单管理",
-                    type=1,
+                    type="menu",
                     parent_id=parent_menu.id,
-                    path="/system/menu",
-                    icon="material-symbols:list-alt-outline",
                     sort=3,
-                    status=StatusConst.ENABLED.value,
-                    scene="superadmin",
-                    tenant_id=0,
                     is_system=True
                 ),
-                Resource(
-                    code="dept",
+                Permission(
+                    code="system:dept",
                     name="部门管理",
-                    type=1,
+                    type="menu",
                     parent_id=parent_menu.id,
-                    path="/system/dept",
-                    icon="mingcute:department-line",
                     sort=4,
-                    status=StatusConst.ENABLED.value,
-                    scene="superadmin",
-                    tenant_id=0,
                     is_system=True
                 ),
-                Resource(
-                    code="auditlog",
+                Permission(
+                    code="system:auditlog",
                     name="审计日志",
-                    type=1,
+                    type="menu",
                     parent_id=parent_menu.id,
-                    path="/system/auditlog",
-                    icon="ph:clipboard-text-bold",
                     sort=5,
-                    status=StatusConst.ENABLED.value,
-                    scene="superadmin",
-                    tenant_id=0,
                     is_system=True
                 ),
             ]
@@ -133,7 +102,7 @@ def init_menus():
             logger.info("系统菜单初始化成功 - 菜单数量: 6")
         else:
             count_result = session.execute(
-                select(func.count(Resource.id)).where(Resource.type == 1)
+                select(func.count(Permission.id)).where(Permission.type == "menu")
             )
             menu_count = count_result.scalar()
             logger.info(f"系统菜单已存在，跳过初始化 - 当前菜单数量: {menu_count}")

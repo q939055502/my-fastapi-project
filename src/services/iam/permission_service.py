@@ -1,5 +1,5 @@
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.iam.permission_repository import permission_repository
 from src.schemas.iam.permission import PermissionCreate, PermissionUpdate

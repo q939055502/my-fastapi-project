@@ -19,17 +19,16 @@ def init_depts():
     """
     logger.info("开始初始化系统部门...")
     for session in get_db():
-        from src.models.system import Dept
+        from src.models.iam import Dept
         result = session.execute(select(Dept))
         depts = result.scalars().first()
         if not depts:
             root_dept = Dept(
                 name="总部",
+                code="HQ",
                 parent_id=None,
                 sort=1,
                 status=StatusConst.ENABLED.value,
-                tenant_id=0,
-                is_system=True
             )
             session.add(root_dept)
             session.flush()
@@ -37,43 +36,38 @@ def init_depts():
             child_depts = [
                 Dept(
                     name="技术部",
+                    code="TECH",
                     parent_id=root_dept.id,
                     sort=1,
                     status=StatusConst.ENABLED.value,
-                    tenant_id=0,
-                    is_system=True
                 ),
                 Dept(
                     name="产品部",
+                    code="PRODUCT",
                     parent_id=root_dept.id,
                     sort=2,
                     status=StatusConst.ENABLED.value,
-                    tenant_id=0,
-                    is_system=True
                 ),
                 Dept(
                     name="运营部",
+                    code="OPERATIONS",
                     parent_id=root_dept.id,
                     sort=3,
                     status=StatusConst.ENABLED.value,
-                    tenant_id=0,
-                    is_system=True
                 ),
                 Dept(
                     name="财务部",
+                    code="FINANCE",
                     parent_id=root_dept.id,
                     sort=4,
                     status=StatusConst.ENABLED.value,
-                    tenant_id=0,
-                    is_system=True
                 ),
                 Dept(
                     name="人事部",
+                    code="HR",
                     parent_id=root_dept.id,
                     sort=5,
                     status=StatusConst.ENABLED.value,
-                    tenant_id=0,
-                    is_system=True
                 ),
             ]
             session.add_all(child_depts)

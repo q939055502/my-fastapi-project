@@ -11,6 +11,7 @@ from .log_context import (
     CTX_LOG,
     LogContext,
     clear_log_context,
+    create_log_context,
     get_log_context,
     set_log_context,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "get_log_context",
     "set_log_context",
     "clear_log_context",
+    "create_log_context",
     # 后台任务上下文
     "CTX_BG_TASKS",
     "get_bg_tasks",

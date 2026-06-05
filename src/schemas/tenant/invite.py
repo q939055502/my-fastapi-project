@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,8 +12,12 @@ class InviteGenerate(BaseModel):
     expire_hours: int | None = Field(None, description="过期小时数")
 
 
+# 别名，用于 API 兼容
+InviteCreate = InviteGenerate
+
+
 class GeneratePublicInvite(InviteGenerate):
-    invite_type: str = Field("public", const=True, description="公开邀请")
+    invite_type: Literal["public"] = Field("public", description="公开邀请")
     need_audit: int = Field(0, description="是否需要审批：0否 1是")
 
 

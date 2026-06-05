@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from src.core.constants import USERNAME_REGEX
+from src.core.constants import RegexConst
 
 
 class UserBase(BaseModel):
@@ -43,7 +43,7 @@ class UserCreate(UserBase):
     @field_validator("username")
     @classmethod
     def validate_username(cls, v: str) -> str:
-        if not re.match(USERNAME_REGEX, v):
+        if not re.match(RegexConst.USERNAME, v):
             raise ValueError("用户名只能包含字母、数字和下划线")
         return v
 

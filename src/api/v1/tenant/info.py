@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter
 
-from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 
 router = APIRouter(
     tags=["租户管理"],

@@ -14,7 +14,7 @@ from passlib.context import CryptContext
 
 from src.core.config import settings
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 

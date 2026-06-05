@@ -4,323 +4,67 @@
 负责系统API权限资源的初始化
 
 职责：
-- 初始化平台级API权限资源（type=2）
-- 创建API接口权限记录（路径、方法、场景等）
+- 初始化平台级API权限（type=api）
 - 为后续角色权限分配提供基础数据
 
 幂等性保证：
-- 检查是否已存在API权限资源，若存在则跳过创建
+- 检查是否已存在API权限，若存在则跳过创建
 - 重复执行不会产生重复数据
 """
 
 from sqlalchemy import func, select
 
-from src.core.constants import StatusConst
 from src.core.log import logger
 from src.core.storage import get_db
 
 
 def init_permissions():
     """
-    初始化系统API权限资源
+    初始化系统API权限
 
     创建平台级API权限：
-    - 平台管理API（scene=admin）
-      - 租户管理、套餐管理、审计日志等
-    - 通用业务API（scene=common）
-      - 用户管理、角色管理、部门管理、资源管理等
+    - 用户管理、角色管理、部门管理、权限管理等
     """
     logger.info("开始初始化系统API权限...")
     for session in get_db():
-        from src.models.iam import Resource
+        from src.models.iam import Permission
 
-        # 检查是否已存在API权限资源（type=2）
+        # 检查是否已存在API权限
         result = session.execute(
-            select(Resource).where(Resource.type == 2)
+            select(Permission).where(Permission.type == "api")
         )
         permissions = result.scalars().first()
 
         if not permissions:
-            # 平台管理API权限
-            admin_api_resources = [
-                Resource(
-                    code="admin_tenants_list",
-                    name="平台租户列表",
-                    type=2,  # API类型
-                    parent_id=None,
-                    api_path="/api/v1/admin/tenants/list",
-                    api_method="GET",
-                    sort=1,
-                    status=StatusConst.ENABLED.value,
-                    scene="admin",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="admin_tenants_create",
-                    name="平台创建租户",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/admin/tenants",
-                    api_method="POST",
-                    sort=2,
-                    status=StatusConst.ENABLED.value,
-                    scene="admin",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="admin_plans_list",
-                    name="平台套餐列表",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/admin/plans/list",
-                    api_method="GET",
-                    sort=3,
-                    status=StatusConst.ENABLED.value,
-                    scene="admin",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="admin_auditlog",
-                    name="平台审计日志",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/admin/auditlog",
-                    api_method="GET",
-                    sort=4,
-                    status=StatusConst.ENABLED.value,
-                    scene="admin",
-                    tenant_id=0,
-                    is_system=True
-                ),
-            ]
-            session.add_all(admin_api_resources)
-
-            # 通用业务API权限
-            common_api_resources = [
+            # API权限列表
+            api_permissions = [
                 # 用户管理API
-                Resource(
-                    code="user_list",
-                    name="用户列表",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/users/list",
-                    api_method="GET",
-                    sort=1,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="user_create",
-                    name="创建用户",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/users",
-                    api_method="POST",
-                    sort=2,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="user_update",
-                    name="更新用户",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/users/{user_id}",
-                    api_method="PUT",
-                    sort=3,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="user_delete",
-                    name="删除用户",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/users/{user_id}",
-                    api_method="DELETE",
-                    sort=4,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
+                Permission(code="user:list", name="用户列表", type="api", sort=1, is_system=True),
+                Permission(code="user:create", name="创建用户", type="api", sort=2, is_system=True),
+                Permission(code="user:update", name="更新用户", type="api", sort=3, is_system=True),
+                Permission(code="user:delete", name="删除用户", type="api", sort=4, is_system=True),
                 # 角色管理API
-                Resource(
-                    code="role_list",
-                    name="角色列表",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/roles/list",
-                    api_method="GET",
-                    sort=1,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="role_create",
-                    name="创建角色",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/roles",
-                    api_method="POST",
-                    sort=2,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="role_update",
-                    name="更新角色",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/roles/{role_id}",
-                    api_method="PUT",
-                    sort=3,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="role_delete",
-                    name="删除角色",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/roles/{role_id}",
-                    api_method="DELETE",
-                    sort=4,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
+                Permission(code="role:list", name="角色列表", type="api", sort=1, is_system=True),
+                Permission(code="role:create", name="创建角色", type="api", sort=2, is_system=True),
+                Permission(code="role:update", name="更新角色", type="api", sort=3, is_system=True),
+                Permission(code="role:delete", name="删除角色", type="api", sort=4, is_system=True),
                 # 部门管理API
-                Resource(
-                    code="dept_list",
-                    name="部门列表",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/depts/list",
-                    api_method="GET",
-                    sort=1,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="dept_create",
-                    name="创建部门",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/depts",
-                    api_method="POST",
-                    sort=2,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="dept_update",
-                    name="更新部门",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/depts/{dept_id}",
-                    api_method="PUT",
-                    sort=3,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="dept_delete",
-                    name="删除部门",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/depts/{dept_id}",
-                    api_method="DELETE",
-                    sort=4,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                # 资源管理API
-                Resource(
-                    code="resource_list",
-                    name="资源列表",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/resources/list",
-                    api_method="GET",
-                    sort=1,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="resource_create",
-                    name="创建资源",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/resources",
-                    api_method="POST",
-                    sort=2,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="resource_update",
-                    name="更新资源",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/resources/{resource_id}",
-                    api_method="PUT",
-                    sort=3,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
-                Resource(
-                    code="resource_delete",
-                    name="删除资源",
-                    type=2,
-                    parent_id=None,
-                    api_path="/api/v1/resources/{resource_id}",
-                    api_method="DELETE",
-                    sort=4,
-                    status=StatusConst.ENABLED.value,
-                    scene="common",
-                    tenant_id=0,
-                    is_system=True
-                ),
+                Permission(code="dept:list", name="部门列表", type="api", sort=1, is_system=True),
+                Permission(code="dept:create", name="创建部门", type="api", sort=2, is_system=True),
+                Permission(code="dept:update", name="更新部门", type="api", sort=3, is_system=True),
+                Permission(code="dept:delete", name="删除部门", type="api", sort=4, is_system=True),
+                # 权限管理API
+                Permission(code="permission:list", name="权限列表", type="api", sort=1, is_system=True),
+                Permission(code="permission:create", name="创建权限", type="api", sort=2, is_system=True),
+                Permission(code="permission:update", name="更新权限", type="api", sort=3, is_system=True),
+                Permission(code="permission:delete", name="删除权限", type="api", sort=4, is_system=True),
             ]
-            session.add_all(common_api_resources)
-
+            session.add_all(api_permissions)
             session.commit()
-            total_count = len(admin_api_resources) + len(common_api_resources)
-            logger.info(f"系统API权限初始化成功 - 权限数量: {total_count}")
+            logger.info(f"系统API权限初始化成功 - 权限数量: {len(api_permissions)}")
         else:
             count_result = session.execute(
-                select(func.count(Resource.id)).where(Resource.type == 2)
+                select(func.count(Permission.id)).where(Permission.type == "api")
             )
             permission_count = count_result.scalar()
             logger.info(f"系统API权限已存在，跳过初始化 - 当前权限数量: {permission_count}")

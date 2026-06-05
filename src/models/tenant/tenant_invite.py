@@ -39,4 +39,4 @@ class TenantInvite(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     default_role = relationship("TenantRole")
     audit_member = relationship("TenantMember", foreign_keys=[audit_member_id])
     creator_member = relationship("TenantMember", foreign_keys=[creator_member_id])
-    members = relationship("TenantMember", back_populates="invite")
+    members = relationship("TenantMember", back_populates="invite", foreign_keys="TenantMember.invite_id")

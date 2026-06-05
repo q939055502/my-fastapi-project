@@ -9,26 +9,26 @@ from typing import Any
 
 from pydantic import ValidationInfo, field_validator
 
-from src.core.constants import EMAIL_REGEX, ID_CARD_REGEX, PHONE_REGEX
+from src.core.constants import RegexConst
 
 
 def validate_phone(phone: str) -> str:
     """校验手机号格式"""
-    if not re.match(PHONE_REGEX, phone):
+    if not re.match(RegexConst.PHONE, phone):
         raise ValueError("手机号格式错误")
     return phone
 
 
 def validate_email(email: str) -> str:
     """校验邮箱格式"""
-    if not re.match(EMAIL_REGEX, email):
+    if not re.match(RegexConst.EMAIL, email):
         raise ValueError("邮箱格式错误")
     return email
 
 
 def validate_id_card(id_card: str) -> str:
     """校验身份证号格式"""
-    if not re.match(ID_CARD_REGEX, id_card):
+    if not re.match(RegexConst.ID_CARD, id_card):
         raise ValueError("身份证号格式错误")
     return id_card
 

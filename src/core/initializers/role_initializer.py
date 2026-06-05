@@ -36,9 +36,9 @@ def init_roles():
     """
     logger.info("开始初始化平台角色...")
     for session in get_db():
-        from src.models.iam import Resource, Role, User
+        from src.models.iam import Permission, Role, User
         from src.models.iam.associations import (
-            role_resource_association,
+            role_permission_association,
             user_role_association,
         )
 
@@ -50,44 +50,44 @@ def init_roles():
             platform_roles = [
                 Role(
                     name="平台超级管理员",
+                    code="platform_super_admin",
                     remark="全平台最高权限，跨所有租户无限制，可管理所有租户、可操作回收站、可物理硬删",
-                    tenant_id=0,
                     is_system=True
                 ),
                 Role(
                     name="平台运营管理员",
+                    code="platform_operator",
                     remark="租户全生命周期管理，审核租户入驻、信息修改，查看租户基础信息、账号数量，冻结违规租户，分配租户套餐、配置",
-                    tenant_id=0,
                     is_system=True
                 ),
                 Role(
                     name="平台财务管理员",
+                    code="platform_finance",
                     remark="仅账单、订单、充值、续费、发票、欠费管控，无权查看员工业务数据、无权冻结租户",
-                    tenant_id=0,
                     is_system=True
                 ),
                 Role(
                     name="平台审核管理员",
+                    code="platform_auditor",
                     remark="企业资质审核、资料审核、内容风控，无任何账号与租户管理权限",
-                    tenant_id=0,
                     is_system=True
                 ),
                 Role(
                     name="平台运维专员",
+                    code="platform_ops",
                     remark="日志查看、系统状态监控、简单问题排查，仅查看，无任何修改删除权限",
-                    tenant_id=0,
                     is_system=True
                 ),
                 Role(
                     name="平台客服专员",
+                    code="platform_support",
                     remark="查看租户基础信息、工单处理、协助改基础资料，无权查看隐私数据、无权改权限",
-                    tenant_id=0,
                     is_system=True
                 ),
                 Role(
                     name="平台普通用户",
+                    code="platform_normal_user",
                     remark="平台基础用户，仅能查看个人信息和基础功能，无管理权限",
-                    tenant_id=0,
                     is_system=True
                 ),
             ]
@@ -96,19 +96,19 @@ def init_roles():
 
             # 为超级管理员角色分配所有权限
             superadmin_role_result = session.execute(
-                select(Role).where(Role.name == "平台超级管理员")
+                select(Role).where(Role.code == "platform_super_admin")
             )
             superadmin_role = superadmin_role_result.scalars().first()
 
             if superadmin_role:
-                all_resources_result = session.execute(select(Resource))
-                all_resources = all_resources_result.scalars().all()
+                all_permissions_result = session.execute(select(Permission))
+                all_permissions = all_permissions_result.scalars().all()
 
-                for resource in all_resources:
+                for permission in all_permissions:
                     session.execute(
-                        role_resource_association.insert().values(
+                        role_permission_association.insert().values(
                             role_id=superadmin_role.id,
-                            resource_id=resource.id
+                            permission_id=permission.id
                         )
                     )
 
@@ -135,7 +135,7 @@ def init_roles():
 
             # 检查并补充超级管理员用户角色关联
             superadmin_role_result = session.execute(
-                select(Role).where(Role.name == "平台超级管理员")
+                select(Role).where(Role.code == "platform_super_admin")
             )
             superadmin_role = superadmin_role_result.scalars().first()
 

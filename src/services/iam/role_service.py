@@ -1,7 +1,7 @@
 from sqlalchemy import asc
 
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.repositories.iam.role_repository import role_repository
 from src.schemas.iam.role import RoleCreate, RoleUpdate

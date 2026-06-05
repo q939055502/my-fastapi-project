@@ -2,9 +2,9 @@ from typing import Any
 
 from src.core.auth import create_token_pair, token_manager, verify_token
 from src.core.config import settings
-from src.core.constants import ROLE_PLATFORM_NORMAL_USER
+from src.core.constants import RoleCodeConst
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
+from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.repositories.iam.role_repository import role_repository
@@ -55,11 +55,11 @@ class AuthService:
 
             default_role = tm.session.execute(
                 role_repository.model.__table__.select()
-                .where(role_repository.model.name == ROLE_PLATFORM_NORMAL_USER)
+                .where(role_repository.model.code == RoleCodeConst.PLATFORM_NORMAL_USER.value)
             ).first()
             if default_role:
                 user_repository.update_roles(new_user, [default_role.id], session=tm.session)
-                logger.info(f"用户 {register_in.username} 自动分配默认角色: {ROLE_PLATFORM_NORMAL_USER}")
+                logger.info(f"用户 {register_in.username} 自动分配默认角色: {RoleCodeConst.PLATFORM_NORMAL_USER.value}")
 
             tm.commit()
 

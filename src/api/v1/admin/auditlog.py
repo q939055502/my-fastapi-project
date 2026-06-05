@@ -2,9 +2,9 @@ from datetime import datetime
 
 from fastapi import APIRouter, Query, Request
 
-from src.core.handlers import success_page
 from src.core.plugins import apply_rate_limit
-from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import success_page
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.services.system.audit_log_service import audit_log_service
 
 router = APIRouter(
