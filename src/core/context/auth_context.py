@@ -65,6 +65,7 @@ def get_current_tenant_id(request: Request) -> int | None:
     ctx = get_auth_context(request)
     return ctx.tenant_id
 
+
 def get_current_request_id(request: Request) -> str:
     """获取当前请求ID"""
     ctx = get_auth_context(request)

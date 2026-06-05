@@ -1,7 +1,7 @@
 """
-异常处理模块
+异常处理器模块
 
-定义全局异常处理函数。
+定义全局异常处理函数，将异常转换为统一响应格式。
 """
 
 import jwt
@@ -13,24 +13,9 @@ from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
 from src.core.enums.response_code import ResponseCode
-from src.core.exceptions.exception import BusinessException
-from src.core.handlers.response import fail
-
-
-class DoesNotExist(Exception):
-    """资源不存在异常"""
-    def __init__(self, message: str = "Resource not found"):
-        super().__init__(message)
-        self.message = message
-
-
-class SettingNotFound(Exception):
-    """设置不存在异常"""
-    def __init__(self, key: str = None):
-        message = f"Setting '{key}' not found" if key else "Setting not found"
-        super().__init__(message)
-        self.key = key
-        self.message = message
+from src.core.exceptions.business import BusinessException
+from src.core.exceptions.common import DoesNotExist
+from src.core.response import fail
 
 
 def DoesNotExistHandle(req: Request, exc: DoesNotExist) -> JSONResponse:

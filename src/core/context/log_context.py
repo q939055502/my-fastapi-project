@@ -34,7 +34,7 @@ class LogContext:
 
 
 # ContextVar 定义 - 自动协程隔离
-_log_context_var: ContextVar[LogContext] = ContextVar("log_context")
+CTX_LOG: ContextVar[LogContext] = ContextVar("log_context")
 
 
 def set_log_context(context: LogContext) -> None:
@@ -43,7 +43,7 @@ def set_log_context(context: LogContext) -> None:
     Args:
         context: 日志上下文对象
     """
-    _log_context_var.set(context)
+    CTX_LOG.set(context)
 
 
 def get_log_context() -> LogContext:
@@ -52,7 +52,12 @@ def get_log_context() -> LogContext:
     Returns:
         LogContext: 当前日志上下文，默认为空上下文
     """
-    return _log_context_var.get(LogContext())
+    return CTX_LOG.get(LogContext())
+
+
+def clear_log_context() -> None:
+    """清空日志上下文"""
+    CTX_LOG.set(LogContext())
 
 
 def create_log_context(
@@ -87,8 +92,3 @@ def create_log_context(
         duration=duration,
         business_code=business_code,
     )
-
-
-
-
-

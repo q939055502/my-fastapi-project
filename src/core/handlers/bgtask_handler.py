@@ -1,12 +1,12 @@
 """
-后台任务模块
+后台任务处理器模块
 
 统一管理后台任务。
 """
 
 from starlette.background import BackgroundTasks
 
-from src.core.handlers.bgtask_context import CTX_BG_TASKS
+from src.core.context import CTX_BG_TASKS
 
 
 class BgTasks:

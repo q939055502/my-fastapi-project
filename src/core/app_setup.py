@@ -18,7 +18,7 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.handlers import (
+from src.core.exceptions import (
     BusinessException,
     BusinessExceptionHandle,
     DoesNotExist,
@@ -26,6 +26,7 @@ from src.core.handlers import (
     GlobalExceptionHandle,
     HttpExcHandle,
     IntegrityHandle,
+    JWTErrorHandle,
     RateLimitExceededHandle,
     RequestValidationHandle,
     ResponseValidationHandle,
@@ -84,8 +85,6 @@ def register_exceptions(app: FastAPI):
     """
     import jwt
     from fastapi import HTTPException
-
-    from src.core.handlers import JWTErrorHandle
 
     app.add_exception_handler(BusinessException, BusinessExceptionHandle)
     app.add_exception_handler(DoesNotExist, DoesNotExistHandle)

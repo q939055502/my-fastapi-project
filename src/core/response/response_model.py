@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from src.core.enums.response_code import ResponseCode
-from src.core.settings.response_msg import RESPONSE_MSG
+from src.core.response.response_msg import RESPONSE_MSG
 
 T = TypeVar("T")
 

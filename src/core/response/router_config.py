@@ -1,5 +1,6 @@
 from src.core.enums.response_code import ResponseCode
-from src.core.handlers import gen_swagger_response
+
+from .response_model import gen_swagger_response
 
 DEFAULT_ROUTER_RESPONSES = {
     422: gen_swagger_response(

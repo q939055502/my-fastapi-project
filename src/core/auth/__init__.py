@@ -5,18 +5,8 @@
 - security: 密码哈希、JWT生成/验证
 - dependency: 认证控制、权限控制、依赖注入
 - token: Redis令牌管理
-- auth_context: 请求上下文管理
 """
 
-from .auth_context import (
-    AuthContext,
-    get_auth_context,
-    get_current_client_ip,
-    get_current_member_id,
-    get_current_request_id,
-    get_current_tenant_id,
-    get_current_user_id,
-)
 from .dependency import AuthControl, PermissionControl, get_current_username
 from .security import (
     check_perm_match,
@@ -50,14 +40,6 @@ __all__ = [
     "AuthControl",
     "PermissionControl",
     "get_current_username",
-    # auth_context
-    "AuthContext",
-    "get_auth_context",
-    "get_current_user_id",
-    "get_current_member_id",
-    "get_current_tenant_id",
-    "get_current_request_id",
-    "get_current_client_ip",
     # token
     "token_manager",
 ]

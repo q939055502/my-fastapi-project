@@ -15,8 +15,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from src.core.auth import parse_jwt_token
-from src.core.auth.auth_context import AuthContext
-from src.core.log import create_log_context, logger, set_log_context
+from src.core.context import AuthContext, create_log_context, logger, set_log_context
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
