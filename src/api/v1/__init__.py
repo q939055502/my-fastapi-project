@@ -3,8 +3,11 @@ API v1 版本路由注册
 
 架构设计：
 - admin/    : 平台超管专属接口（管理所有租户）
-- client/   : 租户成员接口（管理当前租户）
-- common/   : 公共共用接口（个人中心、认证等）
+- tenant/   : 租户管理员接口（管理当前租户）
+- auth/     : 认证接口（登录、注册、Token刷新）
+- public/   : 公开接口（无需认证）
+- me/       : 个人中心（当前用户）
+- common/   : 公共共用接口（文件等）
 """
 
 from fastapi import APIRouter, Depends
@@ -24,27 +27,42 @@ from .admin.tenants import router as admin_tenants_router
 from .admin.users import router as admin_users_router
 
 # ============================================================
-# 🔄 公共共用接口（common）
+# 🔐 认证接口
 # ============================================================
-# 认证接口
-from .auth import router as auth_router
-from .client.members import router as client_members_router
+from .auth import auth_router
 
 # ============================================================
-# 👥 租户成员接口（client）
+# 📄 通用文件接口
 # ============================================================
-from .client.tenant import router as client_tenant_router
-
-# 通用文件接口
 from .common.files import router as common_files_router
 
-# 个人中心
+# ============================================================
+# 👤 个人中心接口
+# ============================================================
 from .me.profile import router as me_profile_router
 
-# 公开接口
+# ============================================================
+# 🔓 公开接口（无需认证）
+# ============================================================
 from .public.info import router as public_info_router
 
-# 用户绑定（手机号/邮箱）
+# ============================================================
+# 👥 租户管理员接口（tenant）
+# ============================================================
+from .tenant import (
+    tenant_info_router,
+    tenant_invite_router,
+    tenant_manage_router,
+    tenant_members_router,
+    tenant_permissions_router,
+    tenant_roles_router,
+    tenant_settings_router,
+    user_tenant_router,
+)
+
+# ============================================================
+# 📱 用户绑定接口
+# ============================================================
 from .user_binds import router as user_binds_router
 
 v1_router = APIRouter()
@@ -69,11 +87,17 @@ v1_router.include_router(admin_auditlog_router, prefix="/admin/auditlog", depend
 v1_router.include_router(admin_settings_router, prefix="/admin/settings", dependencies=admin_deps)
 
 # ============================================================
-# 👥 租户成员接口（需登录，租户内权限）
+# 👥 租户管理员接口（需租户成员权限）
 # ============================================================
-client_deps = [Depends(AuthControl.is_authed)]
-v1_router.include_router(client_tenant_router, prefix="/client/tenant", dependencies=client_deps)
-v1_router.include_router(client_members_router, prefix="/client/members", dependencies=client_deps)
+tenant_deps = [Depends(AuthControl.is_authed)]
+v1_router.include_router(tenant_info_router, prefix="/tenant/info", dependencies=tenant_deps)
+v1_router.include_router(tenant_members_router, prefix="/tenant/members", dependencies=tenant_deps)
+v1_router.include_router(tenant_roles_router, prefix="/tenant/roles", dependencies=tenant_deps)
+v1_router.include_router(tenant_permissions_router, prefix="/tenant/permissions", dependencies=tenant_deps)
+v1_router.include_router(tenant_invite_router, prefix="/tenant/invite", dependencies=tenant_deps)
+v1_router.include_router(tenant_manage_router, prefix="/tenant/manage", dependencies=tenant_deps)
+v1_router.include_router(tenant_settings_router, prefix="/tenant/settings", dependencies=tenant_deps)
+v1_router.include_router(user_tenant_router, prefix="/tenant/user-tenants", dependencies=tenant_deps)
 
 # ============================================================
 # 👤 个人中心接口（需登录）
@@ -81,7 +105,7 @@ v1_router.include_router(client_members_router, prefix="/client/members", depend
 v1_router.include_router(me_profile_router, prefix="/me", dependencies=[Depends(AuthControl.is_authed)])
 
 # ============================================================
-# 📱 用户绑定接口（手机号/邮箱，需登录）
+# 📱 用户绑定接口（需登录）
 # ============================================================
 v1_router.include_router(user_binds_router, prefix="/user-binds", dependencies=[Depends(AuthControl.is_authed)])
 

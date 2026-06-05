@@ -10,8 +10,8 @@ from src.core.handlers import success, success_page
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
-from src.schemas.sys.tenant import TenantCreate, TenantUpdate
-from src.services.sys.tenant_service import tenant_service
+from src.schemas.tenant.tenant import TenantCreate, TenantUpdate
+from src.services.tenant.tenant_service import tenant_service
 
 router = APIRouter(
     tags=["平台管理-租户"],

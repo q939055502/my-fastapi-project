@@ -8,7 +8,7 @@ from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.iam import User
-from src.services.sys.file_mapping_service import file_service
+from src.services.system.file_service import file_service
 
 router = APIRouter(
     tags=["通用-文件管理"],

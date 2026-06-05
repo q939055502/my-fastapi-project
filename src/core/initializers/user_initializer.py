@@ -34,7 +34,7 @@ def init_superuser():
     logger.info("开始初始化超级管理员用户...")
     for session in get_db():
         try:
-            from src.repositories.sys.user_repository import UserCreate, user_repository
+            from src.repositories.iam.user_repository import UserCreate, user_repository
 
             result = session.execute(select(user_repository.model))
             user = result.scalars().first()

@@ -109,7 +109,7 @@ def init_default_tenant():
     for session in get_db():
         try:
             from src.models.tenant import Tenant, TenantMember
-            from src.repositories.sys.user_repository import user_repository
+            from src.repositories.iam.user_repository import user_repository
 
             result = session.execute(select(Tenant).where(Tenant.code == "default"))
             default_tenant = result.scalars().first()

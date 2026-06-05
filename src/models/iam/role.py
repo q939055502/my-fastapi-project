@@ -12,7 +12,6 @@ from src.models.base import (
 
 from .associations import (
     role_permission_association,
-    role_resource_association,
     user_role_association,
 )
 
@@ -28,5 +27,4 @@ class Role(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, S
     code = Column(String(50), nullable=False, index=True, comment="角色编码（唯一）")
 
     users = relationship("User", secondary=user_role_association, back_populates="roles")
-    resources = relationship("Resource", secondary=role_resource_association, back_populates="roles")
     permissions = relationship("Permission", secondary=role_permission_association, back_populates="roles")

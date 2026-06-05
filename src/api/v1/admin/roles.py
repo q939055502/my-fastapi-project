@@ -7,8 +7,8 @@ from src.core.handlers import success, success_page
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
-from src.schemas.sys.roles import RoleCreate, RoleUpdate
-from src.services.sys.role_service import role_service
+from src.schemas.iam.role import RoleCreate, RoleUpdate
+from src.services.iam.role_service import role_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(

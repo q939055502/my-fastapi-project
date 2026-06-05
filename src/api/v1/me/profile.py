@@ -14,8 +14,8 @@ from src.core.log import logger
 from src.core.plugins import apply_rate_limit
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.iam import User
-from src.schemas.sys.users import UpdatePassword, UserUpdate
-from src.services.sys.user_service import user_service
+from src.schemas.iam.user import UpdatePassword, UserUpdate
+from src.services.iam.user_service import user_service
 
 router = APIRouter(
     tags=["个人中心"],

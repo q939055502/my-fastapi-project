@@ -1,0 +1,47 @@
+from sqlalchemy import and_, select
+from sqlalchemy.orm import Session
+
+from src.models.system import DictData
+from src.repositories.base import GenericRepository
+
+
+class DictDataRepository(GenericRepository[DictData, None, None]):
+    def __init__(self):
+        super().__init__(model=DictData)
+
+    def get_by_type_code(self, type_code: str, session: Session) -> list[DictData]:
+        """根据字典类型编码获取字典数据"""
+        query = select(DictData).join(
+            DictData.dict_type
+        ).where(
+            and_(
+                DictData.dict_type.has(code=type_code),
+                not DictData.is_deleted,
+                not DictData.dict_type.has(is_deleted=True)
+            )
+        )
+        return list(session.execute(query).scalars().all())
+
+    def get_by_type_id(self, type_id: int, session: Session) -> list[DictData]:
+        """根据字典类型ID获取字典数据"""
+        query = select(DictData).where(
+            and_(
+                DictData.dict_type_id == type_id,
+                not DictData.is_deleted
+            )
+        )
+        return list(session.execute(query).scalars().all())
+
+    def get_by_value(self, type_id: int, value: str, session: Session) -> DictData | None:
+        """根据类型ID和值获取字典数据"""
+        query = select(DictData).where(
+            and_(
+                DictData.dict_type_id == type_id,
+                DictData.value == value,
+                not DictData.is_deleted
+            )
+        )
+        return session.execute(query).scalars().first()
+
+
+dict_data_repository = DictDataRepository()

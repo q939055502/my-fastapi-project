@@ -5,8 +5,8 @@ from src.core.handlers import success, success_page
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
-from src.schemas.sys.resource import ResourceCreate, ResourceUpdate
-from src.services.sys.resource_service import resource_service
+from src.schemas.iam.permission import PermissionCreate, PermissionUpdate
+from src.services.iam.permission_service import resource_service
 
 router = APIRouter(
     tags=["平台管理-资源"],
@@ -25,7 +25,7 @@ router = APIRouter(
     },
 )
 @apply_rate_limit("30/minute")
-def create_resource(request: Request, resource_in: ResourceCreate):
+def create_resource(request: Request, resource_in: PermissionCreate):
     data = resource_service.create_resource(resource_in)
     return success(data=data, msg="资源创建成功")
 
@@ -41,7 +41,7 @@ def create_resource(request: Request, resource_in: ResourceCreate):
     },
 )
 @apply_rate_limit("30/minute")
-def update_resource(request: Request, resource_id: int, resource_in: ResourceUpdate):
+def update_resource(request: Request, resource_id: int, resource_in: PermissionUpdate):
     data = resource_service.update_resource(resource_id, resource_in)
     return success(data=data, msg="资源更新成功")
 

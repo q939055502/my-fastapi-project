@@ -5,8 +5,8 @@ from src.core.handlers import success
 from src.core.handlers.response import gen_swagger_response
 from src.core.plugins import apply_rate_limit
 from src.core.settings.router_config import DEFAULT_ROUTER_RESPONSES
-from src.schemas.sys.depts import DeptCreate, DeptUpdate
-from src.services.sys.dept_service import dept_service
+from src.schemas.iam.dept import DeptCreate, DeptUpdate
+from src.services.iam.dept_service import dept_service
 
 router = APIRouter(
     tags=["平台管理-部门"],
