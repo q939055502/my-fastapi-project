@@ -44,6 +44,8 @@ from src.models.system import (
 from src.models.tenant import (
     Tenant,
     TenantConfig,
+    TenantDictData,
+    TenantDictType,
     TenantHourlyUsage,
     TenantInvite,
     TenantMember,
@@ -79,6 +81,8 @@ __all__ = [
     "TenantRole",
     "TenantPermission",
     "TenantInvite",
+    "TenantDictType",
+    "TenantDictData",
     # System
     "DictType",
     "DictData",

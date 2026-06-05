@@ -1,4 +1,14 @@
-# 读取 .env，做封装 / 校验 / 类型转换，
+"""
+应用配置模块
+
+使用 Pydantic V2 语法定义应用的配置项，支持从环境变量和 .env 文件读取配置。
+包含应用的基本信息、CORS 配置、数据库配置、JWT 配置等。
+
+职责划分：
+- config.py: 应用配置（支持环境变量覆盖，从 constants.py 引用默认值）
+- constants.py: 程序固定常量（真正固定不变的值）
+"""
+
 import json
 import os
 import secrets
@@ -6,12 +16,7 @@ import secrets
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-"""
-应用配置模块
-
-使用 Pydantic V2 语法定义应用的配置项，支持从环境变量和 .env 文件读取配置。
-包含应用的基本信息、CORS 配置、数据库配置、JWT 配置等。
-"""
+from src.core.constants import DateTimeConst
 
 
 class Settings(BaseSettings):
@@ -28,8 +33,8 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "管理系统"
     APP_DESCRIPTION: str = "业务APP + Web后端管理系统"
 
-    APP_ENV: str = "development"
-    DEBUG: bool = True
+    APP_ENV: str = "production"
+    DEBUG: bool = False
 
     # ========== 存储配置 ==========
     STORAGE_TYPE: str = "local"
@@ -67,8 +72,8 @@ class Settings(BaseSettings):
     # ========== 安全配置 ==========
     SECRET_KEY: str = secrets.token_urlsafe(32)
     JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 4
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 4    # 4小时
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7          # 7天
 
     # ========== 数据库配置 ==========
     DATABASE_URL: str = ""
@@ -95,12 +100,12 @@ class Settings(BaseSettings):
 
     # ========== Redis 配置 ==========
     REDIS_URL: str = "redis://:123456@localhost:6378/0"
-    CACHE_TTL: int = 300
+    CACHE_TTL: int = 300    # 默认缓存时间（秒）
 
     # ========== L1 本地缓存配置 ==========
     L1_CACHE_ENABLED: bool = True
     L1_CACHE_MAXSIZE: int = 1000
-    L1_CACHE_TTL: int = 300
+    L1_CACHE_TTL: int = 300  # 5分钟
 
     # ========== 注册配置 ==========
     ALLOW_USER_REGISTRATION: bool = True
@@ -114,11 +119,11 @@ class Settings(BaseSettings):
     # 软删除数据清理配置（天）
     SCHEDULER_SOFT_DELETE_RETENTION_DAYS: int = 30
     # Cron 表达式配置
-    SCHEDULER_CLEAN_LOG_CRON: str = "0 2 * * *"  # 每天凌晨 2 点执行
-    SCHEDULER_CLEAN_SOFT_DELETE_CRON: str = "0 3 * * 0"  # 每周日凌晨 3 点执行
+    SCHEDULER_CLEAN_LOG_CRON: str = "0 2 * * *"      # 每天凌晨2点执行
+    SCHEDULER_CLEAN_SOFT_DELETE_CRON: str = "0 3 * * 0"  # 每周日凌晨3点执行
 
     # ========== 其他配置 ==========
-    DATETIME_FORMAT: str = "%Y-%m-%d %H:%M:%S"
+    DATETIME_FORMAT: str = DateTimeConst.FORMAT
     COMPANY_ROLE_MAPPING: dict[str, list[int]] = {"default": []}
 
     model_config = SettingsConfigDict(
@@ -131,17 +136,6 @@ class Settings(BaseSettings):
     @field_validator("STORAGE_TYPE")
     @classmethod
     def validate_storage_type(cls, v):
-        """验证存储类型
-
-        Args:
-            v: 存储类型值
-
-        Returns:
-            str: 验证后的存储类型
-
-        Raises:
-            ValueError: 存储类型不支持时抛出
-        """
         valid_types = ["local", "oss", "cos"]
         if v.lower() not in valid_types:
             raise ValueError(f"不支持的存储类型: {v}，支持的类型: {valid_types}")
@@ -150,14 +144,6 @@ class Settings(BaseSettings):
     @field_validator("LOCAL_STORAGE_DIR")
     @classmethod
     def validate_local_storage_dir(cls, v):
-        """验证本地存储目录
-
-        Args:
-            v: 本地存储目录路径
-
-        Returns:
-            str: 验证后的目录路径
-        """
         if not v:
             raise ValueError("本地存储目录不能为空")
         return v
@@ -165,44 +151,24 @@ class Settings(BaseSettings):
     @field_validator("LOCAL_STORAGE_URL")
     @classmethod
     def validate_local_storage_url(cls, v):
-        """验证本地存储URL
-
-        Args:
-            v: 本地存储URL
-
-        Returns:
-            str: 验证后的URL
-        """
         if not v:
             raise ValueError("本地存储URL不能为空")
         return v
 
     @property
     def PROJECT_ROOT(self) -> str:
-        """项目根目录"""
         return os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 
     @property
     def BASE_DIR(self) -> str:
-        """应用基础目录"""
         return os.path.abspath(os.path.join(self.PROJECT_ROOT, os.pardir))
 
     @property
     def CORS_ORIGINS_LIST(self) -> list[str]:
-        """将CORS_ORIGINS字符串转换为列表
-
-        Returns:
-            list[str]: CORS 来源列表
-        """
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
-        """生成 SQLAlchemy 数据库连接 URL
-
-        Returns:
-            str: 数据库连接 URL
-        """
         if self.DATABASE_URL:
             return self.DATABASE_URL
 
@@ -210,20 +176,12 @@ class Settings(BaseSettings):
             return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
         elif self.DB_ENGINE == "postgres":
             return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        else:  # sqlite 作为备用
+        else:
             return f"sqlite:///{self.BASE_DIR}/db.sqlite3"
 
     @field_validator("COMPANY_ROLE_MAPPING", mode="before")
     @classmethod
     def parse_company_role_mapping(cls, v):
-        """解析 COMPANY_ROLE_MAPPING 环境变量
-
-        Args:
-            v: 环境变量值
-
-        Returns:
-            dict[str, list[int]]: 解析后的公司角色映射
-        """
         if isinstance(v, str):
             try:
                 return json.loads(v)
@@ -234,21 +192,9 @@ class Settings(BaseSettings):
     @field_validator("DB_ENGINE")
     @classmethod
     def validate_db_engine(cls, v):
-        """验证数据库引擎
-
-        Args:
-            v: 数据库引擎值
-
-        Returns:
-            str: 验证后的数据库引擎
-
-        Raises:
-            ValueError: 数据库引擎不支持时抛出
-        """
         valid_engines = ["sqlite", "mysql", "postgres", "postgresql"]
         if v.lower() not in valid_engines:
             raise ValueError(f"不支持的数据库引擎: {v}，支持的引擎: {valid_engines}")
-        # 统一别名，postgres 和 postgresql 都使用 postgres
         if v.lower() == "postgresql":
             return "postgres"
         return v.lower()
@@ -256,18 +202,6 @@ class Settings(BaseSettings):
     @field_validator("MYSQL_PASSWORD", "POSTGRES_PASSWORD")
     @classmethod
     def validate_db_password(cls, v, info):
-        """验证数据库密码
-
-        Args:
-            v: 密码值
-            info: 验证信息
-
-        Returns:
-            str: 验证后的密码
-
-        Raises:
-            ValueError: 生产环境密码为空时抛出
-        """
         app_env = info.data.get("APP_ENV", "development")
         if not v and app_env == "production":
             raise ValueError("生产环境必须设置数据库密码")
@@ -276,17 +210,6 @@ class Settings(BaseSettings):
     @field_validator("SECRET_KEY")
     @classmethod
     def validate_secret_key(cls, v):
-        """验证SECRET_KEY强度
-
-        Args:
-            v: 密钥值
-
-        Returns:
-            str: 验证后的密钥
-
-        Raises:
-            ValueError: 密钥长度不足时抛出
-        """
         if len(v) < 32:
             raise ValueError("SECRET_KEY长度至少32字符")
         return v
@@ -294,17 +217,6 @@ class Settings(BaseSettings):
     @field_validator("SWAGGER_UI_PASSWORD")
     @classmethod
     def validate_swagger_password(cls, v):
-        """验证Swagger访问密码
-
-        Args:
-            v: 密码值
-
-        Returns:
-            str: 验证后的密码
-
-        Raises:
-            ValueError: 密码为空或长度不足时抛出
-        """
         if os.getenv("TESTING", "false").lower() == "true":
             return v or "test_password"
         if not v:
@@ -314,21 +226,11 @@ class Settings(BaseSettings):
         return v
 
     def __init__(self, **kwargs):
-        """初始化配置
-
-        Args:
-            **kwargs: 配置参数
-        """
         super().__init__(**kwargs)
         if self.APP_ENV == "production":
             self._validate_production_config()
 
     def _validate_production_config(self):
-        """生产环境特定配置验证
-
-        Raises:
-            ValueError: 生产环境配置不符合要求时抛出
-        """
         if self.DEBUG:
             raise ValueError("生产环境不能启用DEBUG模式")
 
@@ -340,4 +242,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

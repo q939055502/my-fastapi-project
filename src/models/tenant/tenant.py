@@ -40,6 +40,8 @@ class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStat
     roles = relationship("TenantRole", back_populates="tenant", cascade="all, delete-orphan")
     permissions = relationship("TenantPermission", back_populates="tenant", cascade="all, delete-orphan")
     invites = relationship("TenantInvite", back_populates="tenant", cascade="all, delete-orphan")
+    dict_types = relationship("TenantDictType", back_populates="tenant", cascade="all, delete-orphan")
+    dict_datas = relationship("TenantDictData", back_populates="tenant", cascade="all, delete-orphan")
 
     def is_trial_period(self) -> bool:
         """判断是否处于试用期"""

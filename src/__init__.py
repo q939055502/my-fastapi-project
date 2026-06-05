@@ -30,18 +30,18 @@ def create_app():
     配置项：
     - 标题、描述、版本（来自 settings）
     - API 文档路径（/docs, /redoc, /openapi.json）
-    - 中间件（来自 app_config）
-    - 异常处理器（来自 app_config）
-    - 路由注册（来自 app_config）
+    - 中间件（来自 app_setup）
+    - 异常处理器（来自 app_setup）
+    - 路由注册（来自 app_setup）
     - 启动/关闭事件
     """
-    from src.core.app_config import (
+    from src.core.app_setup import (
         make_middlewares,
         register_exceptions,
         register_routers,
     )
     from src.core.auth import get_current_username, token_manager
-    from src.core.handlers import init_data
+    from src.core.initializers import run_all_initializers
     from src.core.scheduler import scheduler_manager
     from src.core.storage import close_db
 
@@ -59,7 +59,7 @@ def create_app():
     def startup_event():
         """应用启动时执行的初始化任务"""
         token_manager.connect()
-        init_data()
+        run_all_initializers()
         scheduler_manager.start()
 
     @app.on_event("shutdown")
