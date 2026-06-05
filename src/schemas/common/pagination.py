@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Annotated, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -13,5 +13,5 @@ class PaginationInfo(BaseModel):
 
 
 class PaginationResponse(BaseModel, Generic[T]):
-    list: list[T] = Field(..., description="数据列表")
+    list: Annotated[list[T], Field(description="数据列表")]
     pagination: PaginationInfo = Field(..., description="分页信息")
