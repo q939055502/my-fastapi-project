@@ -11,16 +11,6 @@ from src.models.base import (
     UUIDModel,
 )
 
-# IAM 身份权限体系
-from src.models.iam import (
-    Dept,
-    DeptClosure,
-    Permission,
-    Role,
-    User,
-    UserBind,
-)
-
 # Order 订单模块
 from src.models.order import (
     Order,
@@ -29,15 +19,22 @@ from src.models.order import (
     OrderRefund,
 )
 
+# IAM 身份权限体系
 # System 系统基础模块
-from src.models.system import (
+from src.models.platform import (
+    AccountBind,
     AuditLog,
+    Dept,
+    DeptClosure,
     DictData,
     DictType,
     FileMapping,
     LoginLog,
     OperationLog,
+    Permission,
+    Role,
     SystemConfig,
+    User,
 )
 
 # Tenant 多租户核心
@@ -69,7 +66,7 @@ __all__ = [
     "Permission",
     "Dept",
     "DeptClosure",
-    "UserBind",
+    "AccountBind",
     # Tenant
     "Tenant",
     "TenantPlan",

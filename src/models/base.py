@@ -13,8 +13,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from src.core.config import settings
-from src.core.storage import Base
+from src.common.core.config import settings
+from src.common.core.storage import Base
 
 
 class BaseModel(Base):

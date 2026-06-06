@@ -4,7 +4,7 @@
 
 import pytest
 from src.services.sys.user_service import user_service
-from src.schemas.iam.user import UserCreate, UserUpdate
+from src.modules.platform.schemas.user import UserCreate, UserUpdate
 import time
 
 

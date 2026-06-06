@@ -3,7 +3,7 @@
 """
 
 import pytest
-from src.models.iam import Dept
+from src.models.platform import Dept
 
 
 def test_dept_model_creation(db_session):

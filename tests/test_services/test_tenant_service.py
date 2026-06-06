@@ -4,7 +4,7 @@
 
 import pytest
 from src.services.sys.tenant_service import tenant_service
-from src.schemas.tenant.tenant import TenantUpdate
+from src.modules.tenant.schemas.tenant import TenantUpdate
 import time
 
 

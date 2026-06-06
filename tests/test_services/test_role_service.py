@@ -4,7 +4,7 @@
 
 import pytest
 from src.services.sys.role_service import role_service
-from src.schemas.iam.role import RoleCreate
+from src.modules.platform.schemas.role import RoleCreate
 import time
 
 

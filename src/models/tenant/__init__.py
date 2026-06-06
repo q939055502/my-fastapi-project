@@ -11,6 +11,7 @@ from .tenant_dict_type import TenantDictType
 from .tenant_hourly_usage import TenantHourlyUsage
 from .tenant_invite import TenantInvite
 from .tenant_member import TenantMember
+from .tenant_member_role import TenantMemberRole
 from .tenant_oper_log import TenantOperLog
 from .tenant_permission import TenantPermission
 from .tenant_plan import TenantPlan
@@ -26,6 +27,7 @@ __all__ = [
     "TenantUsage",
     "TenantHourlyUsage",
     "TenantMember",
+    "TenantMemberRole",
     "TenantRole",
     "TenantPermission",
     "TenantOperLog",

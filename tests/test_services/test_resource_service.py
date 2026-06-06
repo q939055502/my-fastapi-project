@@ -4,7 +4,7 @@
 
 import pytest
 from src.services.sys.resource_service import resource_service
-from src.schemas.iam.permission import PermissionCreate, PermissionUpdate
+from src.modules.platform.schemas.permission import PermissionCreate, PermissionUpdate
 import time
 
 

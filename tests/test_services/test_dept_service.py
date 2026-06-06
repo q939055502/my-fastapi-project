@@ -4,7 +4,7 @@
 
 import pytest
 from src.services.sys.dept_service import dept_service
-from src.schemas.iam.dept import DeptCreate, DeptUpdate
+from src.modules.platform.schemas.dept import DeptCreate, DeptUpdate
 import time
 
 

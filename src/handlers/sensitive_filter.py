@@ -2,7 +2,6 @@ import json
 import time
 
 from fastapi.responses import StreamingResponse
-
 from src.core.log import logger
 from src.core.response import success
 from src.utils.sensitive_word_filter import sensitive_word_filter

@@ -10,10 +10,7 @@ from src.models.base import (
     TimestampMixin,
 )
 
-from .associations import (
-    tenant_member_role_association,
-    tenant_role_permission_association,
-)
+from .associations import tenant_role_permission_association
 
 
 class TenantRole(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin):
@@ -27,9 +24,7 @@ class TenantRole(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMi
     code = Column(String(50), nullable=False, index=True, comment="角色编码（唯一）")
 
     tenant = relationship("Tenant", back_populates="roles")
-    members = relationship(
-        "TenantMember", secondary=tenant_member_role_association, back_populates="roles"
-    )
+    role_members = relationship("TenantMemberRole", back_populates="tenant_role", cascade="all, delete-orphan")
     permissions = relationship(
         "TenantPermission", secondary=tenant_role_permission_association, back_populates="roles"
     )

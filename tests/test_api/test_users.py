@@ -3,7 +3,7 @@
 """
 
 import pytest
-from src.models.iam import User
+from src.models.platform import User
 from src.core.security import get_password_hash
 import time
 
