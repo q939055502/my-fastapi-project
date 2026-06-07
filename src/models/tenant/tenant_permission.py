@@ -24,6 +24,7 @@ class TenantPermission(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, 
     code = Column(String(100), nullable=False, index=True, comment="权限编码（唯一，格式：资源:操作）")
     type = Column(String(20), nullable=False, index=True, comment="权限类型：menu/button/api")
     parent_id = Column(BigInteger, ForeignKey("tenant_permission.id"), nullable=True, index=True, comment="父级权限ID")
+    scope = Column(String(20), nullable=False, default="tenant", index=True, comment="作用域：platform=平台级，tenant=租户级")
 
     tenant = relationship("Tenant", back_populates="permissions")
     parent = relationship("TenantPermission", remote_side="TenantPermission.id", back_populates="children")
