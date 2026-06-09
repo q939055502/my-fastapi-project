@@ -10,9 +10,9 @@ from src.models.base import (
 )
 
 
-class Order(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin):
+class OrderInfo(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin):
     """订单模型"""
-    __tablename__ = "order"
+    __tablename__ = "order_info"
 
     order_no = Column(String(50), unique=True, nullable=False, index=True, comment="订单号")
 

@@ -21,7 +21,8 @@ from src.models.platform import (
     Role,
     User,
 )
-from src.models.tenant import Tenant, TenantMember, TenantPlan
+from src.models.platform import TenantPlan
+from src.models.tenant import Tenant, TenantMember
 
 
 def clean_old_logs():

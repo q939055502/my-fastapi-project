@@ -6,16 +6,22 @@
 - audit_middleware: HTTP审计日志
 - background_middleware: 后台任务处理
 - context_middleware: 请求上下文管理
+- request_log_middleware: 请求日志记录
+- auth_middleware: 权限校验中间件
 """
 
 from .audit_middleware import HttpAuditLogMiddleware
+from .auth_middleware import AuthMiddleware
 from .background_middleware import BackGroundTaskMiddleware
 from .context_middleware import RequestContextMiddleware
 from .headers_middleware import SecurityHeadersMiddleware
+from .request_log_middleware import RequestLogMiddleware
 
 __all__ = [
     "SecurityHeadersMiddleware",
     "HttpAuditLogMiddleware",
     "BackGroundTaskMiddleware",
     "RequestContextMiddleware",
+    "RequestLogMiddleware",
+    "AuthMiddleware",
 ]

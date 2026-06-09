@@ -34,6 +34,7 @@ from src.common.core.middlewares import (
     BackGroundTaskMiddleware,
     HttpAuditLogMiddleware,
     RequestContextMiddleware,
+    RequestLogMiddleware,
     SecurityHeadersMiddleware,
 )
 from src.common.core.plugins import limiter
@@ -46,9 +47,10 @@ def make_middlewares():
     中间件执行顺序（从外到内）：
     1. CORS - 跨域资源共享
     2. SecurityHeaders - 安全响应头
-    3. RequestContext - 请求上下文管理（包含请求日志记录）
-    4. BackGroundTask - 后台任务处理
-    5. HttpAuditLog - HTTP 审计日志
+    3. RequestContext - 请求上下文管理
+    4. RequestLog - 请求日志记录
+    5. BackGroundTask - 后台任务处理
+    6. HttpAuditLog - HTTP 审计日志
     """
     middleware = [
         Middleware(
@@ -60,6 +62,7 @@ def make_middlewares():
         ),
         Middleware(SecurityHeadersMiddleware),
         Middleware(RequestContextMiddleware),
+        Middleware(RequestLogMiddleware),
         Middleware(BackGroundTaskMiddleware),
         Middleware(
             HttpAuditLogMiddleware,

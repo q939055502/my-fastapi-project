@@ -14,7 +14,7 @@ v1_router = APIRouter()
 v1_router.include_router(auth_v1_router)
 v1_router.include_router(common_v1_router)
 v1_router.include_router(platform_v1_router)
-v1_router.include_router(tenant_v1_router)
+v1_router.include_router(tenant_v1_router, prefix="/{tenant_key}")
 v1_router.include_router(order_v1_router)
 
 __all__ = ["v1_router"]

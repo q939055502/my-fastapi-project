@@ -18,6 +18,9 @@ from src.common.core.storage.cache.cache_manager import cache_manager, clear_use
 from src.common.core.storage.transaction_manager import TransactionManager
 from src.modules.platform.repository.dept_repository import dept_repository
 from src.modules.platform.repository.role_repository import role_repository
+from src.modules.platform.repository.role_subject_repository import (
+    role_subject_repository,
+)
 from src.modules.platform.repository.user_repository import user_repository
 from src.modules.platform.schemas.user import UserCreate, UserUpdate
 
@@ -42,8 +45,14 @@ class UserAdminService:
                     detail=f"禁止分配系统内置角色 '{role.name}'",
                 )
 
-    def _user_to_dict(self, user_obj, include_roles: bool = True) -> dict:
-        """将用户对象转换为字典，排除密码字段"""
+    def _user_to_dict(self, user_obj, include_roles: bool = True, roles: list = None) -> dict:
+        """将用户对象转换为字典，排除密码字段
+
+        Args:
+            user_obj: 用户对象
+            include_roles: 是否包含角色信息
+            roles: 角色列表（通过 role_subject_repository 查询得到）
+        """
         user_dict = user_obj.to_dict(exclude_fields=["password"])
 
         # 添加 email 字段，从 AccountBind 中获取
@@ -53,14 +62,14 @@ class UserAdminService:
                     user_dict["email"] = bind.identifier
                     break
 
-        if include_roles and hasattr(user_obj, "roles"):
+        if include_roles and roles:
             user_dict["roles"] = [
                 {
                     "id": role.id,
                     "name": role.name,
                     "remark": role.remark
                 }
-                for role in user_obj.roles
+                for role in roles
             ]
 
         return user_dict
@@ -85,7 +94,6 @@ class UserAdminService:
                 session=tm.session,
                 filters=search_filters,
                 order_by=[desc(user_repository.model.created_at)],
-                eager_load=[user_repository.model.roles],
             )
 
             data = self._transform_user_list_with_dept(items, tm.session)
@@ -96,11 +104,18 @@ class UserAdminService:
     def get_user_detail(self, user_id: int) -> dict:
         """获取用户详情（管理员查看）"""
         with TransactionManager() as tm:
-            user_obj = user_repository.get_with_roles(id=user_id, session=tm.session)
+            user_obj = user_repository.get(id=user_id, session=tm.session)
             if not user_obj:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail=f"用户ID: {user_id} 不存在")
 
-            return self._user_to_dict(user_obj, include_roles=True)
+            # 通过 role_subject_repository 获取用户角色（subject_type=0 表示平台用户）
+            roles = role_subject_repository.get_roles_by_subject(
+                subject_id=user_id,
+                subject_type=0,
+                session=tm.session
+            )
+
+            return self._user_to_dict(user_obj, include_roles=True, roles=roles)
 
     def create_user(self, user_in: UserCreate) -> dict:
         """创建用户（管理员）"""
@@ -140,7 +155,13 @@ class UserAdminService:
 
                 tm.commit()
 
-                result = self._user_to_dict(new_user, include_roles=True)
+                # 获取用户角色
+                roles = role_subject_repository.get_roles_by_subject(
+                    subject_id=new_user.id,
+                    subject_type=0,
+                    session=tm.session
+                )
+                result = self._user_to_dict(new_user, include_roles=True, roles=roles)
                 logger.info(f"用户创建成功: {user_in.username}")
                 return result
             except IntegrityError as e:
@@ -248,11 +269,17 @@ class UserAdminService:
         return filters
 
     def _transform_user_list_with_dept(self, items, session) -> list[dict]:
-        """转换用户列表，添加部门信息"""
+        """转换用户列表，添加部门信息和角色信息"""
         data = []
 
         for obj in items:
-            user_dict = self._user_to_dict(obj, include_roles=True)
+            # 通过 role_subject_repository 获取用户角色（subject_type=0 表示平台用户）
+            roles = role_subject_repository.get_roles_by_subject(
+                subject_id=obj.id,
+                subject_type=0,
+                session=session
+            )
+            user_dict = self._user_to_dict(obj, include_roles=True, roles=roles)
 
             dept_id = user_dict.pop("dept_id", None)
             if dept_id:

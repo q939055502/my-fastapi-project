@@ -7,8 +7,6 @@ from src.common.core.auth import AuthControl
 from ..endpoints.info import router as tenant_info_router
 from ..endpoints.invite import router as tenant_invite_router
 from ..endpoints.members import router as tenant_members_router
-from ..endpoints.permissions import router as tenant_permissions_router
-from ..endpoints.roles import router as tenant_roles_router
 from ..endpoints.settings import router as tenant_settings_router
 from ..endpoints.tenant_manage import router as tenant_manage_router
 from ..endpoints.user_tenant import router as user_tenant_router
@@ -19,8 +17,6 @@ tenant_deps = [Depends(AuthControl.is_authed)]
 
 tenant_v1_router.include_router(tenant_info_router, prefix="/tenant/info", dependencies=tenant_deps)
 tenant_v1_router.include_router(tenant_members_router, prefix="/tenant/members", dependencies=tenant_deps)
-tenant_v1_router.include_router(tenant_roles_router, prefix="/tenant/roles", dependencies=tenant_deps)
-tenant_v1_router.include_router(tenant_permissions_router, prefix="/tenant/permissions", dependencies=tenant_deps)
 tenant_v1_router.include_router(tenant_invite_router, prefix="/tenant/invite", dependencies=tenant_deps)
 tenant_v1_router.include_router(tenant_manage_router, prefix="/tenant/manage", dependencies=tenant_deps)
 tenant_v1_router.include_router(tenant_settings_router, prefix="/tenant/settings", dependencies=tenant_deps)

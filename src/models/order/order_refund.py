@@ -8,7 +8,7 @@ class OrderRefund(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """订单退款记录模型"""
     __tablename__ = "order_refund"
 
-    order_id = Column(BigInteger, ForeignKey("order.id"), nullable=False, index=True, comment="订单ID")
+    order_id = Column(BigInteger, ForeignKey("order_info.id"), nullable=False, index=True, comment="订单ID")
     order_payment_id = Column(BigInteger, ForeignKey("order_payment.id"), nullable=True, index=True, comment="支付记录ID")
 
     refund_no = Column(String(50), nullable=True, unique=True, index=True, comment="退款单号")
@@ -25,5 +25,5 @@ class OrderRefund(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     refunded_at = Column(DateTime(timezone=True), nullable=True, comment="退款成功时间")
     callback_data = Column(JSON, nullable=True, comment="支付平台原始退款回调数据")
 
-    order = relationship("Order", back_populates="refunds")
+    order = relationship("OrderInfo", back_populates="refunds")
     order_payment = relationship("OrderPayment", back_populates="refunds")

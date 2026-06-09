@@ -8,7 +8,7 @@ class OrderPayment(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """订单支付记录模型"""
     __tablename__ = "order_payment"
 
-    order_id = Column(BigInteger, ForeignKey("order.id"), nullable=False, index=True, comment="订单ID")
+    order_id = Column(BigInteger, ForeignKey("order_info.id"), nullable=False, index=True, comment="订单ID")
 
     payment_method = Column(String(20), nullable=False, comment="支付方式：wechat/alipay/manual/bank_transfer")
     payment_no = Column(String(100), nullable=True, unique=True, index=True, comment="支付流水号/交易号")
@@ -23,5 +23,5 @@ class OrderPayment(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     callback_data = Column(JSON, nullable=True, comment="支付平台原始回调数据")
 
-    order = relationship("Order", back_populates="payments")
+    order = relationship("OrderInfo", back_populates="payments")
     refunds = relationship("OrderRefund", back_populates="order_payment", cascade="all, delete-orphan")

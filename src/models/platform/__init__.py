@@ -2,7 +2,6 @@
 平台模型
 
 包含：IAM 身份权限体系、System 系统基础模块
-关联表在 associations.py 中定义，不在此处导出
 """
 
 # IAM 身份权限体系
@@ -15,9 +14,9 @@ from .dict_type import DictType
 from .file_mapping import FileMapping
 from .login_log import LoginLog
 from .operation_log import OperationLog
-from .permission import Permission
-from .role import Role
+from .rbac import Permission, Role, RolePermission, RoleSubject
 from .system_config import SystemConfig
+from .tenant_plan import TenantPlan
 from .user import User
 
 __all__ = [
@@ -27,6 +26,8 @@ __all__ = [
     "DeptClosure",
     "Role",
     "Permission",
+    "RolePermission",
+    "RoleSubject",
     "AccountBind",
     # System
     "AuditLog",
@@ -36,4 +37,5 @@ __all__ = [
     "LoginLog",
     "OperationLog",
     "SystemConfig",
+    "TenantPlan",
 ]

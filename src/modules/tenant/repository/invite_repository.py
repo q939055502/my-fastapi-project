@@ -3,11 +3,11 @@ from datetime import datetime
 
 from sqlalchemy import and_, select, update
 from sqlalchemy.orm import Session
-from src.common.repository.base import GenericRepository
 from src.models.tenant import TenantInvite
+from src.modules.tenant.repository.base import TenantRepositoryBase
 
 
-class TenantInviteRepository(GenericRepository[TenantInvite, None, None]):
+class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
     def __init__(self):
         super().__init__(model=TenantInvite)
 

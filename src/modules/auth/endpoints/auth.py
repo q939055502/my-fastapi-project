@@ -12,12 +12,18 @@ from src.modules.auth.schemas.login import (
     LoginByPasswordOut,
     LoginByPasswordStep1Request,
     LoginStep1MultiResponse,
-    RefreshTokenRequest,
-    SelectUserOut,
-    SelectUserRequest,
-    TokenRefreshOut,
+)
+from src.modules.auth.schemas.register import (
     UserRegisterOut,
     UserRegisterSchema,
+)
+from src.modules.auth.schemas.token import (
+    RefreshTokenRequest,
+    TokenRefreshOut,
+)
+from src.modules.auth.schemas.user import (
+    SelectUserOut,
+    SelectUserRequest,
 )
 from src.modules.auth.service.auth_service import auth_service
 

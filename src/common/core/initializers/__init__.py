@@ -40,20 +40,20 @@ def run_all_initializers():
     logger.info("========== 开始执行系统初始化 ==========")
 
     # 预留扩展点（暂未实现）
-    from .common.cache_warmup_initializer import init_cache_warmup
-    from .common.cleanup_policy_initializer import init_cleanup_policy
-    from .common.db_initializer import init_db
-    from .common.scheduler_initializer import init_scheduler
-    from .platform.config_initializer import init_system_config
-    from .platform.dept_initializer import init_depts
-    from .platform.dict_initializer import init_dict
-    from .platform.menu_initializer import init_menus
-    from .platform.permission_initializer import init_permissions
-    from .platform.region_initializer import init_regions
-    from .platform.role_initializer import init_roles
-    from .platform.user_initializer import init_superuser
-    from .tenant.tenant_dict_initializer import init_tenant_dict
-    from .tenant.tenant_initializer import init_default_tenant, init_plans
+    from .warmup.common.cache_warmup_initializer import init_cache_warmup
+    from .warmup.common.cleanup_policy_initializer import init_cleanup_policy
+    from .init_data.common.db_initializer import init_db
+    from .warmup.common.scheduler_initializer import init_scheduler
+    from .init_data.platform.config_initializer import init_system_config
+    from .init_data.platform.dept_initializer import init_depts
+    from .init_data.platform.dict_initializer import init_dict
+    from .init_data.platform.menu_initializer import init_menus
+    from .init_data.platform.permission_initializer import init_permissions
+    from .init_data.platform.region_initializer import init_regions
+    from .init_data.platform.role_initializer import init_roles
+    from .init_data.platform.user_initializer import init_superuser
+    from .init_data.tenant.tenant_dict_initializer import init_tenant_dict
+    from .init_data.tenant.tenant_initializer import init_default_tenant, init_plans
 
     try:
         # 核心初始化（已实现）
@@ -104,21 +104,21 @@ def run_initializer(initializer_name: str):
             - cache_warmup: 缓存预热（预留）
     """
     initializers = {
-        "db": ("数据库初始化", lambda: __import__("src.common.core.initializers.common.db_initializer", fromlist=["init_db"]).init_db()),
-        "user": ("用户初始化", lambda: __import__("src.common.core.initializers.platform.user_initializer", fromlist=["init_superuser"]).init_superuser()),
-        "tenant_plan": ("租户套餐初始化", lambda: __import__("src.common.core.initializers.tenant.tenant_initializer", fromlist=["init_plans"]).init_plans()),
-        "tenant_default": ("默认租户初始化", lambda: __import__("src.common.core.initializers.tenant.tenant_initializer", fromlist=["init_default_tenant"]).init_default_tenant()),
-        "menu": ("菜单初始化", lambda: __import__("src.common.core.initializers.platform.menu_initializer", fromlist=["init_menus"]).init_menus()),
-        "permission": ("权限初始化", lambda: __import__("src.common.core.initializers.platform.permission_initializer", fromlist=["init_permissions"]).init_permissions()),
-        "role": ("角色初始化", lambda: __import__("src.common.core.initializers.platform.role_initializer", fromlist=["init_roles"]).init_roles()),
-        "config": ("系统配置初始化", lambda: __import__("src.common.core.initializers.platform.config_initializer", fromlist=["init_system_config"]).init_system_config()),
-        "dept": ("部门初始化", lambda: __import__("src.common.core.initializers.platform.dept_initializer", fromlist=["init_depts"]).init_depts()),
-        "dict": ("字典初始化", lambda: __import__("src.common.core.initializers.platform.dict_initializer", fromlist=["init_dict"]).init_dict()),
-        "scheduler": ("定时任务初始化", lambda: __import__("src.common.core.initializers.common.scheduler_initializer", fromlist=["init_scheduler"]).init_scheduler()),
-        "tenant_dict": ("租户字典初始化", lambda: __import__("src.common.core.initializers.tenant.tenant_dict_initializer", fromlist=["init_tenant_dict"]).init_tenant_dict()),
-        "region": ("地区初始化", lambda: __import__("src.common.core.initializers.platform.region_initializer", fromlist=["init_regions"]).init_regions()),
-        "cleanup_policy": ("清理策略初始化", lambda: __import__("src.common.core.initializers.common.cleanup_policy_initializer", fromlist=["init_cleanup_policy"]).init_cleanup_policy()),
-        "cache_warmup": ("缓存预热", lambda: __import__("src.common.core.initializers.common.cache_warmup_initializer", fromlist=["init_cache_warmup"]).init_cache_warmup()),
+        "db": ("数据库初始化", lambda: __import__("src.common.core.initializers.init_data.common.db_initializer", fromlist=["init_db"]).init_db()),
+        "user": ("用户初始化", lambda: __import__("src.common.core.initializers.init_data.platform.user_initializer", fromlist=["init_superuser"]).init_superuser()),
+        "tenant_plan": ("租户套餐初始化", lambda: __import__("src.common.core.initializers.init_data.tenant.tenant_initializer", fromlist=["init_plans"]).init_plans()),
+        "tenant_default": ("默认租户初始化", lambda: __import__("src.common.core.initializers.init_data.tenant.tenant_initializer", fromlist=["init_default_tenant"]).init_default_tenant()),
+        "menu": ("菜单初始化", lambda: __import__("src.common.core.initializers.init_data.platform.menu_initializer", fromlist=["init_menus"]).init_menus()),
+        "permission": ("权限初始化", lambda: __import__("src.common.core.initializers.init_data.platform.permission_initializer", fromlist=["init_permissions"]).init_permissions()),
+        "role": ("角色初始化", lambda: __import__("src.common.core.initializers.init_data.platform.role_initializer", fromlist=["init_roles"]).init_roles()),
+        "config": ("系统配置初始化", lambda: __import__("src.common.core.initializers.init_data.platform.config_initializer", fromlist=["init_system_config"]).init_system_config()),
+        "dept": ("部门初始化", lambda: __import__("src.common.core.initializers.init_data.platform.dept_initializer", fromlist=["init_depts"]).init_depts()),
+        "dict": ("字典初始化", lambda: __import__("src.common.core.initializers.init_data.platform.dict_initializer", fromlist=["init_dict"]).init_dict()),
+        "scheduler": ("定时任务初始化", lambda: __import__("src.common.core.initializers.warmup.common.scheduler_initializer", fromlist=["init_scheduler"]).init_scheduler()),
+        "tenant_dict": ("租户字典初始化", lambda: __import__("src.common.core.initializers.init_data.tenant.tenant_dict_initializer", fromlist=["init_tenant_dict"]).init_tenant_dict()),
+        "region": ("地区初始化", lambda: __import__("src.common.core.initializers.init_data.platform.region_initializer", fromlist=["init_regions"]).init_regions()),
+        "cleanup_policy": ("清理策略初始化", lambda: __import__("src.common.core.initializers.warmup.common.cleanup_policy_initializer", fromlist=["init_cleanup_policy"]).init_cleanup_policy()),
+        "cache_warmup": ("缓存预热", lambda: __import__("src.common.core.initializers.warmup.common.cache_warmup_initializer", fromlist=["init_cache_warmup"]).init_cache_warmup()),
     }
 
     if initializer_name not in initializers:

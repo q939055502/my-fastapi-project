@@ -2,6 +2,7 @@ from sqlalchemy import asc
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.exceptions import BusinessException
 from src.common.core.storage import TransactionManager
+from src.modules.platform.repository.role_permission_repository import role_permission_repository
 from src.modules.platform.repository.role_repository import role_repository
 from src.modules.platform.schemas.role import RoleCreate, RoleUpdate
 
@@ -47,14 +48,21 @@ class RoleService:
                 role_dict[field_name] = value
 
             role_dict["permissions"] = []
-            for permission in role_obj.permissions:
-                permission_dict = {
-                    "id": permission.id,
-                    "name": permission.name,
-                    "code": permission.code,
-                    "type": permission.type,
-                }
-                role_dict["permissions"].append(permission_dict)
+            # 获取角色权限 - 使用 repository
+            role_perms = role_permission_repository.get_by_role_id(role_id, tm.session)
+            
+            for role_perm in role_perms:
+                permission = role_perm.permission
+                if permission:
+                    permission_dict = {
+                        "id": permission.id,
+                        "name": permission.name,
+                        "resource": permission.resource,
+                        "action": permission.action,
+                        "scope": permission.scope,
+                        "type": permission.type,
+                    }
+                    role_dict["permissions"].append(permission_dict)
 
             return role_dict
 
@@ -156,8 +164,15 @@ class RoleService:
                 value = getattr(obj, field_name)
                 role_dict[field_name] = value
 
-            role_dict["menu_count"] = len([p for p in obj.permissions if p.type == "menu"])
-            role_dict["api_count"] = len([p for p in obj.permissions if p.type == "api"])
+            # 使用 role_permissions 关系
+            role_dict["menu_count"] = len([
+                rp for rp in obj.role_permissions 
+                if rp.permission and rp.permission.type == "menu"
+            ])
+            role_dict["api_count"] = len([
+                rp for rp in obj.role_permissions 
+                if rp.permission and rp.permission.type == "api"
+            ])
 
             data.append(role_dict)
 

@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from src.common.repository.base import GenericRepository
 from src.models.platform import Role
+from src.modules.platform.repository.role_permission_repository import role_permission_repository
 from src.modules.platform.schemas.role import RoleCreate, RoleUpdate
 
 
@@ -22,16 +23,13 @@ class RoleRepository(GenericRepository[Role, RoleCreate, RoleUpdate]):
         return result.scalars().first() is not None
 
     def update_permissions(
-        self, role: Role, permission_ids: list[int], session: Session
+        self, role: Role, permission_ids: list[int], session: Session, created_by: int | None = None
     ) -> None:
-        role.permissions.clear()
+        # 删除旧的关联
+        role_permission_repository.delete_by_role_id(role.id, session)
 
-        from src.models.platform import Permission
-
-        for permission_id in permission_ids:
-            permission_obj = session.get(Permission, permission_id)
-            if permission_obj:
-                role.permissions.append(permission_obj)
+        # 添加新的关联
+        role_permission_repository.batch_create(role.id, permission_ids, created_by, session)
 
 
 role_repository = RoleRepository()

@@ -6,6 +6,16 @@
 
 # IAM 平台身份权限
 from .dept import DeptCreate, DeptResponse, DeptUpdate
+from .role_permission import (
+    RolePermissionCreate,
+    RolePermissionResponse,
+    RolePermissionUpdate,
+)
+from .role_subject import (
+    RoleSubjectCreate,
+    RoleSubjectResponse,
+    RoleSubjectUpdate,
+)
 
 # System 系统基础
 from .dict_data import DictDataCreate, DictDataResponse, DictDataUpdate
@@ -13,6 +23,7 @@ from .dict_type import DictTypeCreate, DictTypeResponse, DictTypeUpdate
 from .permission import PermissionCreate, PermissionResponse, PermissionUpdate
 from .role import RoleCreate, RoleResponse, RoleUpdate
 from .system_config import SystemConfigUpdate
+from .tenant_plan import TenantPlanCreate, TenantPlanResponse, TenantPlanUpdate
 from .user import (
     UpdatePassword,
     UserCreate,
@@ -37,6 +48,14 @@ __all__ = [
     "PermissionCreate",
     "PermissionUpdate",
     "PermissionResponse",
+    # RolePermission
+    "RolePermissionCreate",
+    "RolePermissionUpdate",
+    "RolePermissionResponse",
+    # RoleSubject
+    "RoleSubjectCreate",
+    "RoleSubjectUpdate",
+    "RoleSubjectResponse",
     # Dept
     "DeptCreate",
     "DeptUpdate",
@@ -49,4 +68,7 @@ __all__ = [
     "DictDataUpdate",
     "DictDataResponse",
     "SystemConfigUpdate",
+    "TenantPlanCreate",
+    "TenantPlanUpdate",
+    "TenantPlanResponse",
 ]

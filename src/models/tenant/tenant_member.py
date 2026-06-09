@@ -8,6 +8,7 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    and_,
 )
 from sqlalchemy.orm import relationship
 
@@ -18,11 +19,13 @@ class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """租户成员模型 - 用户与租户的关联关系
 
     用于管理用户在不同租户中的成员资格。
+    subject_id 用于统一RBAC体系中的主体标识。
     """
     __tablename__ = "tenant_member"
 
     user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=False, index=True, comment="用户ID")
     tenant_id = Column(BigInteger, ForeignKey("tenant.id"), nullable=False, index=True, comment="租户ID")
+    subject_id = Column(BigInteger, nullable=False, index=True, comment="统一RBAC主体ID（用于权限关联）")
     is_owner = Column(Integer, default=0, nullable=False, comment="是否为租户创建人：0=否，1=是")
     status = Column(Integer, default=1, nullable=False, comment="成员状态：1=正常 0=禁用")
     joined_at = Column(DateTime(timezone=True), default=datetime.now, nullable=False, comment="加入时间")
@@ -36,15 +39,14 @@ class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     join_type = Column(Integer, nullable=True, index=True, comment="加入方式：0=定向邀请 1=公开链接 2=自助申请")
     audit_status = Column(Integer, default=0, comment="审核状态：0待审核 1通过 2拒绝")
-    invite_id = Column(BigInteger, ForeignKey("tenant_invite.id"), nullable=True, index=True, comment="关联的邀请/申请ID")
 
     __table_args__ = (
         UniqueConstraint('user_id', 'tenant_id', name='uq_tenant_member'),
+        UniqueConstraint('subject_id', name='uq_tenant_member_subject_id'),
     )
 
     user = relationship("User", back_populates="tenant_memberships")
     tenant = relationship("Tenant", back_populates="memberships")
     created_by = relationship("TenantMember", remote_side="TenantMember.id", backref="created_sub_accounts")
-    member_roles = relationship("TenantMemberRole", back_populates="tenant_member", cascade="all, delete-orphan")
-    invite = relationship("TenantInvite", back_populates="members", foreign_keys=[invite_id])
+    role_subjects = relationship("RoleSubject", viewonly=True, primaryjoin="and_(RoleSubject.subject_type==1, foreign(RoleSubject.subject_id)==TenantMember.subject_id)")
 

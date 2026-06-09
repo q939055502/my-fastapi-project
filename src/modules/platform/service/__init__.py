@@ -4,6 +4,7 @@ from .file_service import FileService, file_service
 from .permission_service import ResourceService, resource_service
 from .role_service import RoleService, role_service
 from .system_config_service import SystemConfigService, system_config_service
+from .tenant_plan_service import TenantPlanService, tenant_plan_service
 from .user_admin_service import UserAdminService, user_admin_service
 from .user_service import UserService, user_service
 
@@ -24,4 +25,6 @@ __all__ = [
     "file_service",
     "SystemConfigService",
     "system_config_service",
+    "TenantPlanService",
+    "tenant_plan_service",
 ]

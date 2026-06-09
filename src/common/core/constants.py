@@ -58,6 +58,41 @@ class PermissionTypeConst:
     API = DictItem(value="api", label="接口", sort=3)
 
 
+# ========== 数据范围 ==========
+class ScopeConst:
+    """数据范围"""
+    SELF = DictItem(value="self", label="仅自己", sort=1)
+    OWN = DictItem(value="own", label="自己创建", sort=2)
+    DEPT = DictItem(value="dept", label="本部门", sort=3)
+    DEPT_ALL = DictItem(value="dept_all", label="部门及子部门", sort=4)
+    ALL = DictItem(value="all", label="全部数据", sort=5)
+
+
+# ========== 资源类型 ==========
+class ResourceConst:
+    """资源类型"""
+    # 平台级资源
+    USER = DictItem(value="user", label="用户", sort=1)
+    ROLE = DictItem(value="role", label="角色", sort=2)
+    PERMISSION = DictItem(value="permission", label="权限", sort=3)
+    TENANT = DictItem(value="tenant", label="租户", sort=4)
+    
+    # 租户级资源
+    GOODS = DictItem(value="goods", label="商品", sort=10)
+    ORDER = DictItem(value="order", label="订单", sort=11)
+    INVENTORY = DictItem(value="inventory", label="库存", sort=12)
+
+
+# ========== 操作类型 ==========
+class ActionConst:
+    """操作类型"""
+    CREATE = DictItem(value="create", label="创建", sort=1)
+    READ = DictItem(value="read", label="读取", sort=2)
+    UPDATE = DictItem(value="update", label="更新", sort=3)
+    DELETE = DictItem(value="delete", label="删除", sort=4)
+    LIST = DictItem(value="list", label="列表", sort=5)
+
+
 
 
 

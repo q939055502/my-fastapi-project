@@ -5,9 +5,18 @@
 - security: 密码哈希、JWT生成/验证
 - dependency: 认证控制、权限控制、依赖注入
 - token: Redis令牌管理
+- annotations: 接口类型注解
 """
 
-from .dependency import AuthControl, PermissionControl, get_current_username
+from .annotations import (
+    InterfaceType,
+    disable_data_permission,
+    interface_type,
+    login_required,
+    public_api,
+)
+from .dependency import AuthControl, get_current_username
+from .permission import PermissionControl
 from .security import (
     check_perm_match,
     create_access_token,
@@ -42,4 +51,10 @@ __all__ = [
     "get_current_username",
     # token
     "token_manager",
+    # annotations
+    "InterfaceType",
+    "interface_type",
+    "public_api",
+    "login_required",
+    "disable_data_permission",
 ]

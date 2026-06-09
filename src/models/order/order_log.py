@@ -8,7 +8,7 @@ class OrderLog(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     """订单操作日志模型"""
     __tablename__ = "order_log"
 
-    order_id = Column(BigInteger, ForeignKey("order.id"), nullable=False, index=True, comment="订单ID")
+    order_id = Column(BigInteger, ForeignKey("order_info.id"), nullable=False, index=True, comment="订单ID")
 
     operator_type = Column(String(20), default="user", nullable=False, index=True, comment="操作人类型：system/user/admin")
     operator_id = Column(BigInteger, nullable=True, index=True, comment="操作人ID")
@@ -22,4 +22,4 @@ class OrderLog(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     detail = Column(String(500), nullable=True, comment="操作详情")
 
-    order = relationship("Order", back_populates="logs")
+    order = relationship("OrderInfo", back_populates="logs")

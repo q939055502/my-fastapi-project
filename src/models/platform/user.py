@@ -6,11 +6,11 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    and_,
 )
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
-from src.models.platform.associations import user_role_association
 
 
 class User(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
@@ -31,7 +31,7 @@ class User(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     dept_id = Column(BigInteger, ForeignKey("iam_dept.id"), nullable=True, index=True, comment="部门ID")
     dept = relationship("Dept", back_populates="users", foreign_keys=[dept_id])
-    roles = relationship("Role", secondary=user_role_association, back_populates="users")
+    role_subjects = relationship("RoleSubject", viewonly=True, primaryjoin="and_(RoleSubject.subject_type==0, foreign(RoleSubject.subject_id)==User.id)")
     tenant_memberships = relationship("TenantMember", back_populates="user", cascade="all, delete-orphan")
     account_binds = relationship("AccountBind", back_populates="user", cascade="all, delete-orphan")
 
@@ -41,5 +41,8 @@ class User(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     def has_role(self, role_name: str) -> bool:
         """判断用户是否拥有指定角色"""
-        return any(role.name == role_name for role in self.roles)
+        for role_subject in self.role_subjects:
+            if role_subject.role and role_subject.role.name == role_name:
+                return True
+        return False
 

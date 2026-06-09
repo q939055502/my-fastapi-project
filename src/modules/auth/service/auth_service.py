@@ -9,11 +9,9 @@ from src.common.core.exceptions import BusinessException
 from src.common.core.log import logger
 from src.common.core.storage import TransactionManager
 from src.modules.auth.repository.auth_repository import auth_repository
-from src.modules.auth.schemas.login import (
-    LoginByPasswordStep1Request,
-    RefreshTokenRequest,
-    UserRegisterSchema,
-)
+from src.modules.auth.schemas.login import LoginByPasswordStep1Request
+from src.modules.auth.schemas.register import UserRegisterSchema
+from src.modules.auth.schemas.token import RefreshTokenRequest
 from src.modules.platform.repository.role_repository import role_repository
 from src.modules.platform.repository.user_repository import user_repository
 from src.modules.platform.schemas.user import UserCreate

@@ -13,7 +13,7 @@ from src.models.base import (
 
 # Order 订单模块
 from src.models.order import (
-    Order,
+    OrderInfo,
     OrderLog,
     OrderPayment,
     OrderRefund,
@@ -34,6 +34,7 @@ from src.models.platform import (
     Permission,
     Role,
     SystemConfig,
+    TenantPlan,
     User,
 )
 
@@ -46,10 +47,7 @@ from src.models.tenant import (
     TenantHourlyUsage,
     TenantInvite,
     TenantMember,
-    TenantPermission,
-    TenantPlan,
     TenantQuota,
-    TenantRole,
     TenantUsage,
 )
 
@@ -69,14 +67,11 @@ __all__ = [
     "AccountBind",
     # Tenant
     "Tenant",
-    "TenantPlan",
     "TenantConfig",
     "TenantQuota",
     "TenantUsage",
     "TenantHourlyUsage",
     "TenantMember",
-    "TenantRole",
-    "TenantPermission",
     "TenantInvite",
     "TenantDictType",
     "TenantDictData",
@@ -88,8 +83,9 @@ __all__ = [
     "SystemConfig",
     "AuditLog",
     "FileMapping",
+    "TenantPlan",
     # Order
-    "Order",
+    "OrderInfo",
     "OrderPayment",
     "OrderRefund",
     "OrderLog",

@@ -13,12 +13,12 @@ from src.common.core.response import (
     success_page,
 )
 from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
-from src.modules.tenant.schemas.tenant_plan import (
+from src.modules.platform.schemas.tenant_plan import (
     TenantPlanBase,
     TenantPlanCreate,
     TenantPlanUpdate,
 )
-from src.modules.tenant.service.tenant_plan_service import tenant_plan_service
+from src.modules.platform.service.tenant_plan_service import tenant_plan_service
 
 router = APIRouter(
     tags=["平台管理-套餐"],

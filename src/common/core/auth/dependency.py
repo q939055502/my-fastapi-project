@@ -1,22 +1,18 @@
-
 """
 认证依赖注入模块
 
-包含认证和权限控制相关的依赖函数，用于FastAPI的依赖注入系统：
+包含认证相关的依赖函数，用于FastAPI的依赖注入系统：
 - Swagger UI 认证
 - JWT 令牌认证
-- API 权限控制
 """
 
-import re
 import secrets
 
 import jwt
-from fastapi import Depends, Request
+from fastapi import Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer
 from src.common.core.auth.token import token_manager
 from src.common.core.config import settings
-from src.common.core.constants import RoleCodeConst
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.exceptions import BusinessException
 from src.common.core.log import get_ctx_logger
@@ -170,51 +166,3 @@ class AuthControl:
         """
         user = cls.authenticate_token(token.credentials)
         return user, token.credentials
-
-
-class PermissionControl:
-    """权限控制器
-
-    处理API权限控制相关的逻辑，检查用户是否有访问指定API的权限。
-    """
-
-    @classmethod
-    def has_permission(
-        cls,
-        request: Request,
-        current_user: object = Depends(AuthControl.is_authed),
-    ) -> None:
-        """检查用户是否有访问指定API的权限
-
-        Args:
-            request: FastAPI请求对象
-            current_user: 当前认证用户
-
-        Raises:
-            HTTPException: 当用户无权限时抛出403错误
-        """
-        method = request.method
-        path = request.url.path
-
-        roles = current_user.roles
-
-        if not roles:
-            raise BusinessException(ResponseCode.FORBIDDEN, "用户未绑定角色")
-
-        # 超级管理员特殊放行：如果用户有平台超级管理员角色，直接允许
-        for role in roles:
-            if role.code == RoleCodeConst.PLATFORM_SUPER_ADMIN.value:
-                return
-
-        all_resources = []
-        for role in roles:
-            all_resources.extend(role.resources)
-
-        for resource in all_resources:
-            if resource.api_method == method and resource.api_path is not None:
-                pattern = re.sub(r"\{[^}]+\}", r"[^/]+", resource.api_path)
-                pattern = f"^{pattern}$"
-                if re.match(pattern, path):
-                    return
-
-        raise BusinessException(ResponseCode.FORBIDDEN, "无此API访问权限")

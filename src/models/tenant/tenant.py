@@ -37,8 +37,6 @@ class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStat
     memberships = relationship("TenantMember", back_populates="tenant", cascade="all, delete-orphan")
     usages = relationship("TenantUsage", back_populates="tenant", cascade="all, delete-orphan")
     hourly_usages = relationship("TenantHourlyUsage", back_populates="tenant", cascade="all, delete-orphan")
-    roles = relationship("TenantRole", back_populates="tenant", cascade="all, delete-orphan")
-    permissions = relationship("TenantPermission", back_populates="tenant", cascade="all, delete-orphan")
     invites = relationship("TenantInvite", back_populates="tenant", cascade="all, delete-orphan")
     dict_types = relationship("TenantDictType", back_populates="tenant", cascade="all, delete-orphan")
     dict_datas = relationship("TenantDictData", back_populates="tenant", cascade="all, delete-orphan")
