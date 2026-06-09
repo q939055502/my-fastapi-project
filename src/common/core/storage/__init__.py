@@ -1,4 +1,4 @@
-"""Storage module
+﻿"""Storage module
 
 Provides database connection, cache management and transaction management.
 

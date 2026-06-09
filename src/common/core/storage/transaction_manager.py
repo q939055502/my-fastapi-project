@@ -1,4 +1,4 @@
-"""事务管理器（Transaction Manager）
+﻿"""事务管理器（Transaction Manager）
 
 提供简洁的事务管理能力，确保数据库操作的原子性。
 """

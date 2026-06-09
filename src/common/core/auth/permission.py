@@ -1,4 +1,4 @@
-"""
+﻿"""
 权限控制模块
 
 处理API权限控制相关的逻辑，检查用户是否有访问指定API的权限。
@@ -12,7 +12,7 @@ from src.common.core.constants import RoleCodeConst
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.exceptions import BusinessException
 from src.common.core.storage import TransactionManager
-from src.modules.platform.repository.role_subject_repository import (
+from src.foundation.platform.repository.role_subject_repository import (
     role_subject_repository,
 )
 

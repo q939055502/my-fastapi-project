@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text
+﻿from sqlalchemy import Column, String, Text
 
 from src.models.base import (
     BaseModel,

@@ -1,4 +1,4 @@
-"""L3 Database Proxy
+﻿"""L3 Database Proxy
 
 Implements database proxy as the third layer (L3 Cache).
 Serves as a fallback when L1 and L2 caches miss.

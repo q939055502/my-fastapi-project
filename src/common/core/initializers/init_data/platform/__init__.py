@@ -1,4 +1,4 @@
-"""平台数据初始化模块"""
+﻿"""平台数据初始化模块"""
 from .config_initializer import init_system_config
 from .dept_initializer import init_depts
 from .dict_initializer import init_dict

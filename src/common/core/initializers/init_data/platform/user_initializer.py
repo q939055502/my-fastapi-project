@@ -1,4 +1,4 @@
-"""
+﻿"""
 用户初始化器
 
 负责超级管理员和测试用户的创建
@@ -33,7 +33,7 @@ def init_superuser():
     logger.info("开始初始化超级管理员用户...")
     for session in get_db():
         try:
-            from src.modules.platform.repository.user_repository import (
+            from src.foundation.platform.repository.user_repository import (
                 UserCreate,
                 user_repository,
             )

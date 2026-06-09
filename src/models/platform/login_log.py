@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, Integer, String
+﻿from sqlalchemy import Column, DateTime, Integer, String
 
 from src.models.base import BaseModel, LoginStatusMixin, SoftDeleteMixin, TimestampMixin
 

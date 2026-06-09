@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Column, Integer, String
+﻿from sqlalchemy import BigInteger, Column, Integer, String
 
 from src.models.base import BaseModel, TimestampMixin
 

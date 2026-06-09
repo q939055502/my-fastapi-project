@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, Integer, String
+﻿from sqlalchemy import JSON, Column, Integer, String
 
 from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
 

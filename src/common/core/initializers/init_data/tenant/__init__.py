@@ -1,4 +1,4 @@
-"""租户数据初始化模块"""
+﻿"""租户数据初始化模块"""
 from .tenant_dict_initializer import init_tenant_dict
 from .tenant_initializer import init_default_tenant, init_plans
 

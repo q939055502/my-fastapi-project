@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 
 from sqlalchemy import JSON, BigInteger, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship

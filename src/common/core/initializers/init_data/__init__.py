@@ -1,4 +1,4 @@
-"""初始化数据模块"""
+﻿"""初始化数据模块"""
 from .common.db_initializer import init_db
 from .platform.user_initializer import init_superuser
 from .platform.role_initializer import init_roles

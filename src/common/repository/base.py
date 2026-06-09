@@ -1,4 +1,4 @@
-"""Generic Repository Base Class
+﻿"""Generic Repository Base Class
 
 通用 CRUD 仓库基类，仅包含与租户无关的通用能力：
 - 软删除过滤与恢复

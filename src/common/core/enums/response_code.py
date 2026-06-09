@@ -1,4 +1,4 @@
-from enum import IntEnum
+﻿from enum import IntEnum
 
 
 # 响应码枚举，具体响应消息在response/response_msg.yaml中配置

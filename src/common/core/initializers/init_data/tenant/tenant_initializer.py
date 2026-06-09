@@ -1,4 +1,4 @@
-"""
+﻿"""
 租户初始化器
 
 负责租户套餐和默认租户的创建
@@ -108,7 +108,7 @@ def init_default_tenant():
     for session in get_db():
         try:
             from src.models.tenant import Tenant, TenantMember
-            from src.modules.platform.repository.user_repository import user_repository
+            from src.foundation.platform.repository.user_repository import user_repository
 
             result = session.execute(select(Tenant).where(Tenant.code == "default"))
             default_tenant = result.scalars().first()

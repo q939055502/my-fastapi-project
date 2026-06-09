@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, Integer, String
+﻿from sqlalchemy import JSON, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import (

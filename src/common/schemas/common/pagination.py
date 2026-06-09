@@ -1,4 +1,4 @@
-from typing import Annotated, Generic, TypeVar
+﻿from typing import Annotated, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 

@@ -11,8 +11,8 @@ from src.models.base import (
     UUIDModel,
 )
 
-# Order 订单模块
-from src.models.order import (
+# Order 订单模块（业务模型）
+from src.modules.order.models import (
     OrderInfo,
     OrderLog,
     OrderPayment,

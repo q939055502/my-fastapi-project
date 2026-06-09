@@ -1,4 +1,4 @@
-"""Cache module exports"""
+﻿"""Cache module exports"""
 
 from .cache_manager import CacheManager, cache_manager
 
