@@ -1,4 +1,6 @@
-﻿from fastapi import APIRouter, Query, Request
+from uuid import UUID
+
+from fastapi import APIRouter, Query, Request
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.plugins import apply_rate_limit
 from src.common.core.response import gen_swagger_response, success
@@ -29,7 +31,7 @@ def create_dept(request: Request, dept_in: DeptCreate):
 
 
 @router.put(
-    "/{dept_id}",
+    "/{dept_uuid}",
     summary="更新部门",
     responses={
         404: gen_swagger_response(
@@ -39,8 +41,8 @@ def create_dept(request: Request, dept_in: DeptCreate):
     },
 )
 @apply_rate_limit("30/minute")
-def update_dept(request: Request, dept_id: int, dept_in: DeptUpdate):
-    dept_service.update_dept(dept_id, dept_in)
+def update_dept(request: Request, dept_uuid: UUID, dept_in: DeptUpdate):
+    dept_service.update_dept(dept_uuid, dept_in)
     return success(msg="部门更新成功")
 
 
@@ -52,7 +54,7 @@ def list_dept(request: Request, name: str = Query(None, description="部门名�
 
 
 @router.get(
-    "/{dept_id}",
+    "/{dept_uuid}",
     summary="获取部门详情",
     responses={
         404: gen_swagger_response(
@@ -62,13 +64,13 @@ def list_dept(request: Request, name: str = Query(None, description="部门名�
     },
 )
 @apply_rate_limit("60/minute")
-def get_dept(request: Request, dept_id: int):
-    data = dept_service.get_dept_detail(dept_id)
+def get_dept(request: Request, dept_uuid: UUID):
+    data = dept_service.get_dept_detail(dept_uuid)
     return success(data=data)
 
 
 @router.delete(
-    "/{dept_id}",
+    "/{dept_uuid}",
     summary="删除部门",
     responses={
         404: gen_swagger_response(
@@ -78,6 +80,6 @@ def get_dept(request: Request, dept_id: int):
     },
 )
 @apply_rate_limit("30/minute")
-def delete_dept(request: Request, dept_id: int):
-    dept_service.delete_dept(dept_id)
+def delete_dept(request: Request, dept_uuid: UUID):
+    dept_service.delete_dept(dept_uuid)
     return success(msg="部门删除成功")

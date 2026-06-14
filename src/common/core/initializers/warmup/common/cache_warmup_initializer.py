@@ -1,4 +1,4 @@
-﻿"""
+"""
 缓存预热初始化器
 
 负责系统缓存的预热初始化
@@ -43,7 +43,7 @@ def _warmup_system_config() -> int:
     for session in get_db():
         from src.models.platform import SystemConfig
 
-        query = select(SystemConfig).where(SystemConfig.status == 1)
+        query = select(SystemConfig).where(SystemConfig.status == True)
         result = session.execute(query)
         configs = result.scalars().all()
 
@@ -74,7 +74,7 @@ def _warmup_dict_data() -> int:
     for session in get_db():
         from src.models.platform import DictData, DictType
 
-        query = select(DictType).where(DictType.status == 1)
+        query = select(DictType).where(DictType.status == True)
         result = session.execute(query)
         dict_types = result.scalars().all()
 
@@ -89,7 +89,7 @@ def _warmup_dict_data() -> int:
 
             data_query = select(DictData).where(
                 DictData.dict_type_id == dict_type.id,
-                DictData.status == 1
+                DictData.status == True
             ).order_by(DictData.sort)
             data_result = session.execute(data_query)
             dict_datas = data_result.scalars().all()
@@ -246,7 +246,7 @@ def _warmup_user_data() -> int:
     for session in get_db():
         from src.models.platform import User
 
-        query = select(User).where(User.is_deleted == 0)
+        query = select(User).where(User.delete_time.is_(None))
         result = session.execute(query)
         users = result.scalars().all()
 
@@ -284,7 +284,7 @@ def _warmup_account_bind_data() -> int:
     for session in get_db():
         from src.models.platform import AccountBind
 
-        query = select(AccountBind).where(AccountBind.is_deleted == 0)
+        query = select(AccountBind).where(AccountBind.delete_time.is_(None))
         result = session.execute(query)
         binds = result.scalars().all()
 

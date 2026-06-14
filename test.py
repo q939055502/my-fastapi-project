@@ -1,84 +1,25 @@
-# 资源类型枚举
-class ResourceType:
-    PLATFORM = "platform"  # 平台级资源
-    TENANT = "tenant"      # 租户级资源
-    BOTH = "both"          # 两者都适用
+import json
+import pytest
+from pathlib import Path
 
-# 修改资源注册
-def register_resource(resource_name: str, model_class, resource_type: str = ResourceType.TENANT):
-    RESOURCE_MODEL_MAP[resource_name] = {
-        "model": model_class,
-        "type": resource_type
-    }
+# 全局公共夹具（所有测试通用）
+# ===================== 路径统一配置（企业规范：硬编码路径易出错，用动态路径） =====================
+# 项目根目录
+ROOT_DIR = Path(__file__).parent.parent
+# 测试数据目录
+FIXTURES_DIR = ROOT_DIR / "fixtures"
 
+# ===================== 全局数据夹具：加载 JSON 测试数据 =====================
+@pytest.fixture(scope="session")
+def user_raw_data():
+    """全局用户测试原始数据，所有模型用例共用"""
+    data_path = FIXTURES_DIR / "user_data.json"
+    with open(data_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-
-
-
-
-@event.listens_for(Query, "before_compile", retval=True)
-def apply_data_permissions(query):
-    try:
-        entities = []
-        for desc in query.column_descriptions:
-            if hasattr(desc['type'], '__table__'):
-                entities.append(desc['type'])
-        
-        if not entities:
-            return query
-        
-        ctx = get_auth_context()
-        
-        if not ctx.user_id:
-            return query
-        
-        if is_super_admin(ctx.user_id):
-            return query
-        
-        # 区分平台级和租户级资源
-        for entity in entities:
-            resource_info = None
-            for res, info in RESOURCE_MODEL_MAP.items():
-                if info['model'] == entity:
-                    resource_info = info
-                    break
-            
-            if not resource_info:
-                continue
-            
-            # 平台级资源：不过滤租户
-            if resource_info['type'] == ResourceType.PLATFORM:
-                continue
-            
-            # 租户级资源：应用租户隔离
-            if ctx.tenant_id and ctx.tenant_id > 0:
-                if hasattr(entity, 'tenant_id'):
-                    query = query.filter(entity.tenant_id == ctx.tenant_id)
-        
-        # 应用数据权限范围（scope）
-        # ... 现有逻辑 ...
-        
-        return query
-    
-    except Exception:
-        return query
-
-
-
-
-
-
-
-
-
-# 装饰器：标记接口为平台级
-def platform_api(func):
-    """标记接口为平台级，不受租户隔离限制"""
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        # 在请求上下文中标记为平台级操作
-        request = args[0] if args else None
-        if request and hasattr(request, 'state'):
-            request.state.is_platform_api = True
-        return await func(*args, **kwargs)
-    return wrapper
+# ===================== 可选：空夹具/公共工具（后续扩展用） =====================
+@pytest.fixture(scope="function")
+def empty_user_instance():
+    """空 User 模型实例，供单条用例复用"""
+    from app.models.user import User
+    return User()

@@ -1,4 +1,4 @@
-﻿from sqlalchemy import Column, String
+from sqlalchemy import Column, String
 
 from src.models.base import (
     BaseModel,
@@ -8,10 +8,11 @@ from src.models.base import (
     SortMixin,
     SystemMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class DictType(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin, SystemMixin):
+class DictType(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin, EnableStatusMixin, UUIDModel):
     """平台字典类型模型"""
     __tablename__ = "dict_type"
 

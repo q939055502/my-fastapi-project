@@ -1,4 +1,4 @@
-﻿"""认证 Repository
+"""认证 Repository
 
 提供用户登录相关的数据访问方法
 """
@@ -38,7 +38,7 @@ class AuthRepository(GenericRepository[User, None, None]):
 
         Returns:
             list[dict]: 用户信息列表，每个用户包含：
-                - id: 用户ID
+                - uuid: 用户UUID
                 - username: 用户名
                 - alias: 别名
                 - avatar: 头像
@@ -75,9 +75,9 @@ class AuthRepository(GenericRepository[User, None, None]):
             logger.warning(f"用户名登录失败 - 用户被禁用: username={username}")
             raise BusinessException(ResponseCode.FORBIDDEN, "用户已被禁用")
 
-        logger.info(f"用户名登录成功: username={username}, user_id={user.id}")
+        logger.info(f"用户名登录成功: username={username}, user_uuid={user.uuid}")
         return [{
-            "id": user.id,
+            "uuid": str(user.uuid),
             "username": user.username,
             "alias": user.alias,
             "avatar": user.avatar,
@@ -99,7 +99,7 @@ class AuthRepository(GenericRepository[User, None, None]):
 
         Returns:
             list[dict]: 密码匹配的用户列表，每个用户包含：
-                - id: 用户ID
+                - uuid: 用户UUID
                 - username: 用户名
                 - alias: 别名
                 - avatar: 头像
@@ -125,14 +125,14 @@ class AuthRepository(GenericRepository[User, None, None]):
         for potential_user in users:
             if verify_password(password, potential_user.password):
                 matched_users.append({
-                    "id": potential_user.id,
+                    "uuid": str(potential_user.uuid),
                     "username": potential_user.username,
                     "alias": potential_user.alias,
                     "avatar": potential_user.avatar,
                     "last_login": potential_user.last_login.isoformat() if potential_user.last_login else None,
                     "last_login_ip": potential_user.last_login_ip,
                 })
-                logger.info(f"密码匹配成功: account={account}, user_id={potential_user.id}")
+                logger.info(f"密码匹配成功: account={account}, user_uuid={potential_user.uuid}")
 
         if not matched_users:
             logger.warning(f"账号登录失败 - 密码不匹配: account={account}")

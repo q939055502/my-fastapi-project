@@ -1,4 +1,6 @@
-﻿# api/v1/tenants/user_tenant.py
+# api/v1/tenants/user_tenant.py
+
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from src.common.core.auth import AuthControl
@@ -32,12 +34,12 @@ router = APIRouter(
 @apply_rate_limit("10/minute")
 def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User = Depends(AuthControl.is_authed)):
     """创建新租户，当前用户自动成为户主"""
-    tenant = user_tenant_service.create_tenant(tenant_in, current_user.id)
+    tenant = user_tenant_service.create_tenant(tenant_in, current_user.uuid)
     return success(data=tenant, msg="租户创建成功")
 
 
 @router.post(
-    "/{tenant_id}/invite",
+    "/{tenant_uuid}/invite",
     summary="邀请用户加入租户",
     responses={
         404: gen_swagger_response(
@@ -49,12 +51,12 @@ def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User 
 @apply_rate_limit("30/minute")
 def invite_user_to_tenant(
     request: Request,
-    tenant_id: int,
-    user_id: int,
+    tenant_uuid: UUID,
+    user_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed)
 ):
     """邀请用户加入租户（需要是租户成员）"""
-    result = user_tenant_service.invite_user_to_tenant(tenant_id, user_id, current_user.id)
+    result = user_tenant_service.invite_user_to_tenant(tenant_uuid, user_uuid, current_user.uuid)
     return success(data=result, msg="邀请成功")
 
 
@@ -62,12 +64,12 @@ def invite_user_to_tenant(
 @apply_rate_limit("60/minute")
 def get_my_tenants(request: Request, current_user: User = Depends(AuthControl.is_authed)):
     """获取当前用户关联的所有租户"""
-    tenants = user_tenant_service.get_user_tenants(current_user.id)
+    tenants = user_tenant_service.get_user_tenants(current_user.uuid)
     return success(data=tenants)
 
 
 @router.get(
-    "/{tenant_id}/members",
+    "/{tenant_uuid}/members",
     summary="获取租户成员列表",
     responses={
         404: gen_swagger_response(
@@ -77,17 +79,17 @@ def get_my_tenants(request: Request, current_user: User = Depends(AuthControl.is
     },
 )
 @apply_rate_limit("60/minute")
-def get_tenant_members(request: Request, tenant_id: int, current_user: User = Depends(AuthControl.is_authed)):
+def get_tenant_members(request: Request, tenant_uuid: UUID, current_user: User = Depends(AuthControl.is_authed)):
     """获取指定租户的所有成员"""
-    if not user_tenant_service.check_user_in_tenant(current_user.id, tenant_id):
+    if not user_tenant_service.check_user_in_tenant(current_user.uuid, tenant_uuid):
         return success(data=[], msg="您不在此租户中")
 
-    members = user_tenant_service.get_tenant_members(tenant_id)
+    members = user_tenant_service.get_tenant_members(tenant_uuid)
     return success(data=members)
 
 
 @router.get(
-    "/{tenant_id}/relation",
+    "/{tenant_uuid}/relation",
     summary="获取用户在租户中的身份",
     responses={
         404: gen_swagger_response(
@@ -99,16 +101,16 @@ def get_tenant_members(request: Request, tenant_id: int, current_user: User = De
 @apply_rate_limit("60/minute")
 def get_user_tenant_relation(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed)
 ):
     """获取用户在指定租户中的关联信息"""
-    relation = user_tenant_service.get_user_current_tenant(current_user.id, tenant_id)
+    relation = user_tenant_service.get_user_current_tenant(current_user.uuid, tenant_uuid)
     return success(data=relation)
 
 
 @router.delete(
-    "/{tenant_id}/members/{user_id}",
+    "/{tenant_uuid}/members/{user_uuid}",
     summary="移除租户成员",
     responses={
         404: gen_swagger_response(
@@ -120,10 +122,10 @@ def get_user_tenant_relation(
 @apply_rate_limit("30/minute")
 def remove_tenant_member(
     request: Request,
-    tenant_id: int,
-    user_id: int,
+    tenant_uuid: UUID,
+    user_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed)
 ):
     """从租户移除成员（需要是户主）"""
-    user_tenant_service.remove_user_from_tenant(tenant_id, user_id, current_user.id)
+    user_tenant_service.remove_user_from_tenant(tenant_uuid, user_uuid, current_user.uuid)
     return success(msg="成员移除成功")

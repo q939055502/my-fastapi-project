@@ -1,4 +1,6 @@
-﻿from pydantic import Field
+from uuid import UUID
+
+from pydantic import Field
 from src.common.schemas.base import BaseSchema
 
 
@@ -9,7 +11,7 @@ class SystemConfigUpdate(BaseSchema):
 
 
 class SystemConfigResponse(BaseSchema):
-    id: int = Field(..., description="配置ID")
+    uuid: UUID = Field(..., description="配置UUID")
     config_key: str = Field(..., description="配置编码")
     config_value: str = Field(..., description="配置值")
     description: str = Field(..., description="配置描述")

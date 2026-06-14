@@ -1,4 +1,6 @@
-﻿from sqlalchemy import and_, delete, select
+from uuid import UUID
+
+from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
 from src.common.core.log import logger
 from src.common.repository.base import GenericRepository
@@ -11,7 +13,7 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
         super().__init__(model=Dept)
 
     def get_dept_tree(self, name: str, session: Session):
-        query = select(Dept).where(not Dept.is_deleted)
+        query = select(Dept).where(Dept.delete_time.is_(None))
 
         if name:
             query = query.where(Dept.name.contains(name))
@@ -19,18 +21,18 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
         result = session.execute(query.order_by(Dept.sort))
         all_depts = result.scalars().all()
 
-        def build_tree(parent_id):
+        def build_tree(parent_uuid):
             return [
                 {
-                    "id": dept.id,
+                    "uuid": dept.uuid,
                     "name": dept.name,
                     "remark": dept.remark,
                     "sort": dept.sort,
-                    "parent_id": dept.parent_id,
-                    "children": build_tree(dept.id),
+                    "parent_uuid": dept.parent_uuid,
+                    "children": build_tree(dept.uuid),
                 }
                 for dept in all_depts
-                if dept.parent_id == parent_id
+                if dept.parent_uuid == parent_uuid
             ]
 
         dept_tree = build_tree(None)
@@ -40,8 +42,13 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
         pass
 
     def update_dept_closure(self, obj: Dept, session: Session):
+        parent_id = obj.parent_id
+        if obj.parent_uuid:
+            parent_dept = self.get_by_uuid(obj.parent_uuid, session)
+            parent_id = parent_dept.id if parent_dept else None
+        
         result = session.execute(
-            select(DeptClosure).where(DeptClosure.descendant == obj.parent_id)
+            select(DeptClosure).where(DeptClosure.descendant == parent_id)
         )
         parent_depts = result.scalars().all()
 
@@ -65,14 +72,26 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
         session.add_all(dept_closure_objs)
 
     def create_dept(self, obj_in: DeptCreate, session: Session):
-        if obj_in.parent_id != 0:
-            self.get(id=obj_in.parent_id, session=session)
+        if obj_in.parent_uuid:
+            parent_dept = self.get_by_uuid(uuid=obj_in.parent_uuid, session=session)
+            if parent_dept:
+                obj_in.parent_id = parent_dept.id
         new_obj = self.create(obj_in=obj_in, session=session)
         self.update_dept_closure(new_obj, session=session)
 
-    def update_dept(self, dept_id: int, obj_in: DeptUpdate, session: Session):
-        dept_obj = self.get(id=dept_id, session=session)
-        if dept_obj.parent_id != obj_in.parent_id:
+    def update_dept(self, dept_uuid: UUID, obj_in: DeptUpdate, session: Session):
+        dept_obj = self.get_by_uuid(uuid=dept_uuid, session=session)
+        if not dept_obj:
+            return
+
+        old_parent_id = dept_obj.parent_id
+        new_parent_id = None
+        
+        if obj_in.parent_uuid:
+            parent_dept = self.get_by_uuid(uuid=obj_in.parent_uuid, session=session)
+            new_parent_id = parent_dept.id if parent_dept else None
+
+        if old_parent_id != new_parent_id:
             session.execute(
                 delete(DeptClosure).where(
                     and_(
@@ -81,16 +100,17 @@ class DeptRepository(GenericRepository[Dept, DeptCreate, DeptUpdate]):
                     )
                 )
             )
-            dept_obj.parent_id = obj_in.parent_id
+            dept_obj.parent_id = new_parent_id
             self.update_dept_closure(dept_obj, session=session)
-        self.update(id=dept_id, obj_in=obj_in, session=session)
+        
+        self.update(id=dept_obj.id, obj_in=obj_in, session=session)
 
-    def delete_dept(self, dept_id: int, session: Session):
-        dept_obj = self.get(id=dept_id, session=session)
+    def delete_dept(self, dept_uuid: UUID, session: Session):
+        dept_obj = self.get_by_uuid(uuid=dept_uuid, session=session)
         if dept_obj:
-            self.delete(dept_id, session=session)
+            self.delete(dept_obj.id, session=session)
             session.execute(
-                delete(DeptClosure).where(DeptClosure.descendant == dept_id)
+                delete(DeptClosure).where(DeptClosure.descendant == dept_obj.id)
             )
 
 

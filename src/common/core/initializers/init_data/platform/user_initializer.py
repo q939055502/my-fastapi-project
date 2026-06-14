@@ -1,4 +1,4 @@
-﻿"""
+"""
 用户初始化器
 
 负责超级管理员和测试用户的创建
@@ -65,7 +65,7 @@ def init_superuser():
                         username="user1",
                         email="user1@example.com",
                         password="qaz123456",
-                        is_active=True,
+                        is_active=1,
                     ),
                     session=session,
                 )

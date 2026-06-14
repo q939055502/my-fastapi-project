@@ -1,21 +1,23 @@
-﻿"""
+"""
 用户信息相关 Schema
 
 包含：用户信息、选择用户相关等
 """
 
+from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 
 class UserInfoSchema(BaseModel):
-    id: int = Field(..., description="用户ID")
+    uuid: UUID = Field(..., description="用户UUID")
     username: str = Field(..., description="用户名")
     email: str | None = Field(None, description="邮箱")
 
 
 class SelectUserRequest(BaseModel):
     temp_token: str = Field(..., description="临时登录凭证")
-    user_id: int = Field(..., description="选择的用户ID")
+    user_uuid: UUID = Field(..., description="选择的用户UUID")
 
 
 class SelectUserOut(BaseModel):

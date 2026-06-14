@@ -1,4 +1,4 @@
-﻿from sqlalchemy import JSON, Column, Integer, String
+from sqlalchemy import JSON, Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -8,10 +8,11 @@ from src.models.base import (
     SoftDeleteMixin,
     SortMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin):
+class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, EnableStatusMixin, UUIDModel):
     """会员套餐模板"""
     __tablename__ = "tenant_plan"
 
@@ -31,6 +32,6 @@ class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, Enable
     available_modules = Column(JSON, nullable=True, comment="可用模块白名单")
     available_features = Column(JSON, nullable=True, comment="可用功能白名单")
 
-    is_auto_approve = Column(Integer, default=0, comment="是否自动通过：0=否，1=是")
+    is_auto_approve = Column(Boolean, default=False, comment="是否自动通过")
 
     quotas = relationship("TenantQuota", back_populates="plan")

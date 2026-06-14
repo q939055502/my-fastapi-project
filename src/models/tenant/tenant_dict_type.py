@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, Column, ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, Column, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -12,7 +12,7 @@ from src.models.base import (
 )
 
 
-class TenantDictType(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin, SystemMixin):
+class TenantDictType(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin, EnableStatusMixin):
     """租户字典类型模型"""
     __tablename__ = "tenant_dict_type"
     __table_args__ = (UniqueConstraint("tenant_id", "code", name="uq_tenant_dict_type_code"),)

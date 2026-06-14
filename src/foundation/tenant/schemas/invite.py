@@ -1,5 +1,6 @@
-﻿from datetime import datetime
+from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -7,23 +8,22 @@ from pydantic import BaseModel, ConfigDict, Field
 class InviteGenerate(BaseModel):
     invite_type: str = Field(..., description="邀请类型：private/public/apply")
     target_contact: str | None = Field(None, description="目标联系方式")
-    default_role_id: int | None = Field(None, description="默认角色ID")
-    need_audit: int = Field(0, description="是否需要审批：0否 1是")
+    default_role_uuid: UUID | None = Field(None, description="默认角色UUID")
+    need_audit: bool = Field(False, description="是否需要审批")
     expire_hours: int | None = Field(None, description="过期小时数")
 
 
-# 别名，用于 API 兼容
 InviteCreate = InviteGenerate
 
 
 class GeneratePublicInvite(InviteGenerate):
     invite_type: Literal["public"] = Field("public", description="公开邀请")
-    need_audit: int = Field(0, description="是否需要审批：0否 1是")
+    need_audit: bool = Field(False, description="是否需要审批")
 
 
 class ApplyJoin(BaseModel):
     invite_code: str | None = Field(None, description="邀请码（公开链接用）")
-    tenant_id: int | None = Field(None, description="租户ID（搜索申请用）")
+    tenant_uuid: UUID | None = Field(None, description="租户UUID（搜索申请用）")
 
 
 class AuditJoin(BaseModel):
@@ -32,15 +32,15 @@ class AuditJoin(BaseModel):
 
 
 class InviteResponse(BaseModel):
-    id: int = Field(..., description="邀请ID")
-    tenant_id: int = Field(..., description="租户ID")
+    uuid: UUID = Field(..., description="邀请UUID")
+    tenant_uuid: UUID = Field(..., description="租户UUID")
     invite_type: str = Field(..., description="邀请类型")
     invite_code: str | None = Field(None, description="邀请码")
     target_contact: str | None = Field(None, description="目标联系方式")
-    default_role_id: int | None = Field(None, description="默认角色ID")
-    need_audit: int = Field(..., description="是否需要审批")
-    status: int = Field(..., description="状态")
-    creator_member_id: int | None = Field(None, description="创建者ID")
+    default_role_uuid: UUID | None = Field(None, description="默认角色UUID")
+    need_audit: bool = Field(..., description="是否需要审批")
+    status: bool = Field(..., description="启用/禁用状态")
+    creator_member_uuid: UUID | None = Field(None, description="创建者UUID")
     expire_time: int | None = Field(None, description="过期时间")
     created_at: datetime | None = Field(None, description="创建时间")
 
@@ -48,10 +48,10 @@ class InviteResponse(BaseModel):
 
 
 class AuditListResponse(BaseModel):
-    id: int = Field(..., description="申请ID")
-    tenant_id: int = Field(..., description="租户ID")
+    uuid: UUID = Field(..., description="申请UUID")
+    tenant_uuid: UUID = Field(..., description="租户UUID")
     tenant_name: str = Field(..., description="租户名称")
-    apply_user_id: int = Field(..., description="申请人ID")
+    apply_user_uuid: UUID = Field(..., description="申请人UUID")
     apply_username: str = Field(..., description="申请人用户名")
     apply_email: str = Field(..., description="申请人邮箱")
     apply_status: int = Field(..., description="申请状态")

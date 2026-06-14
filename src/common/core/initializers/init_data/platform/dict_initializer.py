@@ -1,4 +1,4 @@
-﻿"""
+"""
 字典初始化器
 
 负责系统字典数据的初始化
@@ -27,70 +27,70 @@ def init_dict():
                     name="系统状态",
                     code="sys_status",
                     sort=1,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="登录状态",
                     code="login_status",
                     sort=2,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="租户状态",
                     code="tenant_status",
                     sort=3,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="权限类型",
                     code="permission_type",
                     sort=4,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="业务场景",
                     code="scene",
                     sort=5,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="成员入驻类型",
                     code="member_join_type",
                     sort=6,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="审核状态",
                     code="audit_status",
                     sort=7,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="房屋状态",
                     code="house_status",
                     sort=8,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="鉴定类型",
                     code="identification_type",
                     sort=9,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
                 DictType(
                     name="鉴定状态",
                     code="identification_status",
                     sort=10,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     is_system=True
                 ),
             ]
@@ -137,7 +137,7 @@ def init_dict():
                         label="启用",
                         value=1,
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -145,7 +145,7 @@ def init_dict():
                         label="禁用",
                         value=0,
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -157,7 +157,7 @@ def init_dict():
                         label="成功",
                         value=1,
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -165,7 +165,7 @@ def init_dict():
                         label="失败",
                         value=0,
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -177,7 +177,7 @@ def init_dict():
                         label="正常",
                         value="active",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -185,7 +185,7 @@ def init_dict():
                         label="暂停",
                         value="suspended",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -193,7 +193,7 @@ def init_dict():
                         label="试用",
                         value="trial",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -201,7 +201,7 @@ def init_dict():
                         label="过期",
                         value="expired",
                         sort=4,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -213,7 +213,7 @@ def init_dict():
                         label="菜单",
                         value="menu",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -221,7 +221,7 @@ def init_dict():
                         label="按钮",
                         value="button",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -229,7 +229,7 @@ def init_dict():
                         label="接口",
                         value="api",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -241,7 +241,7 @@ def init_dict():
                         label="管理后台",
                         value="admin",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -249,7 +249,7 @@ def init_dict():
                         label="移动端",
                         value="app",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -257,7 +257,7 @@ def init_dict():
                         label="商户端",
                         value="merchant",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -269,7 +269,7 @@ def init_dict():
                         label="定向邀请",
                         value="private",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -277,7 +277,7 @@ def init_dict():
                         label="公开链接加入",
                         value="public",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -285,7 +285,7 @@ def init_dict():
                         label="用户自助申请",
                         value="apply",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -297,7 +297,7 @@ def init_dict():
                         label="待审核",
                         value=0,
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -305,7 +305,7 @@ def init_dict():
                         label="已通过",
                         value=1,
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -313,7 +313,7 @@ def init_dict():
                         label="已拒绝",
                         value=2,
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -325,7 +325,7 @@ def init_dict():
                         label="正常",
                         value="normal",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -333,7 +333,7 @@ def init_dict():
                         label="损坏",
                         value="damaged",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -341,7 +341,7 @@ def init_dict():
                         label="危险",
                         value="dangerous",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -353,7 +353,7 @@ def init_dict():
                         label="初始鉴定",
                         value="initial",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -361,7 +361,7 @@ def init_dict():
                         label="常规鉴定",
                         value="routine",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -369,7 +369,7 @@ def init_dict():
                         label="专项鉴定",
                         value="special",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])
@@ -381,7 +381,7 @@ def init_dict():
                         label="待鉴定",
                         value="pending",
                         sort=1,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -389,7 +389,7 @@ def init_dict():
                         label="鉴定中",
                         value="in_progress",
                         sort=2,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                     DictData(
@@ -397,7 +397,7 @@ def init_dict():
                         label="已完成",
                         value="completed",
                         sort=3,
-                        status=StatusConst.ENABLED.value,
+                        status=StatusConst.ENABLED,
                         is_system=True
                     ),
                 ])

@@ -1,4 +1,4 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
@@ -9,10 +9,11 @@ from src.models.base import (
     SoftDeleteMixin,
     TenantStatusMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStatusMixin):
+class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStatusMixin, UUIDModel):
     """租户模型 - 独立存在，有专属户主"""
     __tablename__ = "tenant"
 
@@ -50,7 +51,7 @@ class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStat
 
     def is_active_tenant(self) -> bool:
         """判断租户是否处于活跃状态"""
-        if self.status != "active" or self.is_deleted:
+        if self.status != "active" or self.delete_time is not None:
             return False
         if self.quota:
             return self.quota.is_valid()

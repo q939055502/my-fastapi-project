@@ -1,4 +1,4 @@
-﻿import re
+import re
 from typing import Any
 
 from src.common.core.auth import create_token_pair, token_manager, verify_token
@@ -46,7 +46,7 @@ class AuthService:
                 username=register_in.username,
                 email=register_in.email,
                 password=register_in.password,
-                role_ids=[],
+                role_uuids=[],
             )
 
             new_user = user_repository.create_user(obj_in=user_create, session=tm.session)
@@ -56,13 +56,13 @@ class AuthService:
                 .where(role_repository.model.code == RoleCodeConst.PLATFORM_NORMAL_USER.value)
             ).first()
             if default_role:
-                user_repository.update_roles(new_user, [default_role.id], session=tm.session)
+                user_repository.update_roles(new_user, [default_role.uuid], session=tm.session)
                 logger.info(f"用户 {register_in.username} 自动分配默认角色: {RoleCodeConst.PLATFORM_NORMAL_USER.value}")
 
             tm.commit()
 
         result = {
-            "id": new_user.id,
+            "uuid": new_user.uuid,
             "username": new_user.username,
             "email": register_in.email,
             "created_at": new_user.created_at,
@@ -124,22 +124,25 @@ class AuthService:
             # 单账号登录 - 直接返回正式令牌
             if len(user_list) == 1:
                 user = user_list[0]
-                user_repository.update_last_login(user["id"], client_ip, session=tm.session)
+                user_uuid = user["uuid"]
+                # 通过 uuid 获取用户 ID 用于内部操作
+                db_user = user_repository.get_by_uuid(user_uuid, session=tm.session)
+                user_repository.update_last_login(db_user.id, client_ip, session=tm.session)
                 tm.commit()
 
                 access_token, refresh_token = create_token_pair(
-                    user_id=user["id"],
+                    user_id=db_user.id,
                     username=user["username"],
                 )
 
                 access_ttl = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60
                 refresh_ttl = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
-                token_manager.store_access_token(access_token, user["id"], access_ttl)
-                token_manager.store_refresh_token(refresh_token, user["id"], access_token, refresh_ttl)
-                token_manager.add_user_token(user["id"], access_token, refresh_token, refresh_ttl)
+                token_manager.store_access_token(access_token, db_user.id, access_ttl)
+                token_manager.store_refresh_token(refresh_token, db_user.id, access_token, refresh_ttl)
+                token_manager.add_user_token(db_user.id, access_token, refresh_token, refresh_ttl)
 
-                logger.info(f"用户登录成功（单账号）: identifier={identifier}, user_id={user['id']}")
+                logger.info(f"用户登录成功（单账号）: identifier={identifier}, user_uuid={user_uuid}")
 
                 return {
                     "access_token": access_token,
@@ -168,18 +171,20 @@ class AuthService:
                     "users": user_list,
                 }
 
-    def select_user(self, temp_token: str, user_id: int, client_ip: str) -> dict[str, Any]:
+    def select_user(self, temp_token: str, user_uuid: str, client_ip: str) -> dict[str, Any]:
         """第二步登录：多账号场景下选择用户，返回正式业务令牌
 
         Args:
             temp_token: 临时凭证
-            user_id: 选择的用户ID
+            user_uuid: 选择的用户UUID
             client_ip: 客户端IP
 
         Returns:
             dict: 登录结果，与单账号登录返回格式一致
         """
-        logger.info(f"用户选择账号: temp_token={temp_token}, user_id={user_id}")
+        from uuid import UUID
+
+        logger.info(f"用户选择账号: temp_token={temp_token}, user_uuid={user_uuid}")
 
         # 1. 验证临时凭证
         temp_data = token_manager.get_temp_login_token(temp_token)
@@ -188,20 +193,20 @@ class AuthService:
 
         # 2. 验证用户是否在临时凭证的用户列表中
         users = temp_data.get("users", [])
-        selected_user = next((u for u in users if u["id"] == user_id), None)
+        selected_user = next((u for u in users if str(u["uuid"]) == user_uuid), None)
         if not selected_user:
             raise BusinessException(ResponseCode.FORBIDDEN, "用户不在可选择列表中")
 
         # 3. 验证用户仍然有效（未被禁用等）
         with TransactionManager() as tm:
-            user = user_repository.get(id=user_id, session=tm.session)
+            user = user_repository.get_by_uuid(user_uuid, session=tm.session)
             if not user:
                 raise BusinessException(ResponseCode.NOT_FOUND, "用户不存在")
             if not user.is_active:
                 raise BusinessException(ResponseCode.FORBIDDEN, "用户已被禁用")
 
             # 4. 更新最后登录信息
-            user_repository.update_last_login(user_id, client_ip, session=tm.session)
+            user_repository.update_last_login(user.id, client_ip, session=tm.session)
             tm.commit()
 
         # 5. 生成正式令牌
@@ -217,7 +222,7 @@ class AuthService:
         token_manager.store_refresh_token(refresh_token, user.id, access_token, refresh_ttl)
         token_manager.add_user_token(user.id, access_token, refresh_token, refresh_ttl)
 
-        logger.info(f"用户选择账号成功: user_id={user_id}")
+        logger.info(f"用户选择账号成功: user_uuid={user_uuid}")
 
         return {
             "access_token": access_token,

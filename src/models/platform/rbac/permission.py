@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, Column, ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, Column, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -8,10 +8,11 @@ from src.models.base import (
     SortMixin,
     SystemMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class Permission(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin):
+class Permission(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin, UUIDModel):
     """平台权限表"""
     __tablename__ = "iam_permission"
 

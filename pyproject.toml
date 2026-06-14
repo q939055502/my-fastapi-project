@@ -60,6 +60,7 @@ dependencies = [
     "mkdocs-gen-files>=0.6.1",
     "greenlet>=3.5.0",
     "cachetools>=7.1.4",
+    "pytest-yaml>=1.2.1",
 ]
 
 [project.optional-dependencies]
@@ -134,7 +135,6 @@ skip_glob = ["migrations/*"]
 
 [tool.pylint.messages_control]
 disable = ["C0103", "R0903", "W0613"]
-
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q --strict-markers --strict-config"
@@ -143,6 +143,14 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 asyncio_mode = "auto"
+pythonpath = ["."]
+markers = [
+    "unit: 单元测试用例",
+    "integration: 集成测试用例",
+    "api: 接口测试用例",
+    "e2e: 端到端测试用例",
+    "slow: 运行较慢的用例（连库/中间件）"
+]
 
 [tool.coverage.run]
 source = ["src"]

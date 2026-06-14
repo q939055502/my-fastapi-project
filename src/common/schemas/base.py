@@ -1,8 +1,8 @@
-﻿from typing import Any
+from typing import Any
 
 from pydantic import BaseModel, model_validator
 
-SYSTEM_FIELDS = {"id", "is_deleted", "delete_time", "is_system", "created_at", "updated_at"}
+SYSTEM_FIELDS = {"id", "delete_time", "is_system", "created_at", "updated_at"}
 
 
 class BaseSchema(BaseModel):

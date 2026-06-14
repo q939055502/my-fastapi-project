@@ -1,4 +1,4 @@
-﻿"""
+"""
 全局常量配置
 存放系统级、通用的固定常量，避免硬编码
 
@@ -29,9 +29,9 @@ class DictItem:
 
 # ========== 通用状态常量 ==========
 class StatusConst:
-    """通用启用/禁用状态"""
-    ENABLED = DictItem(value=1, label="启用", sort=1)
-    DISABLED = DictItem(value=0, label="禁用", sort=2)
+    """通用启用/禁用状态（用于 EnableStatusMixin）"""
+    ENABLED = True
+    DISABLED = False
 
 
 # ========== 登录日志状态 ==========

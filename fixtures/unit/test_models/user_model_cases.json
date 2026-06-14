@@ -1,0 +1,58 @@
+{
+  "create": [
+    {
+      "case_name": "正常创建用户",
+      "data": {
+        "username": "testuser1",
+        "alias": "测试用户1",
+        "password": "Test123456",
+        "avatar": "https://example.com/avatar/1.png",
+        "gender": 1,
+        "is_active": 1,
+        "is_multi_login": 0
+      },
+      "expect_valid": true
+    },
+    {
+      "case_name": "最小化字段创建",
+      "data": {
+        "username": "minuser"
+      },
+      "expect_valid": true
+    }
+  ],
+  "update": [
+    {
+      "case_name": "正常更新用户名",
+      "data": {
+        "id": 1,
+        "username": "updated_user"
+      },
+      "expect_valid": true
+    },
+    {
+      "case_name": "更新不存在的用户",
+      "data": {
+        "id": 99999,
+        "username": "ghost_user"
+      },
+      "expect_valid": false
+    }
+  ],
+  "delete": [
+    {
+      "case_name": "正常删除用户",
+      "data": {
+        "id": 1
+      },
+      "expect_valid": true
+    },
+    {
+      "case_name": "删除不存在的用户",
+      "data": {
+        "id": 99999
+      },
+      "expect_valid": false
+    }
+  ]
+}

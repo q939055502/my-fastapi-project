@@ -1,0 +1,22 @@
+[
+  {
+    "case_name": "正常用户创建",
+    "input": {"username": "zhangsan", "email": "zhangsan@qq.com", "password": "Zhang123"},
+    "expect_valid": true
+  },
+  {
+    "case_name": "用户名过短",
+    "input": {"username": "a", "email": "test@qq.com", "password": "Test123"},
+    "expect_valid": false
+  },
+  {
+    "case_name": "邮箱格式错误",
+    "input": {"username": "testuser", "email": "invalid-email", "password": "Test123"},
+    "expect_valid": false
+  },
+  {
+    "case_name": "密码强度不足",
+    "input": {"username": "testuser", "email": "test@qq.com", "password": "123456"},
+    "expect_valid": false
+  }
+]

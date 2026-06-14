@@ -1,7 +1,10 @@
-﻿from sqlalchemy import asc
+from uuid import UUID
+
+from sqlalchemy import asc
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.exceptions import BusinessException
 from src.common.core.storage import TransactionManager
+from src.foundation.platform.repository.user_repository import user_repository
 from src.foundation.tenant.repository.tenant_repository import tenant_repository
 from src.foundation.tenant.schemas.tenant import TenantCreate, TenantUpdate
 
@@ -15,7 +18,7 @@ class TenantService:
         page: int = 1,
         page_size: int = 10,
         name: str = "",
-        status: int = None,
+        status: bool = None,
     ) -> tuple[int, list[dict]]:
         with TransactionManager() as tm:
             search_filters = self._build_tenant_search_filters(
@@ -28,16 +31,16 @@ class TenantService:
                 session=tm.session,
                 filters=search_filters,
                 order_by=[asc(self.repository.model.id)],
-                eager_load=[self.repository.model.plan, self.repository.model.owner_user],
+                eager_load=[self.repository.model.quota, self.repository.model.owner_user],
             )
 
             data = self._transform_tenant_list(items)
 
             return total, data
 
-    def get_tenant_detail(self, tenant_id: int) -> dict:
+    def get_tenant_detail(self, tenant_uuid: UUID) -> dict:
         with TransactionManager() as tm:
-            tenant_obj = tenant_repository.get(id=tenant_id, session=tm.session)
+            tenant_obj = tenant_repository.get_by_uuid(uuid=tenant_uuid, session=tm.session)
             if not tenant_obj:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
 
@@ -52,15 +55,22 @@ class TenantService:
                     detail="The tenant with this code already exists in the system.",
                 )
 
-            new_tenant = tenant_repository.create(obj_in=tenant_in, session=tm.session)
+            owner_user = user_repository.get_by_uuid(uuid=tenant_in.owner_user_uuid, session=tm.session)
+            if not owner_user:
+                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="户主用户不存在")
+
+            tenant_data = tenant_in.model_dump(exclude={"owner_user_uuid"})
+            tenant_data["owner_user_id"] = owner_user.id
+            
+            new_tenant = tenant_repository.create(obj_in=tenant_data, session=tm.session)
 
             tm.commit()
 
             return self._transform_tenant_detail(new_tenant)
 
-    def update_tenant(self, tenant_id: int, tenant_in: TenantUpdate) -> None:
+    def update_tenant(self, tenant_uuid: UUID, tenant_in: TenantUpdate) -> None:
         with TransactionManager() as tm:
-            existing_tenant = tenant_repository.get(id=tenant_id, session=tm.session)
+            existing_tenant = tenant_repository.get_by_uuid(uuid=tenant_uuid, session=tm.session)
             if not existing_tenant:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
 
@@ -72,23 +82,23 @@ class TenantService:
                         detail="The tenant code already exists in the system.",
                     )
 
-            tenant_repository.update(id=tenant_id, obj_in=tenant_in, session=tm.session)
+            tenant_repository.update(id=existing_tenant.id, obj_in=tenant_in, session=tm.session)
             tm.commit()
 
-    def delete_tenant(self, tenant_id: int) -> None:
+    def delete_tenant(self, tenant_uuid: UUID) -> None:
         with TransactionManager() as tm:
-            existing_tenant = tenant_repository.get(id=tenant_id, session=tm.session)
+            existing_tenant = tenant_repository.get_by_uuid(uuid=tenant_uuid, session=tm.session)
             if not existing_tenant:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
 
-            tenant_repository.delete(id=tenant_id, session=tm.session)
+            tenant_repository.delete(id=existing_tenant.id, session=tm.session)
 
             tm.commit()
 
     def _build_tenant_search_filters(
         self,
         name: str = "",
-        status: int = None,
+        status: bool = None,
     ) -> list:
         filters = []
 
@@ -96,7 +106,7 @@ class TenantService:
             filters.append(self.repository.model.name.contains(name))
 
         if status is not None:
-            filters.append(self.repository.model.status == str(status))
+            filters.append(self.repository.model.status == status)
 
         return filters
 
@@ -116,19 +126,20 @@ class TenantService:
             value = getattr(obj, field_name)
             tenant_dict[field_name] = value
 
-        if hasattr(obj, "plan") and obj.plan:
-            tenant_dict["plan"] = {
-                "id": obj.plan.id,
-                "name": obj.plan.name,
-                "code": obj.plan.code,
+        if hasattr(obj, "quota") and obj.quota:
+            tenant_dict["quota"] = {
+                "id": obj.quota.id,
+                "name": obj.quota.name,
+                "code": obj.quota.code,
             }
         else:
-            tenant_dict["plan"] = None
+            tenant_dict["quota"] = None
 
         if hasattr(obj, "owner_user") and obj.owner_user:
             tenant_dict["owner_user"] = {
-                "id": obj.owner_user.id,
+                "uuid": obj.owner_user.uuid,
                 "username": obj.owner_user.username,
+                "email": obj.owner_user.email,
             }
         else:
             tenant_dict["owner_user"] = None

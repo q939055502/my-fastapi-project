@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, Column, ForeignKey, String
+from sqlalchemy import BigInteger, Column, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -12,7 +12,7 @@ from src.models.base import (
 )
 
 
-class TenantDictData(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin, SystemMixin):
+class TenantDictData(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin, EnableStatusMixin):
     """租户字典数据模型"""
     __tablename__ = "tenant_dict_data"
 

@@ -1,5 +1,6 @@
-﻿import re
+import re
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from src.common.core.constants import RegexConst
@@ -12,20 +13,20 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    email: EmailStr = Field(..., example="admin@qq.com", description="邮箱")
+    email: EmailStr = Field(..., json_schema_extra={"example": "admin@qq.com"}, description="邮箱")
     username: str = Field(
         ...,
-        example="admin",
+        json_schema_extra={"example": "admin"},
         min_length=3,
         max_length=20,
         description="用户名（3-20位字母数字下划线）",
     )
     password: str = Field(
         ...,
-        example="Admin123",
+        json_schema_extra={"example": "Admin123"},
         description="密码（至少6位，包含大小写字母和数字中的两种以上）",
     )
-    role_ids: list[int] | None = Field(default_factory=list, description="角色ID列表")
+    role_uuids: list[UUID] | None = Field(default_factory=list, description="角色UUID列表")
 
     @field_validator("password")
     @classmethod
@@ -51,7 +52,7 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = Field(None, description="邮箱")
     username: str | None = Field(None, description="用户名")
     is_active: bool | None = Field(None, description="是否激活")
-    role_ids: list[int] | None = Field(default_factory=list, description="角色ID列表")
+    role_uuids: list[UUID] | None = Field(default_factory=list, description="角色UUID列表")
     remark: str | None = Field(None, description="备注")
 
 
@@ -76,7 +77,7 @@ class UpdatePassword(BaseModel):
 
 
 class UserResponse(UserBase):
-    id: int = Field(..., description="用户ID")
+    uuid: UUID = Field(..., description="用户UUID")
     created_at: datetime | None = Field(None, description="创建时间")
     updated_at: datetime | None = Field(None, description="更新时间")
     last_login: datetime | None = Field(None, description="最后登录时间")
@@ -86,7 +87,7 @@ class UserResponse(UserBase):
 
 
 class UserListResponseItem(UserBase):
-    id: int = Field(..., description="用户ID")
+    uuid: UUID = Field(..., description="用户UUID")
     created_at: datetime | None = Field(None, description="创建时间")
 
     model_config = ConfigDict(from_attributes=True)

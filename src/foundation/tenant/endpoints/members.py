@@ -1,6 +1,8 @@
-﻿"""
+"""
 租户成员管理接口
 """
+
+from uuid import UUID
 
 from fastapi import APIRouter
 from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
@@ -23,7 +25,7 @@ def invite_member():
     pass
 
 
-@router.delete("/{member_id}", summary="移除租户成员")
-def remove_member(member_id: int):
+@router.delete("/{member_uuid}", summary="移除租户成员")
+def remove_member(member_uuid: UUID):
     """从租户中移除指定成员"""
     pass

@@ -1,4 +1,4 @@
-﻿from sqlalchemy import and_, select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, joinedload
 from src.common.repository.base import GenericRepository
 from src.models.platform import DictType
@@ -13,7 +13,7 @@ class DictTypeRepository(GenericRepository[DictType, None, None]):
         query = select(DictType).where(
             and_(
                 DictType.code == code,
-                not DictType.is_deleted
+                DictType.delete_time.is_(None)
             )
         )
         return session.execute(query).scalars().first()
@@ -23,7 +23,7 @@ class DictTypeRepository(GenericRepository[DictType, None, None]):
         query = select(DictType).where(
             and_(
                 DictType.code == code,
-                not DictType.is_deleted
+                DictType.delete_time.is_(None)
             )
         ).options(joinedload(DictType.datas))
         return session.execute(query).scalars().first()
@@ -33,7 +33,7 @@ class DictTypeRepository(GenericRepository[DictType, None, None]):
         query = select(DictType).where(
             and_(
                 DictType.code == code,
-                not DictType.is_deleted
+                DictType.delete_time.is_(None)
             )
         )
         if exclude_id:

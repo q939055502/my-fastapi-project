@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, Column, ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, Column, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -8,10 +8,11 @@ from src.models.base import (
     SortMixin,
     SystemMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class Role(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin):
+class Role(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin, UUIDModel):
     """统一角色表 - 支持平台级和租户级角色"""
     __tablename__ = "iam_role"
     __table_args__ = (

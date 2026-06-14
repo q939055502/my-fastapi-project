@@ -1,4 +1,4 @@
-﻿"""
+"""
 配置初始化器
 
 负责系统配置项的初始化
@@ -31,7 +31,7 @@ def init_system_config():
                     group="system",
                     remark="系统名称",
                     sort=1,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="系统版本",
@@ -41,7 +41,7 @@ def init_system_config():
                     group="system",
                     remark="系统版本",
                     sort=2,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="系统描述",
@@ -51,7 +51,7 @@ def init_system_config():
                     group="system",
                     remark="系统描述",
                     sort=3,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="登录最大失败次数",
@@ -61,7 +61,7 @@ def init_system_config():
                     group="login",
                     remark="登录最大失败次数",
                     sort=4,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="登录锁定时长",
@@ -71,7 +71,7 @@ def init_system_config():
                     group="login",
                     remark="登录锁定时长(分钟)",
                     sort=5,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="是否允许注册",
@@ -81,7 +81,7 @@ def init_system_config():
                     group="register",
                     remark="是否允许用户注册",
                     sort=6,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="是否启用验证码",
@@ -91,7 +91,7 @@ def init_system_config():
                     group="captcha",
                     remark="是否启用验证码",
                     sort=7,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="密码最小长度",
@@ -101,7 +101,7 @@ def init_system_config():
                     group="password",
                     remark="密码最小长度",
                     sort=8,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="会话超时时间",
@@ -111,7 +111,7 @@ def init_system_config():
                     group="session",
                     remark="会话超时时间(分钟)",
                     sort=9,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 SystemConfig(
                     name="审计日志保留天数",
@@ -121,7 +121,7 @@ def init_system_config():
                     group="audit",
                     remark="审计日志保留天数",
                     sort=10,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
             ]
             session.add_all(default_configs)

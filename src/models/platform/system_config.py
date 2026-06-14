@@ -1,4 +1,4 @@
-﻿from sqlalchemy import Column, String, Text
+from sqlalchemy import Column, String, Text
 
 from src.models.base import (
     BaseModel,
@@ -7,10 +7,11 @@ from src.models.base import (
     SoftDeleteMixin,
     SortMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin):
+class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, EnableStatusMixin, UUIDModel):
     """平台全局配置模型"""
     __tablename__ = "system_config"
 

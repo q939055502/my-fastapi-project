@@ -1,10 +1,10 @@
-﻿from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from src.models.base import BaseModel, EnableStatusMixin, RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.base import BaseModel, EnableStatusMixin, RemarkMixin, SoftDeleteMixin, TimestampMixin, UUIDModel
 
 
-class TenantInvite(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin):
+class TenantInvite(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, UUIDModel):
     """租户邀请/申请表 - 统一管理所有邀请和申请"""
 
     __tablename__ = "tenant_invite"
@@ -17,7 +17,7 @@ class TenantInvite(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, Enab
     target_user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=True, index=True, comment="目标用户ID（定向邀请用）")
 
     default_role_id = Column(BigInteger, ForeignKey("iam_role.id"), nullable=True, comment="默认角色ID")
-    need_audit = Column(Integer, default=0, comment="是否需要审批：0无需审批 1需要审批")
+    need_audit = Column(Boolean, default=False, comment="是否需要审批")
 
     apply_user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=True, index=True, comment="申请人用户ID（自助申请用）")
     apply_status = Column(Integer, default=0, comment="申请状态：0待审核 1通过 2拒绝")

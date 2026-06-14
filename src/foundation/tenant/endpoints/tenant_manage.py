@@ -1,6 +1,8 @@
-﻿"""
+"""
 租户管理接口（超级管理员专用）
 """
+
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
 from src.common.core.auth import PermissionControl
@@ -31,7 +33,7 @@ def create_tenant(request: Request, current_user = Depends(PermissionControl.has
 
 
 @router.put(
-    "/{tenant_id}",
+    "/{tenant_uuid}",
     summary="更新租户",
     responses={
         404: gen_swagger_response(
@@ -43,7 +45,7 @@ def create_tenant(request: Request, current_user = Depends(PermissionControl.has
 @apply_rate_limit("30/minute")
 def update_tenant(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(msg="租户更新成功")
@@ -56,14 +58,14 @@ def list_tenants(
     page: int = Query(1, description="页码"),
     page_size: int = Query(10, description="每页数量"),
     name: str = Query("", description="租户名称"),
-    status: int = Query(None, description="状态"),
+    status: bool = Query(None, description="状态"),
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success_page(data=[], total=0, page=page, page_size=page_size)
 
 
 @router.get(
-    "/{tenant_id}",
+    "/{tenant_uuid}",
     summary="获取租户详情",
     responses={
         404: gen_swagger_response(
@@ -75,14 +77,14 @@ def list_tenants(
 @apply_rate_limit("60/minute")
 def get_tenant(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(data={})
 
 
 @router.delete(
-    "/{tenant_id}",
+    "/{tenant_uuid}",
     summary="删除租户",
     responses={
         404: gen_swagger_response(
@@ -94,7 +96,7 @@ def get_tenant(
 @apply_rate_limit("10/minute")
 def delete_tenant(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(msg="租户删除成功")

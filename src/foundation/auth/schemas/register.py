@@ -15,15 +15,15 @@ from src.common.core.constants import RegexConst
 class UserRegisterSchema(BaseModel):
     username: str = Field(
         ...,
-        example="newuser",
+        json_schema_extra={"example": "newuser"},
         min_length=3,
         max_length=20,
         description="用户名（3-20位字母数字下划线）",
     )
-    email: EmailStr = Field(..., example="newuser@qq.com", description="邮箱")
+    email: EmailStr = Field(..., json_schema_extra={"example": "newuser@qq.com"}, description="邮箱")
     password: str = Field(
         ...,
-        example="NewPass123",
+        json_schema_extra={"example": "NewPass123"},
         description="密码（至少6位，包含大小写字母和数字中的两种以上）",
     )
 

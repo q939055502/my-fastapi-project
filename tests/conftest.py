@@ -1,107 +1,46 @@
-"""
-pytest 配置和共享 fixtures
-"""
-
-import sys
-import os
+import json
+import pytest
 from pathlib import Path
 
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
+# 全局公共夹具（所有测试通用）
+# ===================== 路径统一配置（企业规范：硬编码路径易出错，用动态路径） =====================
+# 项目根目录
+ROOT_DIR = Path(__file__).parent.parent
+# 测试数据目录
+FIXTURES_DIR = ROOT_DIR / "fixtures"
 
-# 确保 src 目录在 Python 路径中
-src_path = Path(__file__).parent.parent / "src"
-if str(src_path) not in sys.path:
-    sys.path.insert(0, str(src_path))
+# ===================== 全局数据夹具：加载 JSON 测试数据 =====================
+# 扩展：按测试模块动态生成数据路径
+@pytest.fixture(scope="session")
+def fixtures_dir():
+    """返回根测试数据目录，供子模块复用"""
+    return FIXTURES_DIR
 
-from src.core.config import settings
-from src.models.base import BaseModel
-from src.core.storage import get_db
-
+@pytest.fixture(scope="function")
+def module_fixtures_dir(request):
+    """
+    动态返回当前测试模块的专属数据目录
+    示例：unit/test_models/test_user.py → fixtures/unit/test_models/
+    """
+    # 获取当前测试模块的相对路径（如 unit/test_models）
+    module_rel_path = Path(request.module.__file__).parent.relative_to(ROOT_DIR / "tests")
+    # 拼接专属数据目录（如 fixtures/unit/test_models）
+    module_fixture_dir = FIXTURES_DIR / module_rel_path
+    # 自动创建目录（避免手动建）
+    module_fixture_dir.mkdir(parents=True, exist_ok=True)
+    return module_fixture_dir
+    
+@pytest.fixture(scope="session")
+def user_db_fake_data():
+    """加载纯模型字段的数据库假数据"""
+    file_path = FIXTURES_DIR / "db_fake" / "user.json"
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 @pytest.fixture(scope="session")
-def engine():
-    """创建测试数据库引擎"""
-    database_url = settings.SQLALCHEMY_DATABASE_URL
-    
-    if "sqlite" in database_url:
-        engine = create_engine(
-            database_url,
-            connect_args={"check_same_thread": False}
-        )
-    else:
-        engine = create_engine(database_url)
-    
-    BaseModel.metadata.create_all(bind=engine)
-    yield engine
-    BaseModel.metadata.drop_all(bind=engine)
-    engine.dispose()
+def user_cases_data():
+    """加载数据驱动用例（入参+预期结果）"""
+    file_path = FIXTURES_DIR / "test_cases" / "user_cases.json"
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-
-@pytest.fixture(scope="function")
-def db_session(engine):
-    """创建数据库会话"""
-    TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    session = TestSessionLocal()
-    
-    try:
-        yield session
-    finally:
-        session.close()
-
-
-@pytest.fixture(scope="function")
-def test_client(db_session):
-    """创建测试客户端"""
-    from src import app
-    
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
-    
-    app.dependency_overrides[get_db] = override_get_db
-    
-    with TestClient(app) as client:
-        yield client
-    
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def sample_user_data():
-    """示例用户数据"""
-    return {
-        "username": "testuser",
-        "alias": "测试用户",
-        "email": "test@example.com",
-        "phone": "13800138000",
-        "password": "Test123456",
-        "gender": 1,
-        "is_active": True,
-    }
-
-
-@pytest.fixture
-def sample_role_data():
-    """示例角色数据"""
-    return {
-        "name": "测试角色",
-        "code": "test_role",
-        "remark": "测试用角色",
-        "sort": 1,
-    }
-
-
-@pytest.fixture
-def sample_dept_data():
-    """示例部门数据"""
-    return {
-        "name": "测试部门",
-        "code": "test_dept",
-        "sort": 1,
-        "remark": "测试用部门",
-    }

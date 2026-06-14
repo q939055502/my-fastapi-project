@@ -1,6 +1,8 @@
-﻿"""
+"""
 套餐管理接口（超级管理员专用）
 """
+
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
 from src.common.core.auth import PermissionControl
@@ -48,7 +50,7 @@ def create_plan(
 
 
 @router.put(
-    "/{plan_id}",
+    "/{plan_uuid}",
     summary="更新套餐",
     response_model=ApiResponse,
     responses={
@@ -61,11 +63,11 @@ def create_plan(
 @apply_rate_limit("30/minute")
 def update_plan(
     request: Request,
-    plan_id: int,
+    plan_uuid: UUID,
     plan_in: TenantPlanUpdate,
     current_user = Depends(PermissionControl.has_permission),
 ):
-    tenant_plan_service.update_plan(plan_id, plan_in)
+    tenant_plan_service.update_plan(plan_uuid, plan_in)
     return success(msg="套餐更新成功")
 
 
@@ -91,7 +93,7 @@ def list_plans(
 
 
 @router.get(
-    "/{plan_id}",
+    "/{plan_uuid}",
     summary="获取套餐详情",
     response_model=ApiResponse[TenantPlanBase],
     responses={
@@ -104,15 +106,15 @@ def list_plans(
 @apply_rate_limit("60/minute")
 def get_plan(
     request: Request,
-    plan_id: int,
+    plan_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
-    plan_data = tenant_plan_service.get_plan_detail(plan_id)
+    plan_data = tenant_plan_service.get_plan_detail(plan_uuid)
     return success(data=plan_data)
 
 
 @router.delete(
-    "/{plan_id}",
+    "/{plan_uuid}",
     summary="删除套餐",
     response_model=ApiResponse,
     responses={
@@ -125,8 +127,8 @@ def get_plan(
 @apply_rate_limit("10/minute")
 def delete_plan(
     request: Request,
-    plan_id: int,
+    plan_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
-    tenant_plan_service.delete_plan(plan_id)
+    tenant_plan_service.delete_plan(plan_uuid)
     return success(msg="套餐删除成功")

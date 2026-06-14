@@ -1,14 +1,15 @@
-﻿from datetime import datetime
+from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class DictDataBase(BaseModel):
-    dict_type_id: int = Field(..., description="字典类型ID")
+    dict_type_uuid: UUID = Field(..., description="字典类型UUID")
     label: str = Field(..., description="字典标签")
     value: str = Field(..., description="字典值")
     css_class: str | None = Field(None, description="样式类")
-    status: int = Field(1, description="状态：1启用 0禁用")
+    status: bool = Field(True, description="状态")
     sort: int = Field(0, description="排序")
 
 
@@ -17,16 +18,16 @@ class DictDataCreate(DictDataBase):
 
 
 class DictDataUpdate(BaseModel):
-    dict_type_id: int | None = Field(None, description="字典类型ID")
+    dict_type_uuid: UUID | None = Field(None, description="字典类型UUID")
     label: str | None = Field(None, description="字典标签")
     value: str | None = Field(None, description="字典值")
     css_class: str | None = Field(None, description="样式类")
-    status: int | None = Field(None, description="状态")
+    status: bool | None = Field(None, description="状态")
     sort: int | None = Field(None, description="排序")
 
 
 class DictDataResponse(DictDataBase):
-    id: int = Field(..., description="字典数据ID")
+    uuid: UUID = Field(..., description="字典数据UUID")
     created_at: datetime | None = Field(None, description="创建时间")
     updated_at: datetime | None = Field(None, description="更新时间")
 

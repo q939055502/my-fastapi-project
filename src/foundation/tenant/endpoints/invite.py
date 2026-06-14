@@ -1,6 +1,8 @@
-﻿"""
+"""
 租户邀请/申请管理接口
 """
+
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
 from src.common.core.plugins import apply_rate_limit
@@ -62,19 +64,19 @@ def update_public_link(request: Request, need_audit: bool = False):
     return success(msg="设置更新成功")
 
 
-@router.post("/applications/{application_id}/approve", summary="通过申请")
+@router.post("/applications/{application_uuid}/approve", summary="通过申请")
 @apply_rate_limit("30/minute")
-def approve_application(request: Request, application_id: int):
+def approve_application(request: Request, application_uuid: UUID):
     """通过加入申请"""
     # TODO: 实现申请通过
     return success(msg="申请已通过")
 
 
-@router.post("/applications/{application_id}/reject", summary="拒绝申请")
+@router.post("/applications/{application_uuid}/reject", summary="拒绝申请")
 @apply_rate_limit("30/minute")
 def reject_application(
     request: Request,
-    application_id: int,
+    application_uuid: UUID,
     reason: str = Query("", description="拒绝原因"),
 ):
     """拒绝加入申请"""
@@ -82,9 +84,9 @@ def reject_application(
     return success(msg="申请已拒绝")
 
 
-@router.delete("/invitations/{invite_id}", summary="撤销邀请")
+@router.delete("/invitations/{invite_uuid}", summary="撤销邀请")
 @apply_rate_limit("30/minute")
-def cancel_invite(request: Request, invite_id: int):
+def cancel_invite(request: Request, invite_uuid: UUID):
     """撤销邀请"""
     # TODO: 实现邀请撤销
     return success(msg="邀请已撤销")

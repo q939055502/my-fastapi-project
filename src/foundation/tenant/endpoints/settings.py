@@ -1,6 +1,8 @@
-﻿"""
+"""
 租户配置接口（超级管理员/租户管理员）
 """
+
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from src.common.core.auth import PermissionControl
@@ -16,7 +18,7 @@ router = APIRouter(
 
 
 @router.put(
-    "/{tenant_id}/config",
+    "/{tenant_uuid}/config",
     summary="更新租户配置",
     responses={
         404: gen_swagger_response(
@@ -28,14 +30,14 @@ router = APIRouter(
 @apply_rate_limit("30/minute")
 def update_tenant_config(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(msg="租户配置更新成功")
 
 
 @router.put(
-    "/{tenant_id}/quota",
+    "/{tenant_uuid}/quota",
     summary="更新租户配额",
     responses={
         404: gen_swagger_response(
@@ -47,14 +49,14 @@ def update_tenant_config(
 @apply_rate_limit("10/minute")
 def update_tenant_quota(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(msg="租户配额更新成功")
 
 
 @router.get(
-    "/{tenant_id}/config",
+    "/{tenant_uuid}/config",
     summary="获取租户配置",
     responses={
         404: gen_swagger_response(
@@ -66,14 +68,14 @@ def update_tenant_quota(
 @apply_rate_limit("60/minute")
 def get_tenant_config(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(data={})
 
 
 @router.get(
-    "/{tenant_id}/quota",
+    "/{tenant_uuid}/quota",
     summary="获取租户配额",
     responses={
         404: gen_swagger_response(
@@ -85,7 +87,7 @@ def get_tenant_config(
 @apply_rate_limit("60/minute")
 def get_tenant_quota(
     request: Request,
-    tenant_id: int,
+    tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
     return success(data={})

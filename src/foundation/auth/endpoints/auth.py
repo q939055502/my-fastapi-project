@@ -1,4 +1,4 @@
-﻿"""
+"""
 认证接口（注册、登录、Token刷新）
 """
 
@@ -116,7 +116,7 @@ def login_by_account_and_password(request: Request, credentials: LoginByPassword
                 "refresh_token": "yyy",
                 "token_type": "bearer",
                 "expires_in": 3600,
-                "user": {"id": 1, "username": "admin", "email": "admin@example.com"}
+                "user": {"uuid": "550e8400-e29b-41d4-a716-446655440000", "username": "admin", "email": "admin@example.com"}
             }
         ),
         401: gen_swagger_response(
@@ -141,7 +141,7 @@ def select_user(request: Request, select_request: SelectUserRequest):
     """
     from src.common.core.context.auth_context import get_current_client_ip
     client_ip = get_current_client_ip(request)
-    auth_data = auth_service.select_user(select_request.temp_token, select_request.user_id, client_ip)
+    auth_data = auth_service.select_user(select_request.temp_token, select_request.user_uuid, client_ip)
     if not auth_data:
         raise BusinessException(ResponseCode.UNAUTHORIZED)
     data = SelectUserOut(**auth_data)

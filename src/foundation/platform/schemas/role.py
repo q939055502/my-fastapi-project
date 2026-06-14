@@ -1,4 +1,5 @@
-﻿from datetime import datetime
+from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -17,15 +18,15 @@ class RoleUpdate(BaseModel):
     name: str | None = Field(None, description="角色名称")
     code: str | None = Field(None, description="角色编码")
     remark: str | None = Field(None, description="备注")
-    permission_ids: list[int] | None = Field(None, description="权限ID列表")
+    permission_uuids: list[UUID] | None = Field(None, description="权限UUID列表")
 
 
 class RoleResponse(RoleBase):
-    id: int = Field(..., description="角色ID")
+    uuid: UUID = Field(..., description="角色UUID")
     code: str = Field(..., description="角色编码")
     created_at: datetime | None = Field(None, description="创建时间")
     updated_at: datetime | None = Field(None, description="更新时间")
-    is_system: int = Field(0, description="是否系统内置：0=否，1=是")
+    is_system: bool = Field(False, description="是否系统内置")
 
     model_config = ConfigDict(from_attributes=True)
 

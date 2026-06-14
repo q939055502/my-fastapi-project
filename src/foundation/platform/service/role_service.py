@@ -1,4 +1,6 @@
-﻿from sqlalchemy import asc
+from uuid import UUID
+
+from sqlalchemy import asc
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.exceptions import BusinessException
 from src.common.core.storage import TransactionManager
@@ -35,9 +37,9 @@ class RoleService:
 
             return total, data
 
-    def get_role_detail(self, role_id: int) -> dict:
+    def get_role_detail(self, role_uuid: UUID) -> dict:
         with TransactionManager() as tm:
-            role_obj = role_repository.get(id=role_id, session=tm.session)
+            role_obj = role_repository.get_by_uuid(uuid=role_uuid, session=tm.session)
             if not role_obj:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
@@ -48,14 +50,13 @@ class RoleService:
                 role_dict[field_name] = value
 
             role_dict["permissions"] = []
-            # 获取角色权限 - 使用 repository
-            role_perms = role_permission_repository.get_by_role_id(role_id, tm.session)
+            role_perms = role_permission_repository.get_by_role_id(role_obj.id, tm.session)
             
             for role_perm in role_perms:
                 permission = role_perm.permission
                 if permission:
                     permission_dict = {
-                        "id": permission.id,
+                        "uuid": permission.uuid,
                         "name": permission.name,
                         "resource": permission.resource,
                         "action": permission.action,
@@ -85,9 +86,9 @@ class RoleService:
 
             tm.commit()
 
-    def update_role(self, role_id: int, role_in: RoleUpdate) -> None:
+    def update_role(self, role_uuid: UUID, role_in: RoleUpdate) -> None:
         with TransactionManager() as tm:
-            existing_role = role_repository.get(id=role_id, session=tm.session)
+            existing_role = role_repository.get_by_uuid(uuid=role_uuid, session=tm.session)
             if not existing_role:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
@@ -105,12 +106,12 @@ class RoleService:
                         detail="该角色/职位名称已存在",
                     )
 
-            role_repository.update(id=role_id, obj_in=role_in, session=tm.session)
+            role_repository.update(id=existing_role.id, obj_in=role_in, session=tm.session)
             tm.commit()
 
-    def update_role_permissions(self, role_id: int, permission_ids: list[int]) -> None:
+    def update_role_permissions(self, role_uuid: UUID, permission_uuids: list[UUID]) -> None:
         with TransactionManager() as tm:
-            role_obj = role_repository.get(id=role_id, session=tm.session)
+            role_obj = role_repository.get_by_uuid(uuid=role_uuid, session=tm.session)
             if not role_obj:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
@@ -120,12 +121,12 @@ class RoleService:
                     detail="系统内置角色/职位不可修改权限",
                 )
 
-            role_repository.update_permissions(role_obj, permission_ids, session=tm.session)
+            role_repository.update_permissions(role_obj, permission_uuids, session=tm.session)
             tm.commit()
 
-    def delete_role(self, role_id: int) -> None:
+    def delete_role(self, role_uuid: UUID) -> None:
         with TransactionManager() as tm:
-            existing_role = role_repository.get(id=role_id, session=tm.session)
+            existing_role = role_repository.get_by_uuid(uuid=role_uuid, session=tm.session)
             if not existing_role:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="角色/职位不存在")
 
@@ -135,7 +136,7 @@ class RoleService:
                     detail="系统内置角色/职位不可删除",
                 )
 
-            role_repository.delete(id=role_id, session=tm.session)
+            role_repository.delete(id=existing_role.id, session=tm.session)
 
             tm.commit()
 
@@ -164,7 +165,6 @@ class RoleService:
                 value = getattr(obj, field_name)
                 role_dict[field_name] = value
 
-            # 使用 role_permissions 关系
             role_dict["menu_count"] = len([
                 rp for rp in obj.role_permissions 
                 if rp.permission and rp.permission.type == "menu"

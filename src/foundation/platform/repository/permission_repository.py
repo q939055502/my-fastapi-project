@@ -1,4 +1,6 @@
-﻿from sqlalchemy import select
+from uuid import UUID
+
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from src.common.repository.base import GenericRepository
 from src.models.platform import Permission, RolePermission
@@ -10,7 +12,6 @@ class PermissionRepository(GenericRepository[Permission, PermissionCreate, Permi
         super().__init__(model=Permission)
 
     def get_by_permission_code(self, permission_code: str, session: Session = None) -> Permission | None:
-        """根据权限码获取权限，权限码格式：{resource}:{action}:{scope}"""
         resource, action, scope = permission_code.split(":")
         
         query = select(Permission).where(
@@ -22,7 +23,12 @@ class PermissionRepository(GenericRepository[Permission, PermissionCreate, Permi
         query = self._apply_soft_delete_filter(query)
         return session.execute(query).scalar_one_or_none()
 
-    def get_children(self, parent_id: int, session: Session) -> list[Permission]:
+    def get_children(self, parent_uuid: UUID, session: Session) -> list[Permission]:
+        parent_id = None
+        if parent_uuid:
+            parent = self.get_by_uuid(parent_uuid, session)
+            parent_id = parent.id if parent else None
+            
         query = select(Permission).where(
             Permission.parent_id == parent_id
         )
@@ -39,7 +45,6 @@ class PermissionRepository(GenericRepository[Permission, PermissionCreate, Permi
         ).scalars().all()
 
     def exists_by_permission_code(self, permission_code: str, exclude_id: int | None = None, session: Session = None) -> bool:
-        """检查权限码是否已存在"""
         resource, action, scope = permission_code.split(":")
         
         query = select(Permission).where(
@@ -69,18 +74,15 @@ class PermissionRepository(GenericRepository[Permission, PermissionCreate, Permi
         return result.scalars().first()
 
     def get_tree(self, session: Session) -> list[Permission]:
-        """获取权限树"""
         permissions = self.list(session=session)
         return [p for p in permissions if p.parent_id is None]
 
     def get_platform_permissions(self, session: Session) -> list[Permission]:
-        """获取平台专用权限"""
         query = select(Permission).where(Permission.applicable_scope == "platform")
         query = self._apply_soft_delete_filter(query)
         return session.execute(query).scalars().all()
 
     def get_tenant_permissions(self, session: Session) -> list[Permission]:
-        """获取租户可用权限"""
         query = select(Permission).where(Permission.applicable_scope == "tenant")
         query = self._apply_soft_delete_filter(query)
         return session.execute(query).scalars().all()

@@ -1,4 +1,4 @@
-﻿"""
+"""
 租户初始化器
 
 负责租户套餐和默认租户的创建
@@ -38,7 +38,7 @@ def init_plans():
                     price_year=0,
                     available_features="基础功能",
                     available_modules="user,dept",
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     sort=1
                 ),
                 TenantPlan(
@@ -52,7 +52,7 @@ def init_plans():
                     price_year=9900,
                     available_features="标准功能",
                     available_modules="user,dept,dict",
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     sort=2
                 ),
                 TenantPlan(
@@ -66,7 +66,7 @@ def init_plans():
                     price_year=29900,
                     available_features="高级功能",
                     available_modules="user,dept,dict,file",
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     sort=3
                 ),
                 TenantPlan(
@@ -80,7 +80,7 @@ def init_plans():
                     price_year=99900,
                     available_features="企业级功能",
                     available_modules="user,dept,dict,file,log",
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                     sort=4
                 ),
             ]

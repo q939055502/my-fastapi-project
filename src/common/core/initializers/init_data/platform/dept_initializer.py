@@ -1,4 +1,4 @@
-﻿"""
+"""
 部门初始化器
 
 负责系统部门数据的初始化
@@ -27,7 +27,7 @@ def init_depts():
                 code="HQ",
                 parent_id=None,
                 sort=1,
-                status=StatusConst.ENABLED.value,
+                status=StatusConst.ENABLED,
             )
             session.add(root_dept)
             session.flush()
@@ -38,35 +38,35 @@ def init_depts():
                     code="TECH",
                     parent_id=root_dept.id,
                     sort=1,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 Dept(
                     name="产品部",
                     code="PRODUCT",
                     parent_id=root_dept.id,
                     sort=2,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 Dept(
                     name="运营部",
                     code="OPERATIONS",
                     parent_id=root_dept.id,
                     sort=3,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 Dept(
                     name="财务部",
                     code="FINANCE",
                     parent_id=root_dept.id,
                     sort=4,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
                 Dept(
                     name="人事部",
                     code="HR",
                     parent_id=root_dept.id,
                     sort=5,
-                    status=StatusConst.ENABLED.value,
+                    status=StatusConst.ENABLED,
                 ),
             ]
             session.add_all(child_depts)

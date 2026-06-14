@@ -1,6 +1,8 @@
-﻿"""
+"""
 用户个人管理接口
 """
+
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
@@ -29,10 +31,7 @@ class LogoutRequest(BaseModel):
 
 class SwitchTenantRequest(BaseModel):
     """切换租户请求"""
-    tenant_id: int = Field(..., description="要切换的租户ID")
-
-
-
+    tenant_uuid: UUID = Field(..., description="要切换的租户UUID")
 
 
 @router.post(
@@ -70,7 +69,7 @@ def switch_tenant(
     【限流】10次/分钟
     【功能】切换到指定的租户，返回新的令牌
     """
-    result = user_service.switch_tenant(current_user.id, switch_req.tenant_id)
+    result = user_service.switch_tenant(current_user.uuid, switch_req.tenant_uuid)
     return success(data=result, msg="切换租户成功")
 
 
@@ -91,7 +90,7 @@ def change_password(
     current_user: User = Depends(AuthControl.is_authed),
 ):
     result = user_service.change_my_password(
-        user_id=current_user.id,
+        user_uuid=current_user.uuid,
         old_password=password_in.old_password,
         new_password=password_in.new_password,
     )
@@ -145,7 +144,7 @@ def logout_all(request: Request, current_user: User = Depends(AuthControl.is_aut
             codes=[ResponseCode.SUCCESS],
             description="更新成功",
             example_data={
-                "id": 1,
+                "uuid": "550e8400-e29b-41d4-a716-446655440000",
                 "username": "superadmin",
                 "alias": None,
                 "avatar": None,
@@ -173,9 +172,8 @@ def update_profile(
     【限流】30次/分钟
     【功能】允许修改 alias、avatar、gender、remark
     """
-    # 个人信息只能修改特定字段
     update_data = user_in.model_dump(exclude_unset=True, exclude_none=True)
-    result = user_service.update_my_profile(current_user.id, update_data)
+    result = user_service.update_my_profile(current_user.uuid, update_data)
     return success(data=result, msg="个人信息更新成功")
 
 
@@ -188,7 +186,7 @@ def update_profile(
             codes=[ResponseCode.SUCCESS],
             description="获取成功",
             example_data={
-                "id": 1,
+                "uuid": "550e8400-e29b-41d4-a716-446655440000",
                 "username": "superadmin",
                 "alias": None,
                 "avatar": None,
@@ -212,5 +210,5 @@ def get_profile(request: Request, current_user: User = Depends(AuthControl.is_au
     【限流】60次/分钟
     【功能】返回当前用户的完整信息
     """
-    user_profile = user_service.get_my_profile(current_user.id)
+    user_profile = user_service.get_my_profile(current_user.uuid)
     return success(data=user_profile)

@@ -1,6 +1,8 @@
-﻿"""
+"""
 Account bind management endpoints
 """
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
 from src.common.core.auth import AuthControl
 from src.common.core.response import success
@@ -18,7 +20,7 @@ router = APIRouter(
 
 @router.get("/", summary="Get user's bind list")
 def get_my_bindings(current_user: User = Depends(AuthControl.is_authed)):
-    bindings = account_bind_service.get_user_bindings(current_user.id)
+    bindings = account_bind_service.get_user_bindings(current_user.uuid)
     return success(data=bindings)
 
 
@@ -27,23 +29,23 @@ def bind_value(
     bind_data: AccountBindCreate,
     current_user: User = Depends(AuthControl.is_authed),
 ):
-    bind = account_bind_service.create_bind(current_user.id, bind_data)
+    bind = account_bind_service.create_bind(current_user.uuid, bind_data)
     return success(data=bind, msg="Bind created successfully, please verify")
 
 
 @router.post("/set_default", summary="Set default bind")
 def set_default_bind(
-    bind_id: int,
+    bind_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed),
 ):
-    bind = account_bind_service.set_default_bind(current_user.id, bind_id)
+    bind = account_bind_service.set_default_bind(current_user.uuid, bind_uuid)
     return success(data=bind, msg="Set as default successfully")
 
 
-@router.delete("/{bind_id}", summary="Unbind")
+@router.delete("/{bind_uuid}", summary="Unbind")
 def unbind_value(
-    bind_id: int,
+    bind_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed),
 ):
-    account_bind_service.delete_bind(current_user.id, bind_id)
+    account_bind_service.delete_bind(current_user.uuid, bind_uuid)
     return success(msg="Unbind successfully")

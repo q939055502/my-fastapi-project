@@ -1,4 +1,4 @@
-﻿import secrets
+import secrets
 import string
 from datetime import datetime
 from typing import Optional
@@ -20,6 +20,21 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
 
     def __init__(self):
         super().__init__(model=User)
+
+    def get_by_uuid(self, uuid: str, session: Session) -> User | None:
+        """通过 UUID 获取用户
+
+        Args:
+            uuid: 用户UUID
+            session: 数据库会话
+
+        Returns:
+            User | None: 用户对象或 None
+        """
+        query = select(User).where(User.uuid == uuid)
+        query = self._apply_soft_delete_filter(query)
+        result = session.execute(query)
+        return result.scalars().first()
 
     def get_by_email(self, email: str, session: Session) -> User | None:
         from src.models.platform.account_bind import AccountBind
@@ -85,7 +100,7 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         obj_in.password = get_password_hash(password=obj_in.password)
 
         obj_dict = obj_in.model_dump()
-        obj_dict.pop('role_ids', None)
+        obj_dict.pop('role_uuids', None)
         email = obj_dict.pop('email', None)
 
         obj = self.create(obj_dict, session=session)
@@ -96,7 +111,7 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
                 user_id=obj.id,
                 bind_type=1,
                 identifier=email,
-                is_default=1,
+                is_default=True,
                 status="verified",
                 source="register"
             )
@@ -173,10 +188,10 @@ class UserRepository(GenericRepository[User, UserCreate, UserUpdate]):
         import time
         time.sleep(0.5)
 
-    def update_roles(self, user: User, role_ids: list[int], session: Session) -> None:
+    def update_roles(self, user: User, role_uuids: list, session: Session) -> None:
         user.roles.clear()
-        for role_id in role_ids:
-            role_obj = role_repository.get(id=role_id, session=session)
+        for role_uuid in role_uuids:
+            role_obj = role_repository.get_by_uuid(uuid=role_uuid, session=session)
             if role_obj:
                 user.roles.append(role_obj)
 

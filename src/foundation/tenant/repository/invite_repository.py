@@ -1,4 +1,4 @@
-﻿import secrets
+import secrets
 from datetime import datetime
 
 from sqlalchemy import and_, select, update
@@ -16,8 +16,8 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
         query = select(TenantInvite).where(
             and_(
                 TenantInvite.invite_code == invite_code,
-                TenantInvite.status == 1,
-                not TenantInvite.is_deleted
+                TenantInvite.status == True,
+                TenantInvite.delete_time.is_(None)
             )
         )
         return session.execute(query).scalars().first()
@@ -29,7 +29,7 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
                 TenantInvite.tenant_id == tenant_id,
                 TenantInvite.invite_type == "apply",
                 TenantInvite.apply_status == 0,
-                not TenantInvite.is_deleted
+                TenantInvite.delete_time.is_(None)
             )
         )
         return list(session.execute(query).scalars().all())
@@ -40,7 +40,7 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
         invite_type: str,
         creator_member_id: int,
         default_role_id: int = None,
-        need_audit: int = 0,
+        need_audit: bool = False,
         target_contact: str = None,
         expire_hours: int = 72,
         session: Session = None
@@ -58,7 +58,7 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
             need_audit=need_audit,
             creator_member_id=creator_member_id,
             expire_time=expire_time,
-            status=1
+            status=True
         )
         session.add(invite)
         return invite
@@ -77,8 +77,8 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
             invite_code=invite_code,
             apply_user_id=apply_user_id,
             apply_status=0,
-            need_audit=1,
-            status=1
+            need_audit=True,
+            status=True
         )
         session.add(invite)
         return invite

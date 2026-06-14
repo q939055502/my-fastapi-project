@@ -1,4 +1,4 @@
-﻿"""Generic Repository Base Class
+"""Generic Repository Base Class
 
 通用 CRUD 仓库基类，仅包含与租户无关的通用能力：
 - 软删除过滤与恢复
@@ -9,6 +9,7 @@
 """
 from datetime import datetime
 from typing import Any, Generic, List, TypeVar
+from uuid import UUID
 
 from pydantic import BaseModel
 from sqlalchemy import func, select
@@ -25,7 +26,6 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 # 受保护字段：更新/创建时不可修改
 PROTECTED_SYSTEM_FIELDS = {
     "id",
-    "is_deleted",
     "delete_time",
     "is_system",
     "created_at",
@@ -55,7 +55,7 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     # ------------------------------------------------------------------
     def _check_soft_delete(self) -> bool:
         """检查模型是否支持软删除"""
-        return hasattr(self.model, "is_deleted") and hasattr(self.model, "delete_time")
+        return hasattr(self.model, "delete_time")
 
     # ------------------------------------------------------------------
     # 过滤条件构建
@@ -63,13 +63,13 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def _apply_soft_delete_filter(self, query):
         """应用软删除过滤条件（仅查未删除）"""
         if self._has_soft_delete:
-            return query.where(self.model.is_deleted.is_(False))
+            return query.where(self.model.delete_time.is_(None))
         return query
 
     def _apply_soft_delete_count_filter(self, query):
         """count 查询的软删除过滤（与 list 相同逻辑）"""
         if self._has_soft_delete:
-            return query.where(self.model.is_deleted.is_(False))
+            return query.where(self.model.delete_time.is_(None))
         return query
 
     # ------------------------------------------------------------------
@@ -100,9 +100,26 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """get 的别名"""
         return self.get(id, session)
 
+    def get_by_uuid(self, uuid: UUID, session: Session) -> ModelType | None:
+        """按 UUID 获取单个对象（过滤软删除）"""
+        if not hasattr(self.model, "uuid"):
+            return None
+        query = select(self.model).where(self.model.uuid == uuid)
+        query = self._apply_soft_delete_filter(query)
+        result = session.execute(query)
+        return result.scalars().first()
+
     def get_with_deleted(self, id: int, session: Session) -> ModelType | None:
         """按 ID 获取单个对象（包含软删除）"""
         query = select(self.model).where(self.model.id == id)
+        result = session.execute(query)
+        return result.scalars().first()
+
+    def get_by_uuid_with_deleted(self, uuid: UUID, session: Session) -> ModelType | None:
+        """按 UUID 获取单个对象（包含软删除）"""
+        if not hasattr(self.model, "uuid"):
+            return None
+        query = select(self.model).where(self.model.uuid == uuid)
         result = session.execute(query)
         return result.scalars().first()
 
@@ -239,7 +256,7 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """更新对象（不提交事务）
 
         注意：系统内置对象（is_system=True）不可修改。
-        受保护字段（id/is_deleted/is_system/tenant_id 等）会被自动过滤。
+        受保护字段（id/delete_time/is_system/tenant_id 等）会被自动过滤。
         """
         db_obj = self.get(id, session)
         if not db_obj:
@@ -268,7 +285,7 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def delete(self, id: int, session: Session, hard: bool = False) -> bool:
         """删除对象（自适应删除，不提交事务）
 
-        有软删除字段 → 执行软删除（设置 is_deleted=True）
+        有软删除字段 → 执行软删除（设置 delete_time）
         无软删除字段 → 执行物理删除
 
         系统内置对象（is_system=True）不可删除。
@@ -281,7 +298,6 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             raise BusinessException(ResponseCode.FORBIDDEN, "系统内置对象不可删除")
 
         if self._has_soft_delete and not hard:
-            db_obj.is_deleted = True
             db_obj.delete_time = datetime.now()
         else:
             session.delete(db_obj)
@@ -297,10 +313,9 @@ class GenericRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             return False
 
         db_obj = self.get_with_deleted(id, session)
-        if not db_obj or not db_obj.is_deleted:
+        if not db_obj or not db_obj.delete_time:
             return False
 
-        db_obj.is_deleted = False
         db_obj.delete_time = None
         session.flush()
         return True

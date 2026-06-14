@@ -1,4 +1,4 @@
-﻿"""
+"""
 数据库初始化器
 
 负责数据库表结构的创建
@@ -6,6 +6,10 @@
 
 from src.common.core.log import logger
 from src.common.core.storage import Base, engine
+
+# 必须导入所有模型，否则 create_all() 无法创建对应表
+# 注意：这里导入 models 包会自动注册所有模型到 Base.metadata
+import src.models  # noqa: F401
 
 
 def init_db():

@@ -1,4 +1,4 @@
-﻿
+
 """
 定时任务实现模块
 
@@ -88,11 +88,11 @@ def clean_soft_deleted_data():
                 ]
 
                 for model in soft_delete_models:
-                    if not hasattr(model, "is_deleted") or not hasattr(model, "delete_time"):
+                    if not hasattr(model, "delete_time"):
                         continue
 
                     delete_stmt = delete(model).where(
-                        model.is_deleted,
+                        model.delete_time.isnot(None),
                         model.delete_time < cutoff
                     )
                     result = session.execute(delete_stmt)

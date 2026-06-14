@@ -1,4 +1,4 @@
-﻿"""
+"""
 账号绑定仓库 - 处理手机号/邮箱绑定的数据访问
 """
 
@@ -88,11 +88,11 @@ class AccountBindRepository(GenericRepository[AccountBind, None, None]):
                     self.model.bind_type == bind.bind_type
                 )
             )
-            .values(is_default=0)
+            .values(is_default=False)
         )
         session.execute(update_query)
 
-        bind.is_default = 1
+        bind.is_default = True
         return bind
 
     def verify_bind(self, bind_id: int, user_id: int, session: Session) -> AccountBind | None:

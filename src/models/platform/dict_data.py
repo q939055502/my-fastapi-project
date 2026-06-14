@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, Column, ForeignKey, String
+from sqlalchemy import BigInteger, Column, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -9,10 +9,11 @@ from src.models.base import (
     SortMixin,
     SystemMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class DictData(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin, SystemMixin):
+class DictData(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, SystemMixin, EnableStatusMixin, UUIDModel):
     """平台字典数据模型"""
     __tablename__ = "dict_data"
 

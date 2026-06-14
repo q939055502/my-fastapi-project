@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any, Generic, TypeVar
 
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.response.response_msg import RESPONSE_MSG
 
@@ -24,8 +24,8 @@ class ApiResponse(BaseModel, Generic[T]):
     request_id: str | None = Field(None, description="请求ID（用于追踪）")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(), description="响应时间")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "code": 20000,
                 "msg": "操作成功",
@@ -35,6 +35,7 @@ class ApiResponse(BaseModel, Generic[T]):
                 "timestamp": "2026-06-03T12:00:00Z"
             }
         }
+    )
 
 
 class PaginationInfo(BaseModel):

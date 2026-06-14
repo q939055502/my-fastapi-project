@@ -1,4 +1,5 @@
 ﻿
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -46,7 +47,7 @@ class BaseModel(Base):
 
 class UUIDModel:
     """UUID 混合类"""
-    uuid = Column(UUID(as_uuid=True), unique=True, index=True)
+    uuid = Column(UUID(as_uuid=True), unique=True, index=True, default=lambda: uuid.uuid4())
 
 
 class TimestampMixin:
@@ -56,23 +57,25 @@ class TimestampMixin:
 
 
 class SoftDeleteMixin:
-    """软删除混合类"""
-    is_deleted = Column(Boolean, default=False, comment="软删除标识")
+    """软删除混合类
+    
+    仅使用 delete_time 字段判断软删除状态：
+    - delete_time 为 None 表示未删除
+    - delete_time 有值表示已删除
+    """
     delete_time = Column(DateTime(timezone=True), nullable=True, comment="删除时间")
 
     def soft_delete(self):
         """执行软删除"""
-        self.is_deleted = True
         self.delete_time = datetime.now()
 
     def restore(self):
         """恢复已删除数据"""
-        self.is_deleted = False
         self.delete_time = None
 
     def is_deleted_status(self) -> bool:
         """判断是否已被软删除"""
-        return self.is_deleted
+        return self.delete_time is not None
 
 
 class RemarkMixin:
@@ -83,9 +86,9 @@ class RemarkMixin:
 class EnableStatusMixin:
     """启用/禁用状态 Mixin
 
-    适用于需要表示启用/禁用状态的模型，使用 STATUS_ENABLED/STATUS_DISABLED 常量
+    适用于需要表示启用/禁用状态的模型
     """
-    status = Column(Integer, default=1, comment="状态（使用 STATUS_* 常量：1=启用，0=禁用）")
+    status = Column(Boolean, default=True, comment="启用/禁用状态")
 
 
 class TenantStatusMixin:
@@ -117,5 +120,5 @@ class SystemMixin:
 
     适用于需要区分系统内置和自定义的模型，系统内置数据不允许修改和删除
     """
-    is_system = Column(Integer, default=0, comment="系统内置标识：0=否，1=是，系统内置数据不允许修改删除")
+    is_system = Column(Boolean, default=False, comment="系统内置标识：系统内置数据不允许修改删除")
 

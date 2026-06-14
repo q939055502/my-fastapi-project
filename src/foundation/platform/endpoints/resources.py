@@ -1,4 +1,6 @@
-﻿from fastapi import APIRouter, Query, Request
+from uuid import UUID
+
+from fastapi import APIRouter, Query, Request
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.plugins import apply_rate_limit
 from src.common.core.response import gen_swagger_response, success, success_page
@@ -29,7 +31,7 @@ def create_resource(request: Request, resource_in: PermissionCreate):
 
 
 @router.put(
-    "/{resource_id}",
+    "/{resource_uuid}",
     summary="更新资源",
     responses={
         404: gen_swagger_response(
@@ -39,8 +41,8 @@ def create_resource(request: Request, resource_in: PermissionCreate):
     },
 )
 @apply_rate_limit("30/minute")
-def update_resource(request: Request, resource_id: int, resource_in: PermissionUpdate):
-    data = resource_service.update_resource(resource_id, resource_in)
+def update_resource(request: Request, resource_uuid: UUID, resource_in: PermissionUpdate):
+    data = resource_service.update_resource(resource_uuid, resource_in)
     return success(data=data, msg="资源更新成功")
 
 
@@ -65,7 +67,7 @@ def get_resource_types(request: Request):
 
 
 @router.get(
-    "/{resource_id}",
+    "/{resource_uuid}",
     summary="获取资源详情",
     responses={
         404: gen_swagger_response(
@@ -75,13 +77,13 @@ def get_resource_types(request: Request):
     },
 )
 @apply_rate_limit("60/minute")
-def get_resource(request: Request, resource_id: int):
-    data = resource_service.get_resource_detail(resource_id)
+def get_resource(request: Request, resource_uuid: UUID):
+    data = resource_service.get_resource_detail(resource_uuid)
     return success(data=data)
 
 
 @router.delete(
-    "/{resource_id}",
+    "/{resource_uuid}",
     summary="删除资源",
     responses={
         404: gen_swagger_response(
@@ -91,6 +93,6 @@ def get_resource(request: Request, resource_id: int):
     },
 )
 @apply_rate_limit("30/minute")
-def delete_resource(request: Request, resource_id: int):
-    resource_service.delete_resource(resource_id)
+def delete_resource(request: Request, resource_uuid: UUID):
+    resource_service.delete_resource(resource_uuid)
     return success(msg="资源删除成功")

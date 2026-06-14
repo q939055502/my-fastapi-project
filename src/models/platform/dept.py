@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, Column, Integer, String
+from sqlalchemy import BigInteger, Column, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import (
@@ -8,10 +8,11 @@ from src.models.base import (
     SoftDeleteMixin,
     SortMixin,
     TimestampMixin,
+    UUIDModel,
 )
 
 
-class Dept(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, SortMixin):
+class Dept(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, EnableStatusMixin, UUIDModel):
     """部门模型"""
     __tablename__ = "iam_dept"
 

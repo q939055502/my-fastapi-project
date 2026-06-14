@@ -1,4 +1,6 @@
-﻿from fastapi import APIRouter, Body, Query, Request
+from uuid import UUID
+
+from fastapi import APIRouter, Body, Query, Request
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.plugins import apply_rate_limit
 from src.common.core.response import gen_swagger_response, success, success_page
@@ -29,7 +31,7 @@ def create_user(request: Request, user_in: UserCreate):
 
 
 @router.put(
-    "/{user_id}",
+    "/{user_uuid}",
     summary="更新用户",
     responses={
         404: gen_swagger_response(
@@ -39,8 +41,8 @@ def create_user(request: Request, user_in: UserCreate):
     },
 )
 @apply_rate_limit("30/minute")
-def update_user(request: Request, user_id: int, user_in: UserUpdate):
-    user_admin_service.update_user(user_id, user_in)
+def update_user(request: Request, user_uuid: UUID, user_in: UserUpdate):
+    user_admin_service.update_user(user_uuid, user_in)
     return success(msg="用户更新成功")
 
 
@@ -55,8 +57,8 @@ def update_user(request: Request, user_id: int, user_in: UserUpdate):
     },
 )
 @apply_rate_limit("10/minute")
-def reset_password(request: Request, user_id: int = Body(..., description="用户ID", embed=True)):
-    new_password = user_admin_service.reset_user_password(user_id)
+def reset_password(request: Request, user_uuid: UUID = Body(..., description="用户UUID", embed=True)):
+    new_password = user_admin_service.reset_user_password(user_uuid)
     return success(data={"password": new_password}, msg="密码重置成功")
 
 
@@ -68,20 +70,20 @@ def list_user(
     page_size: int = Query(10, description="每页数量"),
     username: str = Query("", description="用户名称，用于搜索"),
     email: str = Query("", description="邮箱地址"),
-    dept_id: int = Query(None, description="部门ID"),
+    dept_uuid: UUID = Query(None, description="部门UUID"),
 ):
     total, data = user_admin_service.get_user_list(
         page=page,
         page_size=page_size,
         username=username,
         email=email,
-        dept_id=dept_id,
+        dept_uuid=dept_uuid,
     )
     return success_page(data=data, total=total, page=page, page_size=page_size)
 
 
 @router.get(
-    "/{user_id}",
+    "/{user_uuid}",
     summary="获取用户详情",
     responses={
         404: gen_swagger_response(
@@ -91,13 +93,13 @@ def list_user(
     },
 )
 @apply_rate_limit("60/minute")
-def get_user(request: Request, user_id: int):
-    user_data = user_admin_service.get_user_detail(user_id)
+def get_user(request: Request, user_uuid: UUID):
+    user_data = user_admin_service.get_user_detail(user_uuid)
     return success(data=user_data)
 
 
 @router.delete(
-    "/{user_id}",
+    "/{user_uuid}",
     summary="删除用户",
     responses={
         404: gen_swagger_response(
@@ -107,6 +109,6 @@ def get_user(request: Request, user_id: int):
     },
 )
 @apply_rate_limit("30/minute")
-def delete_user(request: Request, user_id: int):
-    user_admin_service.delete_user(user_id)
+def delete_user(request: Request, user_uuid: UUID):
+    user_admin_service.delete_user(user_uuid)
     return success(msg="用户删除成功")

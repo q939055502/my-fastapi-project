@@ -1,7 +1,8 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -12,10 +13,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from src.models.base import BaseModel, RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.base import BaseModel, EnableStatusMixin, RemarkMixin, SoftDeleteMixin, TimestampMixin, UUIDModel
 
 
-class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
+class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, UUIDModel):
     """租户成员模型 - 用户与租户的关联关系
 
     用于管理用户在不同租户中的成员资格。
@@ -26,12 +27,12 @@ class TenantMember(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     user_id = Column(BigInteger, ForeignKey("iam_user.id"), nullable=False, index=True, comment="用户ID")
     tenant_id = Column(BigInteger, ForeignKey("tenant.id"), nullable=False, index=True, comment="租户ID")
     subject_id = Column(BigInteger, nullable=False, index=True, comment="统一RBAC主体ID（用于权限关联）")
-    is_owner = Column(Integer, default=0, nullable=False, comment="是否为租户创建人：0=否，1=是")
-    status = Column(Integer, default=1, nullable=False, comment="成员状态：1=正常 0=禁用")
+    is_owner = Column(Boolean, default=False, nullable=False, comment="是否为租户创建人")
+    # status 字段由 EnableStatusMixin 提供
     joined_at = Column(DateTime(timezone=True), default=datetime.now, nullable=False, comment="加入时间")
     last_login_at = Column(DateTime(timezone=True), nullable=True, comment="最后登录时间")
     last_login_ip = Column(String(50), nullable=True, comment="最后登录IP")
-    is_muted = Column(Integer, default=0, nullable=False, comment="禁言状态：0=否 1=是")
+    is_muted = Column(Boolean, default=False, nullable=False, comment="禁言状态")
     muted_until = Column(DateTime(timezone=True), nullable=True, comment="禁言结束时间")
     contact_info = Column(String(255), nullable=True, comment="联系方式")
 

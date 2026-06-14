@@ -1,17 +1,19 @@
-﻿from datetime import datetime
+from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class TenantMemberBase(BaseModel):
-    user_id: int | None = Field(None, description="用户ID")
+    user_uuid: UUID | None = Field(None, description="用户UUID")
     role: str = Field("member", description="租户内角色")
-    is_owner: int = Field(0, description="是否为租户创建人：0=否，1=是")
-    is_sub_account: int = Field(0, description="是否为子账号：0=否，1=是")
+    is_owner: bool = Field(False, description="是否为租户创建人")
+    is_sub_account: bool = Field(False, description="是否为子账号")
+    status: bool = Field(True, description="成员启用/禁用状态")
 
 
 class TenantMemberCreate(TenantMemberBase):
-    user_id: int = Field(..., description="用户ID")
+    user_uuid: UUID = Field(..., description="用户UUID")
 
 
 class TenantMemberUpdate(BaseModel):
@@ -19,12 +21,12 @@ class TenantMemberUpdate(BaseModel):
 
 
 class TenantMemberRoleUpdate(BaseModel):
-    role_ids: list[int] = Field(..., description="角色ID列表")
+    role_uuids: list[UUID] = Field(..., description="角色UUID列表")
 
 
 class TenantMemberResponse(TenantMemberBase):
-    id: int = Field(..., description="成员ID")
-    tenant_id: int = Field(..., description="租户ID")
+    uuid: UUID = Field(..., description="成员UUID")
+    tenant_uuid: UUID = Field(..., description="租户UUID")
     joined_at: datetime | None = Field(None, description="加入时间")
     join_type: str | None = Field(None, description="加入方式")
     audit_status: int | None = Field(None, description="审核状态")

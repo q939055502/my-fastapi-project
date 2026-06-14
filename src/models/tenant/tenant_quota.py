@@ -1,6 +1,6 @@
-﻿from datetime import UTC, datetime
+from datetime import UTC, datetime
 
-from sqlalchemy import JSON, BigInteger, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import JSON, BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel, SoftDeleteMixin, TimestampMixin
@@ -26,14 +26,14 @@ class TenantQuota(BaseModel, TimestampMixin, SoftDeleteMixin):
     available_modules = Column(JSON, nullable=True, comment="可用模块白名单")
     available_features = Column(JSON, nullable=True, comment="可用功能白名单")
 
-    is_free = Column(Integer, default=1, comment="是否免费版：0=否，1=是")
+    is_free = Column(Boolean, default=True, comment="是否免费版")
 
     tenant = relationship("Tenant", back_populates="quota")
     plan = relationship("TenantPlan", back_populates="quotas")
 
     def is_valid(self) -> bool:
         """判断会员是否有效"""
-        if self.is_deleted:
+        if self.delete_time is not None:
             return False
         if not self.valid_until:
             return True

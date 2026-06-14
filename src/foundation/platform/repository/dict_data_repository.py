@@ -1,4 +1,4 @@
-﻿from sqlalchemy import and_, select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 from src.common.repository.base import GenericRepository
 from src.models.platform import DictData
@@ -15,8 +15,8 @@ class DictDataRepository(GenericRepository[DictData, None, None]):
         ).where(
             and_(
                 DictData.dict_type.has(code=type_code),
-                not DictData.is_deleted,
-                not DictData.dict_type.has(is_deleted=True)
+                DictData.delete_time.is_(None),
+                DictData.dict_type.has(delete_time=None)
             )
         )
         return list(session.execute(query).scalars().all())
@@ -26,7 +26,7 @@ class DictDataRepository(GenericRepository[DictData, None, None]):
         query = select(DictData).where(
             and_(
                 DictData.dict_type_id == type_id,
-                not DictData.is_deleted
+                DictData.delete_time.is_(None)
             )
         )
         return list(session.execute(query).scalars().all())
@@ -37,7 +37,7 @@ class DictDataRepository(GenericRepository[DictData, None, None]):
             and_(
                 DictData.dict_type_id == type_id,
                 DictData.value == value,
-                not DictData.is_deleted
+                DictData.delete_time.is_(None)
             )
         )
         return session.execute(query).scalars().first()

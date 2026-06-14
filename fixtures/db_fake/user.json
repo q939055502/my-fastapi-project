@@ -1,0 +1,19 @@
+[
+  {
+    "id": 1,
+    "username": "zhangsan",
+    "alias": "张三",
+    "password": "$2b$12$EixZaYbB.rK4fl8x2q7Meu6Q6D2V5fF5Q5Q5Q5Q5Q5Q5Q5Q5Q5Q",
+    "avatar": "https://example.com/avatar/1.png",
+    "gender": 1,
+    "phone": "13800138000",
+    "is_active": 1,
+    "is_multi_login": 0,
+    "last_login": "2024-01-15T10:30:00+08:00",
+    "last_login_ip": "192.168.1.100",
+    "dept_id": null,
+    "remark": "测试用户",
+    "created_at": "2024-01-01T00:00:00+08:00",
+    "updated_at": "2024-01-15T10:30:00+08:00"
+  }
+]

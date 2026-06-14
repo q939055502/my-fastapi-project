@@ -1,7 +1,6 @@
-﻿"""SQLAlchemy 数据库连接管理"""
+"""SQLAlchemy 数据库连接管理"""
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from src.common.core.config import settings
 
 engine_kwargs = {
@@ -13,6 +12,8 @@ if not settings.SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine_kwargs.update({
         "pool_size": 10,
         "max_overflow": 20,
+        # 禁用 insertmanyinsert 优化，避免列顺序映射问题
+        "insertmanyvalues_page_size": 1,
     })
 
 engine = create_engine(

@@ -1,4 +1,6 @@
-﻿from sqlalchemy import asc
+from uuid import UUID
+
+from sqlalchemy import asc
 from src.common.core.enums.response_code import ResponseCode
 from src.common.core.exceptions import BusinessException
 from src.common.core.storage import TransactionManager
@@ -33,9 +35,9 @@ class DeptService:
 
             return total, data
 
-    def get_dept_detail(self, dept_id: int) -> dict:
+    def get_dept_detail(self, dept_uuid: UUID) -> dict:
         with TransactionManager() as tm:
-            dept_obj = dept_repository.get(id=dept_id, session=tm.session)
+            dept_obj = dept_repository.get_by_uuid(uuid=dept_uuid, session=tm.session)
             if not dept_obj:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="部门不存在")
 
@@ -53,8 +55,8 @@ class DeptService:
 
     def create_dept(self, dept_in: DeptCreate) -> None:
         with TransactionManager() as tm:
-            if dept_in.parent_id != 0:
-                parent_dept = dept_repository.get(id=dept_in.parent_id, session=tm.session)
+            if dept_in.parent_uuid:
+                parent_dept = dept_repository.get_by_uuid(uuid=dept_in.parent_uuid, session=tm.session)
                 if not parent_dept:
                     raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="父部门不存在")
 
@@ -62,31 +64,31 @@ class DeptService:
 
             tm.commit()
 
-    def update_dept(self, dept_id: int, dept_in: DeptUpdate) -> None:
+    def update_dept(self, dept_uuid: UUID, dept_in: DeptUpdate) -> None:
         with TransactionManager() as tm:
-            existing_dept = dept_repository.get(id=dept_id, session=tm.session)
+            existing_dept = dept_repository.get_by_uuid(uuid=dept_uuid, session=tm.session)
             if not existing_dept:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="部门不存在")
 
-            if dept_in.parent_id != 0:
-                parent_dept = dept_repository.get(id=dept_in.parent_id, session=tm.session)
+            if dept_in.parent_uuid:
+                parent_dept = dept_repository.get_by_uuid(uuid=dept_in.parent_uuid, session=tm.session)
                 if not parent_dept:
                     raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="父部门不存在")
 
-            if dept_in.parent_id == dept_id:
+            if dept_in.parent_uuid == dept_uuid:
                 raise BusinessException(ResponseCode.PARAM_ERROR, detail="父部门不能是自身")
 
-            dept_repository.update_dept(dept_id=dept_id, obj_in=dept_in, session=tm.session)
+            dept_repository.update_dept(dept_uuid=dept_uuid, obj_in=dept_in, session=tm.session)
 
             tm.commit()
 
-    def delete_dept(self, dept_id: int) -> None:
+    def delete_dept(self, dept_uuid: UUID) -> None:
         with TransactionManager() as tm:
-            existing_dept = dept_repository.get(id=dept_id, session=tm.session)
+            existing_dept = dept_repository.get_by_uuid(uuid=dept_uuid, session=tm.session)
             if not existing_dept:
                 raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="部门不存在")
 
-            dept_repository.delete_dept(dept_id=dept_id, session=tm.session)
+            dept_repository.delete_dept(dept_uuid=dept_uuid, session=tm.session)
 
             tm.commit()
 
@@ -98,8 +100,6 @@ class DeptService:
 
         if name:
             filters.append(self.repository.model.name.contains(name))
-
-        filters.append(not self.repository.model.is_deleted)
 
         return filters
 
