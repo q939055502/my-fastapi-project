@@ -1,4 +1,4 @@
-﻿"""Tenant Repository Base
+"""Tenant Repository Base
 
 租户层 Repository 基类，在通用 Repository 基础上增加租户隔离能力。
 
@@ -22,20 +22,20 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
-from src.common.core.context import get_current_auth_context
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.exceptions import BusinessException
-from src.common.repository.base import GenericRepository
+from src.foundation.iam.auth.context import get_current_auth_context
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions import BusinessException
+from src.core.storage import BaseRepository
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
-class TenantRepositoryBase(GenericRepository[ModelType, CreateSchemaType, UpdateSchemaType]):
+class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSchemaType]):
     """租户 Repository 基类
 
-    在 GenericRepository 基础上，增加：
+    在 BaseRepository 基础上，增加：
     - 从请求上下文自动获取租户 ID
     - 所有查询自动按 tenant_id 过滤
     - 创建对象时自动填充 tenant_id
@@ -47,7 +47,7 @@ class TenantRepositoryBase(GenericRepository[ModelType, CreateSchemaType, Update
         if not hasattr(self.model, "tenant_id"):
             raise TypeError(
                 f"Model {self.model.__name__} has no 'tenant_id' column. "
-                "Use GenericRepository instead of TenantRepositoryBase."
+                "Use BaseRepository instead of TenantRepositoryBase."
             )
 
     # ------------------------------------------------------------------

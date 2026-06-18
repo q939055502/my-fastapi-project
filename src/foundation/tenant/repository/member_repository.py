@@ -2,30 +2,30 @@ from datetime import datetime
 
 from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
-from src.models.platform import User
-from src.models.tenant import Tenant, TenantMember
+from src.models.platform import User, AccountBind
+from src.models.tenant import Tenant, Member
 from src.foundation.tenant.repository.base import TenantRepositoryBase
 
 
-class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
+class MemberRepository(TenantRepositoryBase[Member, None, None]):
     def __init__(self):
-        super().__init__(model=TenantMember)
+        super().__init__(model=Member)
 
     def get_user_tenants(self, user_id: int, session: Session) -> list[dict]:
         """获取用户加入的所有租户（跨租户查询，不限制当前上下文租户）"""
         query = select(
             Tenant,
-            TenantMember.is_owner,
-            TenantMember.joined_at
+            Member.is_owner,
+            Member.joined_at
         ).join(
-            TenantMember,
+            Member,
             and_(
-                TenantMember.tenant_id == Tenant.id,
-                TenantMember.user_id == user_id
+                Member.tenant_id == Tenant.id,
+                Member.user_id == user_id
             )
         ).where(
             Tenant.delete_time.is_(None),
-            TenantMember.delete_time.is_(None)
+            Member.delete_time.is_(None)
         )
 
         result = session.execute(query)
@@ -46,17 +46,17 @@ class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
         """获取指定租户的成员列表"""
         query = select(
             User,
-            TenantMember.is_owner,
-            TenantMember.joined_at
+            Member.is_owner,
+            Member.joined_at
         ).join(
-            TenantMember,
+            Member,
             and_(
-                TenantMember.user_id == User.id,
-                TenantMember.tenant_id == tenant_id
+                Member.user_id == User.id,
+                Member.tenant_id == tenant_id
             )
         ).where(
             User.delete_time.is_(None),
-            TenantMember.delete_time.is_(None)
+            Member.delete_time.is_(None)
         )
 
         result = session.execute(query)
@@ -64,25 +64,22 @@ class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
 
         members = []
         for row in rows:
-            email = None
-            if hasattr(row.User, "account_binds"):
-                for bind in row.User.account_binds:
-                    if bind.bind_type == 1 and bind.status == "verified":
-                        email = bind.identifier
-                        break
+            # 查询用户的邮箱绑定
+            email_query = select(AccountBind).where(
+                AccountBind.user_id == row.User.id,
+                AccountBind.bind_type == 1,
+                AccountBind.status == "verified",
+                AccountBind.delete_time.is_(None)
+            )
+            email_result = session.execute(email_query).scalars().first()
+            email = email_result.identifier if email_result else None
+
             member = {
                 "user_id": row.User.id,
                 "username": row.User.username,
                 "email": email,
                 "is_owner": row.is_owner,
                 "joined_at": row.joined_at,
-                "roles": [
-                    {
-                        "id": role.id,
-                        "name": role.name
-                    }
-                    for role in row.User.roles
-                ]
             }
             members.append(member)
 
@@ -90,26 +87,26 @@ class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
 
     def is_user_in_tenant(self, user_id: int, tenant_id: int, session: Session) -> bool:
         """检查用户是否在指定租户中"""
-        query = select(TenantMember).where(
+        query = select(Member).where(
             and_(
-                TenantMember.user_id == user_id,
-                TenantMember.tenant_id == tenant_id,
-                TenantMember.delete_time.is_(None)
+                Member.user_id == user_id,
+                Member.tenant_id == tenant_id
             )
         )
+        query = self._apply_soft_delete_filter(query)
         result = session.execute(query).first()
         return result is not None
 
     def is_tenant_owner(self, user_id: int, tenant_id: int, session: Session) -> bool:
         """检查用户是否为租户所有者"""
-        query = select(TenantMember).where(
+        query = select(Member).where(
             and_(
-                TenantMember.user_id == user_id,
-                TenantMember.tenant_id == tenant_id,
-                TenantMember.is_owner,
-                TenantMember.delete_time.is_(None)
+                Member.user_id == user_id,
+                Member.tenant_id == tenant_id,
+                Member.is_owner
             )
         )
+        query = self._apply_soft_delete_filter(query)
         result = session.execute(query).first()
         return result is not None
 
@@ -131,7 +128,7 @@ class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
         is_owner: bool = False,
         session: Session = None
     ) -> None:
-        tenant_member = TenantMember(
+        tenant_member = Member(
             user_id=user_id,
             tenant_id=tenant_id,
             is_owner=is_owner,
@@ -143,10 +140,10 @@ class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
         if self.is_tenant_owner(user_id, tenant_id, session):
             return False
 
-        stmt = delete(TenantMember).where(
+        stmt = delete(Member).where(
             and_(
-                TenantMember.user_id == user_id,
-                TenantMember.tenant_id == tenant_id
+                Member.user_id == user_id,
+                Member.tenant_id == tenant_id
             )
         )
         session.execute(stmt)
@@ -168,25 +165,23 @@ class TenantMemberRepository(TenantRepositoryBase[TenantMember, None, None]):
 
     def get_user_tenant_relation(self, user_id: int, tenant_id: int, session: Session) -> dict | None:
         """获取用户与租户的关系信息"""
-        query = select(
-            TenantMember
-        ).where(
+        query = select(Member).where(
             and_(
-                TenantMember.user_id == user_id,
-                TenantMember.tenant_id == tenant_id,
-                TenantMember.delete_time.is_(None)
+                Member.user_id == user_id,
+                Member.tenant_id == tenant_id
             )
         )
+        query = self._apply_soft_delete_filter(query)
         result = session.execute(query).first()
 
         if result:
             return {
-                "user_id": result.TenantMember.user_id,
-                "tenant_id": result.TenantMember.tenant_id,
-                "is_owner": result.TenantMember.is_owner,
-                "joined_at": result.TenantMember.joined_at
+                "user_id": result.Member.user_id,
+                "tenant_id": result.Member.tenant_id,
+                "is_owner": result.Member.is_owner,
+                "joined_at": result.Member.joined_at
             }
         return None
 
 
-tenant_member_repository = TenantMemberRepository()
+tenant_member_repository = MemberRepository()

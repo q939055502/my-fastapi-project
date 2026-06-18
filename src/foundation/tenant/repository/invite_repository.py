@@ -3,35 +3,35 @@ from datetime import datetime
 
 from sqlalchemy import and_, select, update
 from sqlalchemy.orm import Session
-from src.models.tenant import TenantInvite
+from src.models.tenant import Invite
 from src.foundation.tenant.repository.base import TenantRepositoryBase
 
 
-class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
+class InviteRepository(TenantRepositoryBase[Invite, None, None]):
     def __init__(self):
-        super().__init__(model=TenantInvite)
+        super().__init__(model=Invite)
 
-    def get_by_code(self, invite_code: str, session: Session) -> TenantInvite | None:
+    def get_by_code(self, invite_code: str, session: Session) -> Invite | None:
         """根据邀请码获取邀请记录"""
-        query = select(TenantInvite).where(
+        query = select(Invite).where(
             and_(
-                TenantInvite.invite_code == invite_code,
-                TenantInvite.status == True,
-                TenantInvite.delete_time.is_(None)
+                Invite.invite_code == invite_code,
+                Invite.status == True
             )
         )
+        query = self._apply_soft_delete_filter(query)
         return session.execute(query).scalars().first()
 
-    def get_pending_applications(self, tenant_id: int, session: Session) -> list[TenantInvite]:
+    def get_pending_applications(self, tenant_id: int, session: Session) -> list[Invite]:
         """获取租户的待审核申请"""
-        query = select(TenantInvite).where(
+        query = select(Invite).where(
             and_(
-                TenantInvite.tenant_id == tenant_id,
-                TenantInvite.invite_type == "apply",
-                TenantInvite.apply_status == 0,
-                TenantInvite.delete_time.is_(None)
+                Invite.tenant_id == tenant_id,
+                Invite.invite_type == "apply",
+                Invite.apply_status == 0
             )
         )
+        query = self._apply_soft_delete_filter(query)
         return list(session.execute(query).scalars().all())
 
     def create_invite(
@@ -44,12 +44,12 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
         target_contact: str = None,
         expire_hours: int = 72,
         session: Session = None
-    ) -> TenantInvite:
+    ) -> Invite:
         """创建邀请记录"""
         invite_code = secrets.token_urlsafe(16) if invite_type in ("public", "private") else None
         expire_time = int((datetime.now().timestamp() + expire_hours * 3600) * 1000)
 
-        invite = TenantInvite(
+        invite = Invite(
             tenant_id=tenant_id,
             invite_type=invite_type,
             invite_code=invite_code,
@@ -69,9 +69,9 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
         apply_user_id: int,
         invite_code: str = None,
         session: Session = None
-    ) -> TenantInvite:
+    ) -> Invite:
         """创建申请记录"""
-        invite = TenantInvite(
+        invite = Invite(
             tenant_id=tenant_id,
             invite_type="apply",
             invite_code=invite_code,
@@ -86,8 +86,8 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
     def accept_application(self, invite_id: int, audit_member_id: int, session: Session) -> None:
         """通过申请"""
         session.execute(
-            update(TenantInvite).where(
-                TenantInvite.id == invite_id
+            update(Invite).where(
+                Invite.id == invite_id
             ).values(
                 apply_status=1,
                 audit_member_id=audit_member_id,
@@ -98,8 +98,8 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
     def reject_application(self, invite_id: int, audit_member_id: int, remark: str, session: Session) -> None:
         """拒绝申请"""
         session.execute(
-            update(TenantInvite).where(
-                TenantInvite.id == invite_id
+            update(Invite).where(
+                Invite.id == invite_id
             ).values(
                 apply_status=2,
                 audit_member_id=audit_member_id,
@@ -109,4 +109,4 @@ class TenantInviteRepository(TenantRepositoryBase[TenantInvite, None, None]):
         )
 
 
-tenant_invite_repository = TenantInviteRepository()
+tenant_invite_repository = InviteRepository()

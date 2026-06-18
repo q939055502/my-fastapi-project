@@ -4,12 +4,12 @@
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
-from src.common.core.constants import AccountBindStatusConst
-from src.common.repository.base import GenericRepository
-from src.models.platform.account_bind import AccountBind
+from src.core.constants import AccountBindStatusConst
+from src.core.storage import BaseRepository
+from src.models.platform.auth import AccountBind
 
 
-class AccountBindRepository(GenericRepository[AccountBind, None, None]):
+class AccountBindRepository(BaseRepository[AccountBind, None, None]):
 
     def __init__(self):
         super().__init__(model=AccountBind)
@@ -149,6 +149,19 @@ class AccountBindRepository(GenericRepository[AccountBind, None, None]):
         result = session.execute(query)
         bind = result.scalars().first()
         return bind.identifier if bind else None
+
+    def count_by_identifier(self, bind_type: int, identifier: str, session: Session) -> int:
+        """统计某个标识（手机号/邮箱）已绑定的账号数量"""
+        query = select(AccountBind).where(
+            and_(
+                AccountBind.bind_type == bind_type,
+                AccountBind.identifier == identifier,
+                AccountBind.status == "verified"
+            )
+        )
+        query = self._apply_soft_delete_filter(query)
+        result = session.execute(query)
+        return len(list(result.scalars().all()))
 
 
 account_bind_repository = AccountBindRepository()

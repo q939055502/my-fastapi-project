@@ -4,9 +4,9 @@ Account bind management endpoints
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from src.common.core.auth import AuthControl
-from src.common.core.response import success
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.iam import AuthControl
+from src.core.response import success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.platform import User
 from src.foundation.system.schemas.account_bind import AccountBindCreate
 from src.foundation.system.service.account_bind_service import account_bind_service

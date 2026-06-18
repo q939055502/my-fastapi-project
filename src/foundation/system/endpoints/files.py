@@ -1,12 +1,12 @@
-﻿from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import FileResponse
-from src.common.core.auth import AuthControl
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.plugins import apply_rate_limit
-from src.common.core.response import gen_swagger_response, success
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.iam import AuthControl
+from src.core.enums.response_code import ResponseCode
+from src.core.plugins import apply_rate_limit
+from src.core.response import gen_swagger_response, success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.platform import User
-from src.foundation.platform.service.file_service import file_service
+from src.foundation.system.service.file_service import file_service
 
 router = APIRouter(
     tags=["通用-文件管理"],

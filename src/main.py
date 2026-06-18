@@ -1,4 +1,4 @@
-﻿"""
+"""
 FastAPI 应用入口模块
 
 负责创建和配置 FastAPI 应用实例，包含：
@@ -14,10 +14,10 @@ from fastapi import Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 
-from src.common.core.exceptions import SettingNotFound
+from src.core.exceptions import SettingNotFound
 
 try:
-    from src.common.core.config import settings
+    from src.core.config import settings
 except ImportError as e:
     raise SettingNotFound("Can not import settings") from e
 
@@ -34,15 +34,15 @@ def create_app():
     - 路由注册（来自 app_setup）
     - 启动/关闭事件
     """
-    from src.common.core.app_setup import (
+    from src.app_setup import (
         make_middlewares,
         register_exceptions,
         register_routers,
     )
-    from src.common.core.auth import get_current_username, token_manager
-    from src.common.core.initializers import run_all_initializers
-    from src.common.core.scheduler import scheduler_manager
-    from src.common.core.storage import close_db
+    from src.foundation.iam import get_current_username, token_manager
+    from src.initializers import run_all_initializers
+    from src.core.scheduler import scheduler_manager
+    from src.core.storage import close_db
 
     app = FastAPI(
         title=settings.APP_TITLE,

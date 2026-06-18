@@ -5,11 +5,11 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from src.common.core.auth import PermissionControl
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.plugins import apply_rate_limit
-from src.common.core.response import gen_swagger_response, success
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.iam import PermissionControl
+from src.core.enums.response_code import ResponseCode
+from src.core.plugins import apply_rate_limit
+from src.core.response import gen_swagger_response, success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 
 router = APIRouter(
     tags=["租户管理-设置"],

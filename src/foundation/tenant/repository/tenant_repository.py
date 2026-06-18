@@ -1,11 +1,11 @@
-﻿from sqlalchemy import select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.common.repository.base import GenericRepository
+from src.core.storage import BaseRepository
 from src.models.tenant import Tenant
 from src.foundation.tenant.schemas.tenant import TenantCreate, TenantUpdate
 
 
-class TenantRepository(GenericRepository[Tenant, TenantCreate, TenantUpdate]):
+class TenantRepository(BaseRepository[Tenant, TenantCreate, TenantUpdate]):
     def __init__(self):
         super().__init__(model=Tenant)
 

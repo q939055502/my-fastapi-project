@@ -1,29 +1,27 @@
-﻿"""
-多租户核心模型
+"""
+租户模型
 
-包含：租户、租户配置、租户配额、租户用量、租户成员等模型
+包含：租户核心、使用量统计、租户字典等模块
 """
 
-from .tenant import Tenant
-from .tenant_config import TenantConfig
-from .tenant_dict_data import TenantDictData
-from .tenant_dict_type import TenantDictType
-from .tenant_hourly_usage import TenantHourlyUsage
-from .tenant_invite import TenantInvite
-from .tenant_member import TenantMember
-from .tenant_oper_log import TenantOperLog
-from .tenant_quota import TenantQuota
-from .tenant_usage import TenantUsage
+from .core import Invite, Member, Quota, Tenant
+from .core.config import Config as TenantConfig
+from .dict.dict_data import DictData as TenantDictData
+from .dict.dict_type import DictType as TenantDictType
+from .usage import HourlyUsage, OperLog, Usage
 
 __all__ = [
+    # Core
     "Tenant",
+    "Member",
+    "Invite",
     "TenantConfig",
-    "TenantQuota",
-    "TenantUsage",
-    "TenantHourlyUsage",
-    "TenantMember",
-    "TenantOperLog",
-    "TenantInvite",
+    "Quota",
+    # Usage
+    "Usage",
+    "HourlyUsage",
+    "OperLog",
+    # Dict
     "TenantDictType",
     "TenantDictData",
 ]

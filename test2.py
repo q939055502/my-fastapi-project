@@ -1,28 +1,33 @@
-# tests/test_tenant_model.py
-import pytest
-from datetime import datetime, timedelta, UTC
-from src.models.tenant.tenant import Tenant
+def _build_login_result(self, user: User, access_token: str, refresh_token: str, access_ttl: int) -> dict[str, Any]:
+    """组装登录成功返回结果"""
+    # 获取用户角色和权限
+    with TransactionManager() as tm:
+        roles = role_repository.get_user_roles(user.id, session=tm.session)
+        permissions = role_repository.get_user_permissions(user.id, session=tm.session)
+    
+    # 获取用户基本信息（排除敏感字段）
+    user_info = {
+        "uuid": str(user.uuid),
+        "username": user.username,
+        "email": user.email,
+        "alias": user.alias,
+        "avatar": user.avatar,
+    }
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": access_ttl,
+        "user": user_info,
+        "roles": [r.code for r in roles],
+        "permissions": [p.permission_code for p in permissions],
+    }
 
-class TestTenantModel:
-    """租户模型业务逻辑测试"""
-    
-    def test_is_trial_period_returns_false_when_no_trial_dates(self):
-        """无试用日期时返回False"""
-        tenant = Tenant(trial_start_date=None, trial_end_date=None)
-        assert tenant.is_trial_period() is False
-    
-    def test_is_trial_period_returns_true_when_within_trial(self):
-        """在试用期内返回True"""
-        tenant = Tenant(
-            trial_start_date=datetime.now(UTC) - timedelta(days=1),
-            trial_end_date=datetime.now(UTC) + timedelta(days=1)
-        )
-        assert tenant.is_trial_period() is True
-    
-    def test_is_trial_period_returns_false_when_trial_expired(self):
-        """试用期已过返回False"""
-        tenant = Tenant(
-            trial_start_date=datetime.now(UTC) - timedelta(days=10),
-            trial_end_date=datetime.now(UTC) - timedelta(days=1)
-        )
-        assert tenant.is_trial_period() is False
+
+def _store_tokens(self, user_id: int, access_token: str, refresh_token: str, access_ttl: int, refresh_ttl: int) -> None:
+    """存储令牌到Redis"""
+    token_manager.store_access_token(access_token, user_id, access_ttl)
+    token_manager.store_refresh_token(refresh_token, user_id, access_token, refresh_ttl)
+    token_manager.add_user_token(user_id, access_token, refresh_token, refresh_ttl)
+

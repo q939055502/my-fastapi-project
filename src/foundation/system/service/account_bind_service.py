@@ -1,12 +1,12 @@
-﻿"""
+"""
 Account bind service - handle phone/email binding business logic
 """
 from typing import Any
 
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.exceptions import BusinessException
-from src.common.core.log import logger
-from src.common.core.storage import TransactionManager
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions import BusinessException
+from src.core.log import logger
+from src.core.storage import TransactionManager
 from src.foundation.system.repository.account_bind_repository import (
     account_bind_repository,
 )

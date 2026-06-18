@@ -5,7 +5,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 
 router = APIRouter(
     tags=["租户成员"],

@@ -6,17 +6,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
-from src.common.core.auth import AuthControl, token_manager
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.exceptions import BusinessException
-from src.common.core.log import logger
-from src.common.core.plugins import apply_rate_limit
-from src.common.core.response import ApiResponse, gen_swagger_response, success
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.iam import AuthControl, token_manager
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions import BusinessException
+from src.core.log import logger
+from src.core.plugins import apply_rate_limit
+from src.core.response import ApiResponse, gen_swagger_response, success
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.models.platform import User
-from src.foundation.system.schemas.user import UpdateMyProfileIn, UserProfileOut
-from src.foundation.platform.schemas.user import UpdatePassword
-from src.foundation.platform.service.user_service import user_service
+from src.foundation.system.schemas.user import UpdateMyProfileIn, UserProfileOut, UpdatePassword
+from src.foundation.system.service.user_service import user_service
 
 router = APIRouter(
     tags=["个人中心"],
@@ -149,8 +148,10 @@ def logout_all(request: Request, current_user: User = Depends(AuthControl.is_aut
                 "alias": None,
                 "avatar": None,
                 "gender": 0,
+                "is_active": True,
                 "last_login": "2026-06-07T10:00:00",
                 "last_login_ip": "127.0.0.1",
+                "created_at": "2024-01-01T00:00:00",
                 "email": "admin@example.com",
                 "phone": "13800138000",
                 "remark": None
@@ -191,8 +192,10 @@ def update_profile(
                 "alias": None,
                 "avatar": None,
                 "gender": 0,
+                "is_active": True,
                 "last_login": "2026-06-07T10:00:00",
                 "last_login_ip": "127.0.0.1",
+                "created_at": "2024-01-01T00:00:00",
                 "email": "admin@example.com",
                 "phone": "13800138000",
                 "remark": None

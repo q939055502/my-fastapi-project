@@ -1,18 +1,20 @@
 """
-租户管理接口（超级管理员专用）
+平台管理租户接口（超级管理员专用）
 """
 
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
-from src.common.core.auth import PermissionControl
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.plugins import apply_rate_limit
-from src.common.core.response import gen_swagger_response, success, success_page
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.iam import PermissionControl
+from src.core.enums.response_code import ResponseCode
+from src.core.plugins import apply_rate_limit
+from src.core.response import gen_swagger_response, success, success_page
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.tenant.schemas.tenant import TenantCreate, TenantUpdate
+from src.foundation.tenant.service.tenant_service import tenant_service
 
 router = APIRouter(
-    tags=["租户管理-管理"],
+    tags=["平台管理-租户"],
     responses=DEFAULT_ROUTER_RESPONSES,
 )
 
@@ -28,8 +30,13 @@ router = APIRouter(
     },
 )
 @apply_rate_limit("10/minute")
-def create_tenant(request: Request, current_user = Depends(PermissionControl.has_permission)):
-    return success(msg="租户创建成功")
+def create_tenant(
+    request: Request,
+    tenant_in: TenantCreate,
+    current_user = Depends(PermissionControl.has_permission),
+):
+    tenant_data = tenant_service.create_tenant(tenant_in)
+    return success(data=tenant_data, msg="租户创建成功")
 
 
 @router.put(
@@ -46,12 +53,14 @@ def create_tenant(request: Request, current_user = Depends(PermissionControl.has
 def update_tenant(
     request: Request,
     tenant_uuid: UUID,
+    tenant_in: TenantUpdate,
     current_user = Depends(PermissionControl.has_permission),
 ):
+    tenant_service.update_tenant(tenant_uuid, tenant_in)
     return success(msg="租户更新成功")
 
 
-@router.get("/", summary="获取租户列表")
+@router.get("/list", summary="获取租户列表")
 @apply_rate_limit("60/minute")
 def list_tenants(
     request: Request,
@@ -61,7 +70,13 @@ def list_tenants(
     status: bool = Query(None, description="状态"),
     current_user = Depends(PermissionControl.has_permission),
 ):
-    return success_page(data=[], total=0, page=page, page_size=page_size)
+    total, data = tenant_service.get_tenant_list(
+        page=page,
+        page_size=page_size,
+        name=name,
+        status=status,
+    )
+    return success_page(data=data, total=total, page=page, page_size=page_size)
 
 
 @router.get(
@@ -80,7 +95,8 @@ def get_tenant(
     tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
-    return success(data={})
+    tenant_data = tenant_service.get_tenant_detail(tenant_uuid)
+    return success(data=tenant_data)
 
 
 @router.delete(
@@ -99,4 +115,5 @@ def delete_tenant(
     tenant_uuid: UUID,
     current_user = Depends(PermissionControl.has_permission),
 ):
+    tenant_service.delete_tenant(tenant_uuid)
     return success(msg="租户删除成功")

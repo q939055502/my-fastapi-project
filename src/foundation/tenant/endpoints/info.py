@@ -1,9 +1,9 @@
-﻿"""
+"""
 租户成员视角的租户管理接口
 """
 
 from fastapi import APIRouter
-from src.common.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 
 router = APIRouter(
     tags=["租户管理"],

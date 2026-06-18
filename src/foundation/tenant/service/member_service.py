@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from src.common.core.enums.response_code import ResponseCode
-from src.common.core.exceptions import BusinessException
-from src.common.core.storage import TransactionManager
-from src.foundation.platform.repository.user_repository import user_repository
+from src.core.enums.response_code import ResponseCode
+from src.core.exceptions import BusinessException
+from src.core.storage import TransactionManager
+from src.foundation.system.repository.user_repository import user_repository
 from src.foundation.tenant.repository.member_repository import tenant_member_repository
 from src.foundation.tenant.repository.tenant_repository import tenant_repository
 from src.foundation.tenant.schemas.tenant import TenantCreate
