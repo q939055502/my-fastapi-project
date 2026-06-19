@@ -1,19 +1,20 @@
 """请求上下文中间件
 
-统一管理请求上下文：
-- 设置认证上下文（AuthContext）
-- 设置日志上下文（LogContext）
+统一管理请求上下文:
+- 设置认证上下文(AuthContext)
+- 设置日志上下文(LogContext)
 """
 
 import uuid
+
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response
 
 from src.core.log import create_log_context, set_log_context
 from src.foundation.iam.auth.context import AuthContext, set_auth_context
 from src.foundation.iam.auth.security import parse_jwt_token
 from src.foundation.tenant.resolver import resolve_tenant_id
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.requests import Request
-from starlette.responses import Response
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
@@ -34,7 +35,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         # 2. 解析路径租户信息
         path_tenant_id = self._resolve_path_tenant(request)
 
-        # 3. 解析认证信息（从JWT）
+        # 3. 解析认证信息(从JWT)
         auth_info = await self._parse_auth_info(request)
         auth_tenant_id = auth_info.get("tenant_id")
         user_id = auth_info.get("user_id")
@@ -61,10 +62,10 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             subject_id=subject_id,
         )
 
-        # 7. 存储到请求状态中（供路由层使用）
+        # 7. 存储到请求状态中(供路由层使用)
         request.state.auth_context = auth_context
 
-        # 8. 存储到 ContextVar（供非路由层使用）
+        # 8. 存储到 ContextVar(供非路由层使用)
         set_auth_context(auth_context)
 
         # 9. 设置日志上下文

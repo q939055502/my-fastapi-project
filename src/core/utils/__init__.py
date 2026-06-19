@@ -1,4 +1,4 @@
-﻿"""Common utils module
+"""Common utils module
 
 Provides common utility functions for the application.
 """

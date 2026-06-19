@@ -3,8 +3,8 @@ from datetime import datetime
 
 from sqlalchemy import and_, select, update
 from sqlalchemy.orm import Session
-from src.models.tenant import Invite
 from src.foundation.tenant.repository.base import TenantRepositoryBase
+from src.models.tenant import Invite
 
 
 class InviteRepository(TenantRepositoryBase[Invite, None, None]):
@@ -16,7 +16,7 @@ class InviteRepository(TenantRepositoryBase[Invite, None, None]):
         query = select(Invite).where(
             and_(
                 Invite.invite_code == invite_code,
-                Invite.status == True
+                Invite.status.is_(True)
             )
         )
         query = self._apply_soft_delete_filter(query)

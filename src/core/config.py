@@ -1,11 +1,12 @@
 """
+
 应用配置模块
 
-使用 Pydantic V2 语法定义应用的配置项，支持从环境变量和 .env 文件读取配置。
+使用 Pydantic V2 语法定义应用的配置项，支持从环境变量:.env 文件读取配置。
 包含应用的基本信息、CORS 配置、数据库配置、JWT 配置等。
 
 职责划分：
-- config.py: 应用配置（支持环境变量覆盖，从 constants.py 引用默认值）
+- config.py: 应用配置（支持环境变量覆盖，constants.py 引用默认值）
 - constants.py: 程序固定常量（真正固定不变的值）
 
 配置加载优先级：
@@ -20,29 +21,27 @@ import secrets
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from src.core.constants import DateTimeConst
 
 
 class Settings(BaseSettings):
-    """
-    应用配置类
+    """应用配置
 
-    使用 Pydantic V2 的 BaseSettings 类，支持从环境变量和 .env 文件读取配置。
+    使用 Pydantic V2 BaseSettings 类，支持从环境变量和 .env 文件读取配置。
     所有配置项都有默认值，同时支持通过环境变量覆盖。
     """
 
     # ========== 应用基本配置 ==========
-    VERSION: str = "1.0.0"              # 应用版本号
+    VERSION: str = "1.0.0"              # 应用版本
     APP_TITLE: str = "管理系统"          # 应用标题，用于API文档和日志
     PROJECT_NAME: str = "管理系统"       # 项目名称，用于日志和监控
     APP_DESCRIPTION: str = "业务APP + Web后端管理系统"  # 应用描述
-
     APP_ENV: str = "production"         # 应用环境：development | production
     DEBUG: bool = False                 # 调试模式开关，生产环境必须为False
 
     # ========== 存储配置 ==========
-    # 存储类型：local（本地存储）| oss（阿里云OSS）| cos（腾讯云COS）
-    STORAGE_TYPE: str = "local"
+    STORAGE_TYPE: str = "local"         # 存储类型：local(本地存储)| oss(阿里云OSS)| cos(腾讯云COS)
     LOCAL_STORAGE_DIR: str = "./storage"              # 本地存储目录
     LOCAL_STORAGE_URL: str = "http://localhost:8000/storage"  # 本地存储访问URL
 
@@ -50,13 +49,13 @@ class Settings(BaseSettings):
     OSS_ACCESS_KEY_ID: str = ""                       # OSS访问密钥ID
     OSS_ACCESS_KEY_SECRET: str = ""                   # OSS访问密钥Secret
     OSS_ENDPOINT: str = "oss-cn-hangzhou.aliyuncs.com"  # OSS地域节点
-    OSS_BUCKET_NAME: str = ""                         # OSS存储桶名称
+    OSS_BUCKET_NAME: str = ""                         # OSS存储桶名
 
     # 腾讯云COS配置
     COS_SECRET_ID: str = ""                           # COS密钥ID
     COS_SECRET_KEY: str = ""                          # COS密钥Key
     COS_REGION: str = "ap-guangzhou"                  # COS地域
-    COS_BUCKET_NAME: str = ""                         # COS存储桶名称
+    COS_BUCKET_NAME: str = ""                         # COS存储桶名
 
     # ========== CORS 配置 ==========
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8080"  # 允许跨域的源，多个用逗号分隔
@@ -90,18 +89,18 @@ class Settings(BaseSettings):
     MYSQL_PORT: int = 3307                       # MySQL服务器端口
     MYSQL_USER: str = "app_user"                 # MySQL用户名
     MYSQL_PASSWORD: str = "123456"               # MySQL密码
-    MYSQL_DATABASE: str = "app_db"               # MySQL数据库名称
+    MYSQL_DATABASE: str = "app_db"               # MySQL数据库名
 
     # ========== PostgreSQL 配置 ==========
     POSTGRES_HOST: str = "localhost"             # PostgreSQL服务器地址
     POSTGRES_PORT: int = 5432                    # PostgreSQL服务器端口
     POSTGRES_USER: str = "app_user"              # PostgreSQL用户名
     POSTGRES_PASSWORD: str = "123456"            # PostgreSQL密码
-    POSTGRES_DB: str = "app_db"                  # PostgreSQL数据库名称
+    POSTGRES_DB: str = "app_db"                  # PostgreSQL数据库名
 
     # ========== Swagger 配置 ==========
     SWAGGER_UI_USERNAME: str = "admin"           # Swagger文档访问用户名
-    SWAGGER_UI_PASSWORD: str = "qaz123456"       # Swagger文档访问密码，长度至少8位
+    SWAGGER_UI_PASSWORD: str = "qaz123456"       # Swagger文档访问密码，长度至少6位
     SUPER_ADMIN_PASSWORD: str = "qaz123456"      # 超级管理员初始密码
 
     # ========== Redis 配置 ==========
@@ -118,9 +117,9 @@ class Settings(BaseSettings):
     # ========== L2 Redis 缓存配置 ==========
     # L2缓存使用Redis分布式存储，适合中低频访问的大数据，支持跨进程共享
     L2_CACHE_ENABLED: bool = True                # 是否启用L2 Redis缓存
-    L2_CACHE_TTL_HIGH: int = 1800                # 高频数据TTL（秒）：用户会话、实时数据等（30分钟）
-    L2_CACHE_TTL_MEDIUM: int = 21600             # 中频数据TTL（秒）：字典数据、配置信息等（6小时）
-    L2_CACHE_TTL_LOW: int = 43200                # 低频数据TTL（秒）：系统配置、权限数据等（12小时）
+    L2_CACHE_TTL_HIGH: int = 1800                # 高频数据TTL（秒）：用户会话、实时数据等，30分钟
+    L2_CACHE_TTL_MEDIUM: int = 21600             # 中频数据TTL（秒）：字典数据、配置信息等，6小时
+    L2_CACHE_TTL_LOW: int = 43200                # 低频数据TTL（秒）：系统配置、权限数据等，12小时
 
     # ========== 缓存随机偏移配置（防止缓存雪崩）==========
     # 通过在TTL基础上添加随机偏移，避免大量缓存同时失效导致缓存雪崩
@@ -134,12 +133,9 @@ class Settings(BaseSettings):
 
     # ========== 调度器配置 ==========
     SCHEDULER_ENABLED: bool = True               # 是否启用调度器（定时任务）
-    # 日志清理配置（天）
     SCHEDULER_LOGIN_LOG_RETENTION_DAYS: int = 90     # 登录日志保留天数
     SCHEDULER_OPERATION_LOG_RETENTION_DAYS: int = 180  # 操作日志保留天数
-    # 软删除数据清理配置（天）
     SCHEDULER_SOFT_DELETE_RETENTION_DAYS: int = 30    # 软删除数据保留天数
-    # Cron 表达式配置
     SCHEDULER_CLEAN_LOG_CRON: str = "0 2 * * *"      # 日志清理任务执行时间：每天凌晨2点
     SCHEDULER_CLEAN_SOFT_DELETE_CRON: str = "0 3 * * 0"  # 软删除清理任务执行时间：每周日凌晨3点
 
@@ -198,9 +194,7 @@ class Settings(BaseSettings):
 
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
-        """构建数据库连接URL
-        """
-
+        """构建数据库连接URL"""
         if self.DB_ENGINE == "mysql":
             return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
         elif self.DB_ENGINE == "postgres":
@@ -256,7 +250,7 @@ class Settings(BaseSettings):
         if not v:
             raise ValueError("SWAGGER_UI_PASSWORD必须设置")
         if len(v) < 6:
-            raise ValueError("Swagger访问密码长度至少6位")
+            raise ValueError("Swagger访问密码长度至少6字符")
         return v
 
     def __init__(self, **kwargs):

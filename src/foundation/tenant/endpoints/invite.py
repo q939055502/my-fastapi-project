@@ -43,7 +43,7 @@ def list_applications(
 @router.post("/invite", summary="发送定向邀请")
 @apply_rate_limit("10/minute")
 def send_invite(request: Request, invite_in: InviteCreate):
-    """发送定向邀请（手机号/邮箱）"""
+    """发送定向邀请(手机号/邮箱)"""
     # TODO: 实现定向邀请
     return success(msg="邀请发送成功")
 
@@ -59,7 +59,7 @@ def create_public_link(request: Request):
 @router.put("/public-link", summary="更新公开邀请设置")
 @apply_rate_limit("10/minute")
 def update_public_link(request: Request, need_audit: bool = False):
-    """更新公开邀请设置（是否需要审批）"""
+    """更新公开邀请设置(是否需要审批)"""
     # TODO: 实现公开邀请设置更新
     return success(msg="设置更新成功")
 

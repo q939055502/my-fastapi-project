@@ -1,7 +1,7 @@
 """
 租户模型
 
-包含：租户核心、使用量统计、租户字典等模块
+包含:租户核心, 使用量统计, 租户字典等模块
 """
 
 from .core import Invite, Member, Quota, Tenant

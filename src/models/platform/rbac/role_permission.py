@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Column, Integer, UniqueConstraint
+from sqlalchemy import BigInteger, Column, UniqueConstraint
 
 from src.models.base import BaseModel
 from src.models.mixins import ResourceOwnerMixin, TimestampMixin

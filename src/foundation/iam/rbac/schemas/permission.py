@@ -6,9 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class PermissionBase(BaseModel):
     name: str = Field(..., description="权限名称")
-    resource: str = Field(..., description="资源标识，如user、role等")
-    action: str = Field(..., description="操作类型，如create、read、update、delete等")
-    type: str = Field(..., description="权限类型，menu/button/api")
+    resource: str = Field(..., description="资源标识,如user, role等")
+    action: str = Field(..., description="操作类型,如create, read, update, delete等")
+    type: str = Field(..., description="权限类型,menu/button/api")
     parent_uuid: UUID | None = Field(None, description="上级权限UUID")
     sort: int = Field(0, description="排序")
 

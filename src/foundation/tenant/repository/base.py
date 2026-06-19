@@ -1,31 +1,29 @@
 """Tenant Repository Base
 
-租户层 Repository 基类，在通用 Repository 基础上增加租户隔离能力。
+租户侧 Repository 基类,在通用 Repository 基础上增加租户隔离能力。
 
-核心职责：
-1. 所有查询自动加上 tenant_id 过滤（依据当前请求上下文）
+核心职责:
+1. 所有查询自动加上 tenant_id 过滤(依据当前请求上下文)
 2. 创建对象时自动填充 tenant_id
-3. 路径租户（path_tenant_id）优先于认证租户（tenant_id）
+3. 路径租户(path_tenant_id)优先于认证租户(tenant_id)
 
-适用场景：
-- 租户内的业务数据模型（有 tenant_id 字段）
-- 平台管理员操作租户数据时（通过路径租户定位）
+适用场景:
+- 租户内的业务数据模型(有 tenant_id 字段)
+- 平台管理员操作租户数据时(通过路径租户定位)
 
-不适用场景：
-- Tenant 模型本身（自己管理自己）
-- 平台级数据（没有 tenant_id 字段）
+不适用场景:
+- Tenant 模型本身(自己管理自己)
+- 平台级数据(没有 tenant_id 字段)
 """
-from datetime import datetime
-from typing import Any, Generic, List, TypeVar
+import builtins
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
-
-from src.foundation.iam.auth.context import get_current_auth_context
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.storage import BaseRepository
+from src.foundation.iam.auth.context import get_current_auth_context
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -35,7 +33,7 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSchemaType]):
     """租户 Repository 基类
 
-    在 BaseRepository 基础上，增加：
+    在 BaseRepository 基础上,增加了:
     - 从请求上下文自动获取租户 ID
     - 所有查询自动按 tenant_id 过滤
     - 创建对象时自动填充 tenant_id
@@ -56,7 +54,7 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
     def _get_effective_tenant_id(self) -> int | None:
         """获取当前上下文的生效租户 ID
 
-        路径租户（path_tenant_id）优先，其次是认证租户（tenant_id）
+        路径租户(path_tenant_id)优先,其次是认证租户(tenant_id)
         """
         ctx = get_current_auth_context()
         if ctx is None:
@@ -64,14 +62,14 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         return ctx.path_tenant_id or ctx.tenant_id
 
     def _ensure_tenant_id(self) -> int:
-        """获取租户 ID，不存在时抛异常（用于必须有租户的场景）"""
+        """获取租户 ID,不存在时抛异常(用于必须有租户的场景)"""
         tenant_id = self._get_effective_tenant_id()
         if not tenant_id:
-            raise BusinessException(ResponseCode.BAD_REQUEST, "未找到租户上下文")
+            raise BusinessException(40000, "未找到租户上下文")
         return tenant_id
 
     # ------------------------------------------------------------------
-    # 过滤条件构建（在父类软删除过滤基础上，叠加租户过滤）
+    # 过滤条件构建(在父类软删除过滤基础上,叠加租户过滤)
     # ------------------------------------------------------------------
     def _apply_tenant_filter(self, query):
         """给查询添加 tenant_id 过滤"""
@@ -81,16 +79,16 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         return query.where(self.model.tenant_id == tenant_id)
 
     def _apply_all_default_filters(self, query):
-        """应用所有默认过滤（软删除 + 租户）"""
+        """应用所有默认过滤(软删除 + 租户)"""
         query = self._apply_soft_delete_filter(query)
         query = self._apply_tenant_filter(query)
         return query
 
     # ------------------------------------------------------------------
-    # 查询方法（全部叠加租户过滤）
+    # 查询方法(全部叠加租户过滤)
     # ------------------------------------------------------------------
     def get(self, id: int, session: Session) -> ModelType | None:
-        """按 ID 获取单个对象（过滤软删除 + 租户）"""
+        """按 ID 获取单个对象(过滤软删除 + 租户)"""
         query = select(self.model).where(self.model.id == id)
         query = self._apply_all_default_filters(query)
         result = session.execute(query)
@@ -101,7 +99,7 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         return self.get(id, session)
 
     def get_with_deleted(self, id: int, session: Session) -> ModelType | None:
-        """按 ID 获取单个对象（包含软删除，仍按租户过滤）"""
+        """按 ID 获取单个对象(包含软删除,仍按租户过滤)"""
         query = select(self.model).where(self.model.id == id)
         query = self._apply_tenant_filter(query)
         result = session.execute(query)
@@ -112,11 +110,11 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         page: int = 1,
         page_size: int = 10,
         session: Session | None = None,
-        filters: List | None = None,
-        order_by: List | None = None,
-        eager_load: List | None = None,
-    ) -> tuple[int, List[ModelType]]:
-        """租户内列表查询（过滤软删除 + 租户）"""
+        filters: list | None = None,
+        order_by: list | None = None,
+        eager_load: list | None = None,
+    ) -> tuple[int, list[ModelType]]:
+        """租户内列表查询(过滤软删除 + 租户)"""
         query = select(self.model)
         query = self._apply_all_default_filters(query)
 
@@ -157,11 +155,11 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         page: int = 1,
         page_size: int = 10,
         session: Session | None = None,
-        filters: List | None = None,
-        order_by: List | None = None,
-        eager_load: List | None = None,
-    ) -> tuple[int, List[ModelType]]:
-        """租户内列表查询（包含软删除，仍按租户过滤）"""
+        filters: builtins.list | None = None,
+        order_by: builtins.list | None = None,
+        eager_load: builtins.list | None = None,
+    ) -> tuple[int, builtins.list[ModelType]]:
+        """租户内列表查询(包含软删除,仍按租户过滤)"""
         query = select(self.model)
         query = self._apply_tenant_filter(query)
 
@@ -197,14 +195,14 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         return total, list(items)
 
     # ------------------------------------------------------------------
-    # 写入方法（创建时自动填充 tenant_id）
+    # 写入方法(创建时自动填充 tenant_id)
     # ------------------------------------------------------------------
     def create(
         self,
         obj_in: CreateSchemaType | dict[str, Any],
         session: Session,
     ) -> ModelType:
-        """创建对象（自动填充 tenant_id，不提交事务）"""
+        """创建对象(自动填充 tenant_id,不提交事务)"""
         if isinstance(obj_in, dict):
             obj_dict = dict(obj_in)
         else:
@@ -225,14 +223,14 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         return db_obj
 
     def exists(self, id: int, session: Session) -> bool:
-        """检查对象是否存在（过滤软删除 + 租户）"""
+        """检查对象是否存在(过滤软删除 + 租户)"""
         query = select(self.model.id).where(self.model.id == id)
         query = self._apply_all_default_filters(query)
         result = session.execute(query)
         return result.scalars().first() is not None
 
     def exists_with_deleted(self, id: int, session: Session) -> bool:
-        """检查对象是否存在（包含软删除，仍按租户过滤）"""
+        """检查对象是否存在(包含软删除,仍按租户过滤)"""
         query = select(self.model.id).where(self.model.id == id)
         query = self._apply_tenant_filter(query)
         result = session.execute(query)

@@ -6,6 +6,7 @@ import os
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Request
+
 from src.core.config import settings
 from src.core.plugins import apply_rate_limit
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
@@ -21,10 +22,10 @@ router = APIRouter(
 def health_check(request: Request):
     """
     健康检查接口
-    【类型】公开接口（无需登录）
+    【类型】公开接口(无需登录)
     【权限】无需认证
     【功能】检查服务是否正常运行
-    【用途】负载均衡器、健康监控平台探针
+    【用途】负载均衡器, 健康监控平台探测
     """
     return {
         "status": "healthy",
@@ -41,10 +42,10 @@ def get_version(request: Request):
     """
     版本信息接口
 
-    【类型】公开接口（无需登录）
+    【类型】公开接口(无需登录)
     【权限】无需认证
     【功能】获取服务版本信息
-    【用途】前端兼容性检查、运维监控
+    【用途】前端兼容性检查, 运维监控
     """
     return {
         "version": settings.VERSION,

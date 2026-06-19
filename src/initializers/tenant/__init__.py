@@ -1,9 +1,6 @@
-﻿"""租户数据初始化模块"""
-from .tenant_dict_initializer import init_tenant_dict
-from .tenant_initializer import init_default_tenant, init_plans
-
-__all__ = [
-    "init_plans",
-    "init_default_tenant",
-    "init_tenant_dict",
-]
+"""�⻧���ݳ�ʼ��ģ��"""
+from .tenant_dict_initializer import init_tenant_dictfrom .tenant_initializer import init_default_tenant, init_plans__all__ = [
+    "init_plans",
+    "init_default_tenant",
+    "init_tenant_dict",
+]

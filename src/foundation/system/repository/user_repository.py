@@ -2,30 +2,22 @@ import secrets
 import string
 from datetime import datetime
 from typing import Optional
-from uuid import UUID
 
-from sqlalchemy import and_, delete, select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
-from src.foundation.iam.auth.security import get_password_hash, verify_password
-from src.core.enums.response_code import ResponseCode
+
 from src.core.exceptions import BusinessException
 from src.core.storage import BaseRepository
-from src.models.platform import User, Role, RoleSubject, AccountBind
 from src.foundation.iam.auth.schemas.login import LoginByPasswordStep1Request
+from src.foundation.iam.auth.security import get_password_hash, verify_password
 from src.foundation.system.schemas.user import UserCreate, UserUpdate
+from src.models.platform import AccountBind, Role, RoleSubject, User
 
 
 class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
     def __init__(self):
         super().__init__(model=User)
-
-    def get_by_uuid(self, uuid: str, session: Session) -> User | None:
-        """通过 UUID 获取用户"""
-        query = select(User).where(User.uuid == uuid)
-        query = self._apply_soft_delete_filter(query)
-        result = session.execute(query)
-        return result.scalars().first()
 
     def get_by_email(self, email: str, session: Session) -> User | None:
         query = select(User).join(
@@ -64,7 +56,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         return result.scalars().first()
 
     def get_with_roles(self, id: int, session: Session) -> dict | None:
-        """获取用户及其角色信息（通过 JOIN 查询）"""
+        """获取用户及其角色信息(通过 JOIN 查询)"""
         user_query = select(User).where(User.id == id)
         user_query = self._apply_soft_delete_filter(user_query)
         user_result = session.execute(user_query)
@@ -73,7 +65,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         if not user:
             return None
 
-        # 查询用户的角色（通过 RoleSubject 关联）
+        # 查询用户的角色(通过 RoleSubject 关联)
         roles_query = select(Role).join(
             RoleSubject, Role.id == RoleSubject.role_id
         ).where(
@@ -99,7 +91,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         }
 
     def get_with_tenants(self, id: int, session: Session) -> dict | None:
-        """获取用户及其租户信息（通过 JOIN 查询）"""
+        """获取用户及其租户信息(通过 JOIN 查询)"""
         from src.models.tenant import Member, Tenant
 
         user_query = select(User).where(User.id == id)
@@ -148,7 +140,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
         obj = self.create(obj_dict, session=session)
 
-        # 创建邮箱绑定（如果提供了邮箱）
+        # 创建邮箱绑定(如果提供了邮箱)
         if email:
             user_email_bind = AccountBind(
                 user_id=obj.id,
@@ -160,7 +152,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
             )
             session.add(user_email_bind)
 
-        # 创建手机号绑定（如果提供了手机号）
+        # 创建手机号绑定(如果提供了手机号)
         if phone:
             user_phone_bind = AccountBind(
                 user_id=obj.id,
@@ -200,7 +192,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
         user = None
 
-        # 按优先级查找用户：用户名 > 邮箱 > 手机号
+        # 按优先级查找用户:用户名 > 邮箱 > 手机号
         if credentials.login_username:
             user = self.get_by_username(credentials.login_username, session)
             logger.info(f"Authenticate attempt - username: {credentials.login_username}, user_found: {user is not None}")
@@ -214,7 +206,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         if not user:
             logger.warning("Authentication failed - user not found")
             self._delay_for_security()
-            raise BusinessException(ResponseCode.UNAUTHORIZED, "用户名/手机号/邮箱或密码错误")
+            raise BusinessException(40100, "用户名、手机号、邮箱或密码错误")
 
         verified = verify_password(credentials.password, user.password)
         identifier = credentials.login_username or credentials.login_email or credentials.login_phone
@@ -223,13 +215,13 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         if not verified:
             logger.warning(f"Authentication failed - wrong password: {identifier}")
             self._delay_for_security()
-            raise BusinessException(ResponseCode.UNAUTHORIZED, "用户名/手机号/邮箱或密码错误")
+            raise BusinessException(40100, "用户名、手机号、邮箱或密码错误")
 
         logger.info(f"User status check - identifier: {identifier}, is_active: {user.is_active}")
 
         if not user.is_active:
             logger.warning(f"Authentication failed - user disabled: {identifier}")
-            raise BusinessException(ResponseCode.UNAUTHORIZED, "用户已被禁用")
+            raise BusinessException(40100, "用户已被禁用")
 
         logger.info(f"Authentication successful - identifier: {identifier}, user_id: {user.id}")
         return user
@@ -239,7 +231,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         time.sleep(0.5)
 
     def update_roles(self, user_id: int, role_uuids: list, creator_id: int, session: Session) -> None:
-        """更新用户角色（通过 RoleSubject 关联表）"""
+        """更新用户角色(通过 RoleSubject 关联表)"""
         # 删除现有角色关联
         session.execute(
             delete(RoleSubject).where(
@@ -266,7 +258,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
     def reset_password(self, user_id: int, session: Session) -> str:
         user_obj = self.get(id=user_id, session=session)
         if not user_obj:
-            raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, "用户不存在")
+            raise BusinessException(40401, "用户不存在")
         new_password = self._generate_secure_password()
         user_obj.password = get_password_hash(password=new_password)
         return new_password

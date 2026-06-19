@@ -1,7 +1,5 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-from src.core.storage import BaseRepository
 from src.foundation.tenant.repository.base import TenantRepositoryBase
 from src.models.tenant import Quota
 

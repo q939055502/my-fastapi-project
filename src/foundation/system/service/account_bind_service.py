@@ -3,7 +3,6 @@ Account bind service - handle phone/email binding business logic
 """
 from typing import Any
 
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
@@ -66,7 +65,7 @@ class AccountBindService:
             )
             if not bind:
                 raise BusinessException(
-                    ResponseCode.ENTITY_NOT_FOUND,
+                    40401,
                     "Bind not found"
                 )
             tm.commit()
@@ -83,7 +82,7 @@ class AccountBindService:
             )
             if not bind:
                 raise BusinessException(
-                    ResponseCode.ENTITY_NOT_FOUND,
+                    40401,
                     "Bind not found"
                 )
             tm.commit()
@@ -100,7 +99,7 @@ class AccountBindService:
             )
             if not bind:
                 raise BusinessException(
-                    ResponseCode.ENTITY_NOT_FOUND,
+                    40401,
                     "Bind not found"
                 )
             tm.commit()
@@ -117,7 +116,7 @@ class AccountBindService:
             )
             if not success:
                 raise BusinessException(
-                    ResponseCode.ENTITY_NOT_FOUND,
+                    40401,
                     "Bind not found"
                 )
             tm.commit()
@@ -130,7 +129,7 @@ class AccountBindService:
             bind = account_bind_repository.get(id=bind_id, session=tm.session)
             if not bind or bind.user_id != user_id:
                 raise BusinessException(
-                    ResponseCode.ENTITY_NOT_FOUND,
+                    40401,
                     "Bind not found"
                 )
 

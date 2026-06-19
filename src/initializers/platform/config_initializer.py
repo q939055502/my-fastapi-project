@@ -5,6 +5,7 @@
 """
 
 from sqlalchemy import func, select
+
 from src.core.constants import StatusConst
 from src.core.log import logger
 from src.core.storage import get_db
@@ -14,7 +15,7 @@ def init_system_config():
     """
     初始化系统配置项
 
-    创建系统级配置项，用于系统运行参数的统一管理
+    创建系统级配置项,用于系统运行参数的统一管理
     """
     logger.info("开始初始化系统配置...")
     for session in get_db():
@@ -130,5 +131,5 @@ def init_system_config():
         else:
             count_result = session.execute(select(func.count(SystemConfig.id)))
             config_count = count_result.scalar()
-            logger.info(f"系统配置已存在，跳过初始化 - 当前配置数量: {config_count}")
+            logger.info(f"系统配置已存在,跳过初始化 - 当前配置数量: {config_count}")
         break

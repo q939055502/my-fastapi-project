@@ -11,12 +11,12 @@ class OrderPayment(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
 
     order_id = Column(BigInteger, ForeignKey("order_info.id"), nullable=False, index=True, comment="订单ID")
 
-    payment_method = Column(String(20), nullable=False, comment="支付方式：wechat/alipay/manual/bank_transfer")
+    payment_method = Column(String(20), nullable=False, comment="支付方式:wechat/alipay/manual/bank_transfer")
     payment_no = Column(String(100), nullable=True, unique=True, index=True, comment="支付流水号/交易号")
 
-    amount = Column(Integer, nullable=False, comment="支付金额（分）")
+    amount = Column(Integer, nullable=False, comment="支付金额(分)")
 
-    status = Column(String(20), default="pending", nullable=False, index=True, comment="支付状态：pending/success/failed/refunded")
+    status = Column(String(20), default="pending", nullable=False, index=True, comment="支付状态:pending/success/failed/refunded")
     paid_at = Column(DateTime(timezone=True), nullable=True, comment="支付成功时间")
 
     payer_name = Column(String(50), nullable=True, comment="付款人姓名")

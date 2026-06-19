@@ -11,7 +11,7 @@ class OrderPaymentCreate(BaseModel):
     order_id: int = Field(..., description="订单ID")
     payment_method: str = Field(..., description="支付方式")
     payment_no: str | None = Field(None, description="支付流水号")
-    amount: int = Field(..., description="支付金额（分）")
+    amount: int = Field(..., description="支付金额(分)")
     payer_name: str | None = Field(None, description="付款人姓名")
     payer_account: str | None = Field(None, description="付款人账号")
     callback_data: dict[str, Any] | None = Field(None, description="支付平台回调数据")

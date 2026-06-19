@@ -4,16 +4,16 @@ System API v1 路由
 from fastapi import APIRouter, Depends
 from src.foundation.iam import AuthControl, PermissionControl
 
+from ..endpoints.account_bind import router as account_bind_router
+from ..endpoints.admin_users import router as admin_users_router
+from ..endpoints.auditlog import router as admin_auditlog_router
+from ..endpoints.dict import router as dict_router
+from ..endpoints.files import router as common_files_router
 from ..endpoints.info import router as public_info_router
 from ..endpoints.me import router as me_router
-from ..endpoints.account_bind import router as account_bind_router
-from ..endpoints.files import router as common_files_router
-from ..endpoints.admin_users import router as admin_users_router
 from ..endpoints.orgs import router as admin_orgs_router
-from ..endpoints.auditlog import router as admin_auditlog_router
-from ..endpoints.settings import router as admin_settings_router
 from ..endpoints.plans import router as admin_plans_router
-from ..endpoints.dict import router as dict_router
+from ..endpoints.settings import router as admin_settings_router
 
 system_v1_router = APIRouter()
 

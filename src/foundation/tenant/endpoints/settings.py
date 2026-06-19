@@ -1,15 +1,14 @@
 """
-租户配置接口（超级管理员/租户管理员）
+租户配置接口(超级管理员/租户管理员)
 """
 
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from src.foundation.iam import PermissionControl
-from src.core.enums.response_code import ResponseCode
 from src.core.plugins import apply_rate_limit
 from src.core.response import gen_swagger_response, success
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.iam import PermissionControl
 
 router = APIRouter(
     tags=["租户管理-设置"],
@@ -20,12 +19,6 @@ router = APIRouter(
 @router.put(
     "/{tenant_uuid}/config",
     summary="更新租户配置",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
-            description="租户不存在"
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
 def update_tenant_config(
@@ -41,7 +34,7 @@ def update_tenant_config(
     summary="更新租户配额",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
+            codes=[40401],
             description="租户不存在"
         ),
     },
@@ -60,7 +53,7 @@ def update_tenant_quota(
     summary="获取租户配置",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
+            codes=[40401],
             description="租户不存在"
         ),
     },
@@ -77,12 +70,6 @@ def get_tenant_config(
 @router.get(
     "/{tenant_uuid}/quota",
     summary="获取租户配额",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
-            description="租户不存在"
-        ),
-    },
 )
 @apply_rate_limit("60/minute")
 def get_tenant_quota(

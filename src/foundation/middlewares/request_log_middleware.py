@@ -6,11 +6,12 @@
 
 from datetime import datetime
 
-from src.foundation.iam.auth.context import get_current_auth_context
-from src.core.log import logger
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
+
+from src.core.log import logger
+from src.foundation.iam.auth.context import get_current_auth_context
 
 
 class RequestLogMiddleware(BaseHTTPMiddleware):

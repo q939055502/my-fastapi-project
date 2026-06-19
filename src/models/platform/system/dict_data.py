@@ -19,4 +19,4 @@ class DictData(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixi
     dict_type_id = Column(BigInteger, index=True, comment="字典类型ID")
     label = Column(String(100), nullable=False, comment="字典标签")
     value = Column(String(100), nullable=False, comment="字典值")
-    css_class = Column(String(100), nullable=True, comment="样式类")
+    css_class = Column(String(100), nullable=True, comment="样式属性")

@@ -19,7 +19,7 @@ class StorageBackend(ABC):
 
         Args:
             file: 文件对象
-            key: 文件唯一标识（如 "avatars/user_123.jpg")
+            key: 文件唯一标识(如 "avatars/user_123.jpg")
             content_type: 文件 MIME 类型
 
         Returns:
@@ -43,7 +43,7 @@ class StorageBackend(ABC):
 
         Args:
             key: 文件唯一标识
-            expires_in: 链接有效期（秒），仅对私有存储有效
+            expires_in: 链接有效期(秒),仅对私有存储有效
 
         Returns:
             str: 文件访问 URL
@@ -103,7 +103,7 @@ class LocalStorage(StorageBackend):
                 file_path.unlink()
                 logger.info(f"文件删除成功: {key}")
                 return True
-            logger.warning(f"文件不存在，无法删除: {key}")
+            logger.warning(f"文件不存在,无法删除: {key}")
             return False
         except Exception as e:
             logger.error(f"文件删除失败: {str(e)}")
@@ -167,7 +167,7 @@ try:
                 logger.info(f"文件从 OSS 删除成功: {key}")
                 return True
             except oss2.exceptions.NoSuchKey:
-                logger.warning(f"文件在 OSS 中不存在，无法删除: {key}")
+                logger.warning(f"文件在 OSS 中不存在,无法删除: {key}")
                 return False
             except Exception as e:
                 logger.error(f"文件从 OSS 删除失败: {str(e)}")
@@ -182,7 +182,7 @@ try:
                 logger.error(f"获取 OSS 文件URL失败: {str(e)}")
                 raise
 except ImportError:
-    logger.warning("未安装阿里云 OSS SDK，OSS 存储功能不可用")
+    logger.warning("未安装阿里云 OSS SDK,OSS 存储功能不可用")
     OSSStorage = None
 
 
@@ -251,7 +251,7 @@ try:
                 return True
             except Exception as e:
                 if 'NoSuchKey' in str(e):
-                    logger.warning(f"文件在 COS 中不存在，无法删除: {key}")
+                    logger.warning(f"文件在 COS 中不存在,无法删除: {key}")
                     return False
                 logger.error(f"文件从 COS 删除失败: {str(e)}")
                 return False
@@ -270,7 +270,7 @@ try:
                 logger.error(f"获取 COS 文件URL失败: {str(e)}")
                 raise
 except ImportError:
-    logger.warning("未安装腾讯云 COS SDK，COS 存储功能不可用")
+    logger.warning("未安装腾讯云 COS SDK,COS 存储功能不可用")
     COSStorage = None
 
 
@@ -303,14 +303,14 @@ def get_storage_backend() -> StorageBackend:
                 bucket_name=settings.COS_BUCKET_NAME
             )
         else:
-            logger.warning(f"不支持的存储类型: {storage_type}，默认使用本地存储")
+            logger.warning(f"不支持的存储类型: {storage_type},默认使用本地存储")
             return LocalStorage(
                 base_dir=settings.LOCAL_STORAGE_DIR,
                 base_url=settings.LOCAL_STORAGE_URL
             )
     except Exception as e:
         logger.error(f"初始化存储后端失败: {str(e)}")
-        logger.warning("存储后端初始化失败，默认使用本地存储")
+        logger.warning("存储后端初始化失败,默认使用本地存储")
         return LocalStorage(
             base_dir=settings.LOCAL_STORAGE_DIR,
             base_url=settings.LOCAL_STORAGE_URL
@@ -322,7 +322,7 @@ try:
     logger.info("存储服务初始化成功")
 except Exception as e:
     logger.error(f"存储服务初始化失败: {str(e)}")
-    logger.warning("存储服务初始化失败，默认使用本地存储")
+    logger.warning("存储服务初始化失败,默认使用本地存储")
     storage: StorageBackend = LocalStorage(
         base_dir=settings.LOCAL_STORAGE_DIR,
         base_url=settings.LOCAL_STORAGE_URL

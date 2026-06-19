@@ -12,7 +12,7 @@ class OperLog(BaseModel, TimestampMixin):
     tenant_id = Column(BigInteger, nullable=False, index=True, comment="租户ID")
     member_id = Column(BigInteger, nullable=False, index=True, comment="租户成员ID")
 
-    perm_code = Column(String(100), nullable=True, comment="权限编码（资源:操作）")
+    perm_code = Column(String(100), nullable=True, comment="权限编码(资源:操作)")
     module = Column(String(50), nullable=True, comment="功能模块")
     summary = Column(String(128), nullable=True, comment="操作描述")
 

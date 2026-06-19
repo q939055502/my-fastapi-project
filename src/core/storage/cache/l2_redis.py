@@ -1,6 +1,6 @@
 """L2 Redis 分布式缓存
 
-实现基于 Redis 的分布式缓存作为第二层缓存（L2 Cache）。
+实现基于 Redis 的分布式缓存作为第二层缓存(L2 Cache)。
 提供跨进程/服务的持久化共享缓存能力。
 """
 
@@ -9,6 +9,7 @@ from typing import Any
 
 import redis
 from redis import Redis
+
 from src.core.config import settings
 
 
@@ -20,7 +21,7 @@ class L2RedisCache:
         初始化 Redis 连接
 
         Args:
-            default_ttl: 默认缓存过期时间（秒），不指定则使用配置中的 L2_CACHE_TTL_MEDIUM
+            default_ttl: 默认缓存过期时间(秒),不指定则使用配置中的 L2_CACHE_TTL_MEDIUM
         """
         self._client = None
         self._default_ttl = default_ttl or settings.L2_CACHE_TTL_MEDIUM
@@ -60,14 +61,14 @@ class L2RedisCache:
             return None
 
     def set(self, key: str, value: Any, ttl: int | None = None) -> None:
-        """设置值，可选指定 TTL
+        """设置值,可选指定 TTL
 
-        注意：这里不处理随机偏移，由缓存管理器统一处理
+        注意:这里不处理随机偏移,由缓存管理器统一处理
 
         Args:
             key: 缓存键
             value: 要缓存的值
-            ttl: 过期时间（秒），如果为 None 则使用默认 TTL
+            ttl: 过期时间(秒),如果为 None 则使用默认 TTL
         """
         client = self._ensure_connection()
         if not client:

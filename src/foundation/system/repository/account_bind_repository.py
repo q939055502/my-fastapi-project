@@ -1,9 +1,10 @@
 """
-账号绑定仓库 - 处理手机号/邮箱绑定的数据访问
+账号绑定仓库 - 处理手机号、邮箱绑定的数据访问
 """
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
+
 from src.core.constants import AccountBindStatusConst
 from src.core.storage import BaseRepository
 from src.models.platform.auth import AccountBind
@@ -40,7 +41,7 @@ class AccountBindRepository(BaseRepository[AccountBind, None, None]):
     def get_by_user_and_type(
         self, user_id: int, bind_type: int, session: Session
     ) -> AccountBind | None:
-        """获取用户指定类型的绑定（优先默认）"""
+        """获取用户指定类型的绑定(优先默认)"""
         query = select(AccountBind).where(
             and_(
                 AccountBind.user_id == user_id,
@@ -116,7 +117,7 @@ class AccountBindRepository(BaseRepository[AccountBind, None, None]):
         return bind
 
     def delete_bind(self, bind_id: int, user_id: int, session: Session) -> bool:
-        """删除绑定（软删除）"""
+        """删除绑定(软删除)"""
         bind = self.get(id=bind_id, session=session)
         if not bind or bind.user_id != user_id:
             return False
@@ -151,7 +152,7 @@ class AccountBindRepository(BaseRepository[AccountBind, None, None]):
         return bind.identifier if bind else None
 
     def count_by_identifier(self, bind_type: int, identifier: str, session: Session) -> int:
-        """统计某个标识（手机号/邮箱）已绑定的账号数量"""
+        """统计某个标识(手机号/邮箱)已绑定的账号数量"""
         query = select(AccountBind).where(
             and_(
                 AccountBind.bind_type == bind_type,

@@ -1,14 +1,15 @@
-﻿import json
+import json
 import time
 
 from fastapi.responses import StreamingResponse
+
 from src.core.log import logger
 from src.core.response import success
 from src.core.utils.sensitive_word_filter import sensitive_word_filter
 
 
 class SensitiveFilterHandler:
-    """统一的敏感词处理器"""
+    """统一敏感词处理器"""
 
     def __init__(self):
         self.filter = sensitive_word_filter
@@ -18,7 +19,7 @@ class SensitiveFilterHandler:
         return self.filter.contains_sensitive_word(text)
 
     def handle_sensitive_input_stream(self, matched_word: str, query: str):
-        """处理包含敏感词的流式请求"""
+        """处理包含敏感词的流式响应"""
         logger.warning(f"用户输入包含敏感词 '{matched_word}': {query[:100]}")
 
         def sensitive_word_response():
@@ -40,7 +41,7 @@ class SensitiveFilterHandler:
         )
 
     def handle_sensitive_input_sync(self, matched_word: str, query: str):
-        """处理包含敏感词的同步请求"""
+        """处理包含敏感词的同步响应"""
         logger.warning(f"用户输入包含敏感词 '{matched_word}': {query[:100]}")
         return success(
             data={
@@ -67,7 +68,7 @@ class SensitiveFilterHandler:
         }
 
     def create_sensitive_stream_message(self, event_data: dict | None = None) -> dict:
-        """创建敏感词流式消息"""
+        """创建敏感词流式信息"""
         return {
             "event": "error",
             "message_id": event_data.get("message_id") if event_data else "",

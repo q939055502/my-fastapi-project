@@ -1,30 +1,29 @@
 """
 权限控制模块
 
-处理API权限控制相关的逻辑，检查用户是否有访问指定API的权限。
+处理API权限控制相关的逻辑,检查用户是否有访问指定API的权限。
 """
 
 import re
 
 from fastapi import Depends, Request
+
 from src.core.constants import RoleCodeConst
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.foundation.iam.auth.dependency import AuthControl
-from src.foundation.iam.rbac.repository.permission_repository import permission_repository
-from src.foundation.iam.rbac.repository.role_permission_repository import (
-    role_permission_repository,
+from src.foundation.iam.rbac.repository.permission_repository import (
+    permission_repository,
 )
+from src.foundation.iam.rbac.repository.role_repository import role_repository
 from src.foundation.iam.rbac.repository.role_subject_repository import (
     role_subject_repository,
 )
 
 
 class PermissionControl:
-    """权限控制器
-
-    处理API权限控制相关的逻辑，检查用户是否有访问指定API的权限。
+    """权限控制类
+    处理API权限控制相关的逻辑,检查用户是否有访问指定API的权限。
     """
 
     @classmethod
@@ -38,7 +37,7 @@ class PermissionControl:
 
         Args:
             request: FastAPI请求对象
-            permission_code: 权限编码（可选，用于精确权限校验）
+            permission_code: 权限编码(可选,用于精确权限校验)
             current_user: 当前认证用户
 
         Raises:
@@ -47,11 +46,12 @@ class PermissionControl:
         with TransactionManager() as tm:
             auth_ctx = getattr(request.state, "auth_context", None)
             if auth_ctx:
-                roles = role_subject_repository.get_roles_by_subject(
+                role_ids = role_subject_repository.get_role_ids_by_subject(
                     subject_id=auth_ctx.subject_id,
                     subject_type=auth_ctx.subject_type,
                     session=tm.session
                 )
+                roles = role_repository.list_by_ids(role_ids=role_ids, session=tm.session)
             else:
                 roles = getattr(current_user, 'roles', [])
 
@@ -68,7 +68,7 @@ class PermissionControl:
         path = request.url.path
 
         if not roles:
-            raise BusinessException(ResponseCode.FORBIDDEN, "用户未绑定角色")
+            raise BusinessException(40300, "用户未绑定角色")
 
         all_resources = []
         for role in roles:
@@ -81,7 +81,7 @@ class PermissionControl:
                 if re.match(pattern, path):
                     return
 
-        raise BusinessException(ResponseCode.FORBIDDEN, "无此API访问权限")
+        raise BusinessException(40300, "无此API访问权限")
 
     @classmethod
     def _check_permission_code(cls, request: Request, permission_code: str) -> None:
@@ -97,24 +97,25 @@ class PermissionControl:
         auth_ctx = getattr(request.state, "auth_context", None)
 
         if not auth_ctx:
-            raise BusinessException(ResponseCode.FORBIDDEN, "无权限")
+            raise BusinessException(40300, "无权限")
 
         if permission_code.startswith("platform:"):
             if auth_ctx.subject_type != 0:
-                raise BusinessException(ResponseCode.FORBIDDEN, "无平台权限")
+                raise BusinessException(40300, "无平台权限")
         elif permission_code.startswith("tenant:"):
             if auth_ctx.subject_type != 1:
-                raise BusinessException(ResponseCode.FORBIDDEN, "无租户权限")
+                raise BusinessException(40300, "无租户权限")
 
         with TransactionManager() as tm:
-            roles = role_subject_repository.get_roles_by_subject(
+            role_ids = role_subject_repository.get_role_ids_by_subject(
                 subject_id=auth_ctx.subject_id,
                 subject_type=auth_ctx.subject_type,
                 session=tm.session
             )
+            roles = role_repository.list_by_ids(role_ids=role_ids, session=tm.session)
 
             if not roles:
-                raise BusinessException(ResponseCode.FORBIDDEN, "无此权限")
+                raise BusinessException(40300, "无此权限")
 
             for role in roles:
                 permissions = permission_repository.get_permissions_by_role(
@@ -125,4 +126,4 @@ class PermissionControl:
                     if perm_code == permission_code:
                         return
 
-        raise BusinessException(ResponseCode.FORBIDDEN, "无此权限")
+        raise BusinessException(40300, "无此权限")

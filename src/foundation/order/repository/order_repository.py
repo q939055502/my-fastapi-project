@@ -1,10 +1,10 @@
 import secrets
 import string
 from datetime import datetime
-from uuid import UUID
 
-from sqlalchemy import asc, desc, select
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
+
 from src.core.storage import BaseRepository
 from src.foundation.order.models import OrderInfo
 from src.foundation.order.schemas.order import OrderCreate, OrderUpdate
@@ -15,12 +15,6 @@ class OrderRepository(BaseRepository[OrderInfo, OrderCreate, OrderUpdate]):
 
     def __init__(self):
         super().__init__(model=OrderInfo)
-
-    def get_by_uuid(self, uuid: UUID, session: Session) -> OrderInfo | None:
-        query = select(OrderInfo).where(OrderInfo.uuid == uuid)
-        query = self._apply_soft_delete_filter(query)
-        result = session.execute(query)
-        return result.scalars().first()
 
     def get_by_order_no(self, order_no: str, session: Session) -> OrderInfo | None:
         query = select(OrderInfo).where(OrderInfo.order_no == order_no)
@@ -77,7 +71,7 @@ class OrderRepository(BaseRepository[OrderInfo, OrderCreate, OrderUpdate]):
         )
 
     def generate_order_no(self) -> str:
-        """生成订单号：日期 + 随机数"""
+        """生成订单号:日期 + 随机数"""
         date_str = datetime.now().strftime("%Y%m%d%H%M%S")
         random_str = "".join(secrets.choice(string.digits) for _ in range(6))
         return f"ORD{date_str}{random_str}"

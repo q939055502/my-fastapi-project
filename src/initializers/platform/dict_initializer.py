@@ -5,6 +5,7 @@
 """
 
 from sqlalchemy import func, select
+
 from src.core.constants import StatusConst
 from src.core.log import logger
 from src.core.storage import get_db
@@ -14,7 +15,7 @@ def init_dict():
     """
     初始化系统字典数据
 
-    创建系统级字典类型和字典数据，用于前端展示下拉选项等场景
+    创建系统级字典类型和字典数据,用于前端展示下拉选项等场景
     """
     logger.info("开始初始化系统字典...")
     for session in get_db():
@@ -408,5 +409,5 @@ def init_dict():
         else:
             type_count = session.execute(select(func.count(DictType.id))).scalar()
             data_count = session.execute(select(func.count(DictData.id))).scalar()
-            logger.info(f"系统字典已存在，跳过初始化 - 字典类型: {type_count}, 字典数据: {data_count}")
+            logger.info(f"系统字典已存在,跳过初始化 - 字典类型: {type_count}, 字典数据: {data_count}")
         break

@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Column, String, UniqueConstraint
+from sqlalchemy import Column, String, UniqueConstraint
 
 from src.models.base import BaseModel
 from src.models.mixins import (
@@ -21,4 +21,4 @@ class Role(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, S
     )
 
     name = Column(String(50), nullable=False, comment="角色名称")
-    code = Column(String(50), nullable=False, index=True, comment="角色编码（唯一）")
+    code = Column(String(50), nullable=False, index=True, comment="角色编码(唯一标识)")

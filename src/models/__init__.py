@@ -1,10 +1,9 @@
 """
 Models Package - 统一导出所有业务模型
-
-设计原则：
+设计原则:
 1. 所有业务模型统一在 models 目录下管理
-2. 按领域分组：platform（平台）、tenant（租户）、order（订单）
-3. 从 models 顶层绝对导入，禁止直接导入深层子文件
+2. 按领域分组:platform(平台), tenant(租户), order(订单)
+3. 从 models 顶层绝对导入,禁止直接导入深层子文件
 """
 from src.models.base import BaseModel
 from src.models.mixins import (
@@ -14,7 +13,15 @@ from src.models.mixins import (
     UUIDModel,
 )
 
-# Platform 平台模型（IAM 身份权限体系、系统基础模块）
+# Order 订单模块模型
+from src.models.order import (
+    OrderInfo,
+    OrderLog,
+    OrderPayment,
+    OrderRefund,
+)
+
+# Platform 平台模型(IAM 身份权限体系, 系统基础模块)
 from src.models.platform import (
     AccountBind,
     AuditLog,
@@ -37,24 +44,16 @@ from src.models.platform import (
 
 # Tenant 多租户核心模型
 from src.models.tenant import (
-    Tenant,
-    Member,
-    Invite,
-    TenantConfig,
-    Quota,
-    Usage,
     HourlyUsage,
+    Invite,
+    Member,
     OperLog,
-    TenantDictType,
+    Quota,
+    Tenant,
+    TenantConfig,
     TenantDictData,
-)
-
-# Order 订单模块模型
-from src.models.order import (
-    OrderInfo,
-    OrderLog,
-    OrderPayment,
-    OrderRefund,
+    TenantDictType,
+    Usage,
 )
 
 __all__ = [

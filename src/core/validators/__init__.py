@@ -1,13 +1,9 @@
 """
-数据验证器模块
+数据验证器模�?
+提供通用的数据验证工具函数和可复用的 Pydantic 校验�?
+使用方式�?1. 纯函数调用(适用于任意场景)�?   from src.core.validators import validate_phone, validate_password
 
-提供通用的数据验证工具函数和可复用的 Pydantic 校验器
-
-使用方式：
-1. 纯函数调用（适用于任意场景）：
-   from src.core.validators import validate_phone, validate_password
-
-2. 继承 Mixin（适用于 Pydantic Schema）：
+2. 继承 Mixin(适用�?Pydantic Schema):
    from pydantic import BaseModel
    from src.core.validators import ValidatorMixin
 

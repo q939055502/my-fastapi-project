@@ -1,8 +1,7 @@
 """
 租户信息相关 Schema
 
-包含：租户信息、选择租户相关等
-"""
+包含:租户信息, 选择租户相关�?"""
 
 from pydantic import BaseModel, Field
 

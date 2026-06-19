@@ -4,13 +4,19 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from src.core.enums.response_code import ResponseCode
+
 from src.core.plugins import apply_rate_limit
-from src.core.response import gen_swagger_response, success
+from src.core.response import ApiResponse, gen_swagger_response
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.foundation.iam import AuthControl
-from src.foundation.order.schemas.order_payment import OrderPaymentCreate
-from src.foundation.order.schemas.order_refund import OrderRefundCreate
+from src.foundation.order.schemas.order_payment import (
+    OrderPaymentCreate,
+    OrderPaymentResponse,
+)
+from src.foundation.order.schemas.order_refund import (
+    OrderRefundCreate,
+    OrderRefundResponse,
+)
 from src.foundation.order.service import (
     order_payment_service,
     order_refund_service,
@@ -27,7 +33,7 @@ router = APIRouter(
     summary="创建支付记录",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
+            codes=[40401],
             description="订单不存在",
         ),
     },
@@ -38,9 +44,9 @@ def create_payment(
     order_uuid: UUID,
     payment_in: OrderPaymentCreate,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[OrderPaymentResponse]:
     """
-    创建支付记录（标记订单为已支付）
+    创建支付记录(标记订单为已支付)
     """
     payment_data = order_payment_service.create_payment(
         order_uuid,
@@ -48,7 +54,8 @@ def create_payment(
         operator_id=current_user.id,
         operator_name=current_user.username,
     )
-    return success(data=payment_data, msg="支付成功")
+    payment_response = OrderPaymentResponse.model_validate(payment_data)
+    return ApiResponse(code=20000, data=payment_response, msg="支付成功")
 
 
 @router.get(
@@ -60,27 +67,18 @@ def list_payments(
     request: Request,
     order_uuid: UUID,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[list[OrderPaymentResponse]]:
     """
     获取订单支付记录
     """
     payments = order_payment_service.list_payments(order_uuid)
-    return success(data=payments)
+    payment_responses = [OrderPaymentResponse.model_validate(p) for p in payments]
+    return ApiResponse(code=20000, data=payment_responses)
 
 
 @router.post(
     "/{order_uuid}/refunds",
     summary="申请退款",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="订单不存在",
-        ),
-        400: gen_swagger_response(
-            codes=[ResponseCode.PARAM_ERROR],
-            description="只有已支付订单可申请退款",
-        ),
-    },
 )
 @apply_rate_limit("10/minute")
 def create_refund(
@@ -88,7 +86,7 @@ def create_refund(
     order_uuid: UUID,
     refund_in: OrderRefundCreate,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[OrderRefundResponse]:
     """
     申请退款
     """
@@ -98,7 +96,8 @@ def create_refund(
         operator_id=current_user.id,
         operator_name=current_user.username,
     )
-    return success(data=refund_data, msg="退款申请已提交")
+    refund_response = OrderRefundResponse.model_validate(refund_data)
+    return ApiResponse(code=20000, data=refund_response, msg="退款申请已提交")
 
 
 @router.get(
@@ -110,9 +109,10 @@ def list_refunds(
     request: Request,
     order_uuid: UUID,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[list[OrderRefundResponse]]:
     """
     获取订单退款记录
     """
     refunds = order_refund_service.list_refunds(order_uuid)
-    return success(data=refunds)
+    refund_responses = [OrderRefundResponse.model_validate(r) for r in refunds]
+    return ApiResponse(code=20000, data=refund_responses)

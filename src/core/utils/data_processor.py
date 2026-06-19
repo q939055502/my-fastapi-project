@@ -13,7 +13,7 @@ class DataProcessor:
 
         found_event_types = []
 
-        # 从后往前查找，最新的事件在后面
+        # 从后往前查找,最新的事件在后面
         for i, chunk in enumerate(reversed(chunks)):
             if chunk.startswith("data:"):
                 json_content_str = chunk[len("data:") :].strip()
@@ -36,7 +36,7 @@ class DataProcessor:
                         continue
 
         logger.warning(
-            f"未找到workflow_finished事件。遍历了 {len(chunks)} 个数据块。"
+            f"未找到workflow_finished事件.遍历了 {len(chunks)} 个数据块, "
             f"发现的事件类型: {found_event_types}"
         )
         return None

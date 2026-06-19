@@ -18,15 +18,15 @@ class TenantPlan(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMi
     name = Column(String(50), nullable=False, comment="套餐名称")
     code = Column(String(50), unique=True, nullable=False, index=True, comment="套餐编码")
 
-    price_month = Column(Integer, comment="月费（分）")
-    price_quarter = Column(Integer, comment="季费（分）")
-    price_year = Column(Integer, comment="年费（分）")
+    price_month = Column(Integer, comment="月费(分)")
+    price_quarter = Column(Integer, comment="季费(分)")
+    price_year = Column(Integer, comment="年费(分)")
 
-    max_users = Column(Integer, comment="最大用户数（null=无限制）")
-    max_orgs = Column(Integer, comment="最大组织数（null=无限制）")
-    max_storage = Column(Integer, comment="最大存储空间（MB，null=无限制）")
-    max_file_size = Column(Integer, comment="单文件最大大小（MB，null=无限制）")
-    max_bandwidth = Column(Integer, comment="月带宽限制（GB，null=无限制）")
+    max_users = Column(Integer, comment="最大用户数(null=无限制)")
+    max_orgs = Column(Integer, comment="最大组织数(null=无限制)")
+    max_storage = Column(Integer, comment="最大存储空间(MB,null=无限制)")
+    max_file_size = Column(Integer, comment="单文件最大大小(MB,null=无限制)")
+    max_bandwidth = Column(Integer, comment="月带宽限制(GB,null=无限制)")
 
     available_modules = Column(JSON, nullable=True, comment="可用模块白名单")
     available_features = Column(JSON, nullable=True, comment="可用功能白名单")

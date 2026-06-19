@@ -1,4 +1,3 @@
-
 """
 APScheduler 定时任务调度器模块
 
@@ -7,13 +6,14 @@ APScheduler 定时任务调度器模块
 - 任务的注册和管理
 - 与 FastAPI 应用集成
 
-业务任务由 foundation/scheduler/ 负责注册
+业务任务在 foundation/scheduler/ 负责注册
 """
 from __future__ import annotations
 
 from collections.abc import Callable
 
 from apscheduler.schedulers.background import BackgroundScheduler
+
 from src.core.config import settings
 from src.core.log import logger
 
@@ -36,7 +36,7 @@ class SchedulerManager:
     def start(self):
         """启动调度器"""
         if not settings.SCHEDULER_ENABLED:
-            logger.info("调度器已禁用，跳过启动")
+            logger.info("调度器已禁用,跳过启动")
             return
 
         if self._scheduler.running:
@@ -70,7 +70,7 @@ class SchedulerManager:
 
         Args:
             func: 任务函数
-            trigger: 触发器类型（cron/date/interval）
+            trigger: 触发器类型(cron/date/interval等)
             job_id: 任务ID
             name: 任务名称
             **kwargs: 其他参数
@@ -104,4 +104,3 @@ class SchedulerManager:
 
 # 单例实例
 scheduler_manager = SchedulerManager()
-

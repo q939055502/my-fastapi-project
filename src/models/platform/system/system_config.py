@@ -18,7 +18,7 @@ class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, Sort
     name = Column(String(100), nullable=False, comment="配置名称")
     code = Column(String(100), unique=True, nullable=False, index=True, comment="配置编码")
     value = Column(Text, nullable=True, comment="配置值")
-    config_type = Column(String(20), default="string", comment="配置类型：string/int/json/boolean")
+    config_type = Column(String(20), default="string", comment="配置类型:string/int/json/boolean")
     group = Column(String(50), nullable=True, index=True, comment="配置分组")
 
     @property
@@ -26,9 +26,9 @@ class SystemConfig(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, Sort
         """根据 config_type 返回类型化的值"""
         if self.value is None:
             return None
-        
+
         config_type = self.config_type or "string"
-        
+
         if config_type == "int":
             try:
                 return int(self.value)

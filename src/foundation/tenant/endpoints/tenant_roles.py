@@ -1,19 +1,19 @@
 """
 租户角色管理接口
 
-管理租户级角色（tenant_id为具体租户ID），仅该租户内生效。
+管理租户级角色(tenant_id为具体租户ID),仅该租户内生效
 """
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
-from src.core.enums.response_code import ResponseCode
+from src.core.base.schema_base import PaginationResponse
 from src.core.plugins import apply_rate_limit
-from src.core.response import gen_swagger_response, success, success_page
+from src.core.response import ApiResponse, gen_swagger_response
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.storage import TransactionManager
+from src.core.storage.uuid_resolver import uuid_resolver
 from src.foundation.iam.rbac.schemas.role import RoleCreate, RoleUpdate
 from src.foundation.iam.rbac.service.role_service import role_service
-from src.foundation.tenant.repository.tenant_repository import tenant_repository
-from src.core.storage import TransactionManager
 
 router = APIRouter(
     tags=["租户管理-角色"],
@@ -23,44 +23,30 @@ router = APIRouter(
 
 def _get_tenant_id_by_uuid(tenant_uuid: UUID, session) -> int:
     """通过租户UUID获取租户ID"""
-    tenant = tenant_repository.get_by_uuid(uuid=tenant_uuid, session=session)
-    if not tenant:
+    tenant_id = uuid_resolver.resolve(session, "tenant", str(tenant_uuid))
+    if not tenant_id:
         from src.core.exceptions import BusinessException
-        raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="租户不存在")
-    return tenant.id
+        raise BusinessException(40401, detail="租户不存在")
+    return tenant_id
 
 
 @router.post(
     "/",
     summary="创建租户角色",
-    responses={
-        400: gen_swagger_response(
-            codes=[ResponseCode.PARAM_ERROR],
-            description="角色名称或编码已存在"
-        ),
-        403: gen_swagger_response(
-            codes=[ResponseCode.FORBIDDEN],
-            description="禁止创建系统内置角色"
-        ),
-        404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="租户不存在"
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
-def create_tenant_role(request: Request, tenant_uuid: UUID, role_in: RoleCreate):
+def create_tenant_role(request: Request, tenant_uuid: UUID, role_in: RoleCreate) -> ApiResponse[dict]:
     """
     创建租户角色
 
-    【类型】管理接口（需登录）
+    【类型】管理接口(需登录)
     【权限】租户管理员
-    【功能】在租户内创建角色，仅该租户生效
+    【功能】在租户内创建角色,仅该租户生效
     """
     with TransactionManager() as tm:
         tenant_id = _get_tenant_id_by_uuid(tenant_uuid, tm.session)
     data = role_service.create_tenant_role(tenant_id, role_in)
-    return success(data=data, msg="租户角色创建成功")
+    return ApiResponse(code=20000, data=data, msg="租户角色创建成功")
 
 
 @router.put(
@@ -68,32 +54,32 @@ def create_tenant_role(request: Request, tenant_uuid: UUID, role_in: RoleCreate)
     summary="更新租户角色",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="租户角色不存在或租户不存在"
+            codes=[40401],
+            description="租户角色不存在或租户不存在",
         ),
         400: gen_swagger_response(
-            codes=[ResponseCode.PARAM_ERROR],
+            codes=[40000],
             description="角色名称或编码已存在"
         ),
         403: gen_swagger_response(
-            codes=[ResponseCode.FORBIDDEN],
+            codes=[40300],
             description="系统内置角色不可修改"
         ),
     },
 )
 @apply_rate_limit("30/minute")
-def update_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID, role_in: RoleUpdate):
+def update_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID, role_in: RoleUpdate) -> ApiResponse[dict]:
     """
     更新租户角色
 
-    【类型】管理接口（需登录）
+    【类型】管理接口(需登录)
     【权限】租户管理员
     【功能】更新租户内角色信息
     """
     with TransactionManager() as tm:
         tenant_id = _get_tenant_id_by_uuid(tenant_uuid, tm.session)
     data = role_service.update_tenant_role(tenant_id, role_uuid, role_in)
-    return success(data=data, msg="租户角色更新成功")
+    return ApiResponse(code=20000, data=data, msg="租户角色更新成功")
 
 
 @router.put(
@@ -101,28 +87,27 @@ def update_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID, rol
     summary="更新租户角色权限",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="租户角色不存在或租户不存在"
+            codes=[40401],
+            description="租户角色不存在或租户不存在",
         ),
         403: gen_swagger_response(
-            codes=[ResponseCode.FORBIDDEN],
+            codes=[40300],
             description="系统内置角色不可修改权限"
         ),
     },
 )
 @apply_rate_limit("30/minute")
-def update_tenant_role_permissions(request: Request, tenant_uuid: UUID, role_uuid: UUID, role_in: RoleUpdate):
+def update_tenant_role_permissions(request: Request, tenant_uuid: UUID, role_uuid: UUID, role_in: RoleUpdate) -> ApiResponse[None]:
     """
     更新租户角色权限
 
-    【类型】管理接口（需登录）
-    【权限】租户管理员
+    【类型】管理接口(需登录�?    【权限】租户管理员
     【功能】更新租户角色的权限列表
     """
     with TransactionManager() as tm:
         tenant_id = _get_tenant_id_by_uuid(tenant_uuid, tm.session)
     role_service.update_tenant_role_permissions(tenant_id, role_uuid, role_in.permission_uuids or [])
-    return success(msg="权限更新成功")
+    return ApiResponse(code=20000, msg="权限更新成功")
 
 
 @router.get("/list", summary="获取租户角色列表")
@@ -132,12 +117,12 @@ def list_tenant_roles(
     tenant_uuid: UUID,
     page: int = Query(1, description="页码"),
     page_size: int = Query(10, description="每页数量"),
-    name: str = Query("", description="角色名称，用于查询"),
-):
+    name: str = Query("", description="角色名称,用于查询"),
+) -> ApiResponse[PaginationResponse[dict]]:
     """
     获取租户角色列表
 
-    【类型】管理接口（需登录）
+    【类型】管理接口(需登录)
     【权限】租户管理员
     【功能】分页查询租户内角色
     """
@@ -149,32 +134,33 @@ def list_tenant_roles(
         page_size=page_size,
         name=name
     )
-    return success_page(data=data, total=total, page=page, page_size=page_size)
+    return ApiResponse(
+        code=20000,
+        data=PaginationResponse(
+            list=data,
+            pagination={"total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size if page_size > 0 else 0}
+        ),
+        msg="操作成功"
+    )
 
 
 @router.get(
     "/{role_uuid}",
     summary="获取租户角色详情",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="租户角色不存在或租户不存在"
-        ),
-    },
 )
 @apply_rate_limit("60/minute")
-def get_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID):
+def get_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID) -> ApiResponse[dict]:
     """
     获取租户角色详情
 
-    【类型】管理接口（需登录）
+    【类型】管理接口(需登录)
     【权限】租户管理员
     【功能】获取单个租户角色的详细信息
     """
     with TransactionManager() as tm:
         tenant_id = _get_tenant_id_by_uuid(tenant_uuid, tm.session)
     data = role_service.get_tenant_role_detail(tenant_id, role_uuid)
-    return success(data=data)
+    return ApiResponse(code=20000, data=data)
 
 
 @router.get(
@@ -182,50 +168,40 @@ def get_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID):
     summary="获取租户角色权限",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="租户角色不存在或租户不存在"
+            codes=[40401],
+            description="租户角色不存在或租户不存在",
         ),
     },
 )
 @apply_rate_limit("60/minute")
-def get_tenant_role_permissions(request: Request, tenant_uuid: UUID, role_uuid: UUID):
+def get_tenant_role_permissions(request: Request, tenant_uuid: UUID, role_uuid: UUID) -> ApiResponse[list]:
     """
     获取租户角色权限
 
-    【类型】管理接口（需登录）
+    【类型】管理接口(需登录)
     【权限】租户管理员
     【功能】获取租户角色的权限列表
     """
     with TransactionManager() as tm:
         tenant_id = _get_tenant_id_by_uuid(tenant_uuid, tm.session)
     data = role_service.get_tenant_role_detail(tenant_id, role_uuid)
-    return success(data=data.get("permissions", []))
+    return ApiResponse(code=20000, data=data.get("permissions", []))
 
 
 @router.delete(
     "/{role_uuid}",
     summary="删除租户角色",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="租户角色不存在或租户不存在"
-        ),
-        403: gen_swagger_response(
-            codes=[ResponseCode.FORBIDDEN],
-            description="系统内置角色不可删除"
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
-def delete_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID):
+def delete_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID) -> ApiResponse[None]:
     """
     删除租户角色
 
-    【类型】管理接口（需登录）
+    【类型】管理接口(需登录)
     【权限】租户管理员
-    【功能】删除租户内角色（软删除）
+    【功能】删除租户内角色(软删除)
     """
     with TransactionManager() as tm:
         tenant_id = _get_tenant_id_by_uuid(tenant_uuid, tm.session)
     role_service.delete_tenant_role(tenant_id, role_uuid)
-    return success(msg="租户角色删除成功")
+    return ApiResponse(code=20000, msg="租户角色删除成功")

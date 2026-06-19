@@ -2,7 +2,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import UploadFile
-from src.core.enums.response_code import ResponseCode
+
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.response import ApiResponse
@@ -51,7 +51,7 @@ class FileService:
                 with open(file_path, "wb") as f:
                     f.write(content)
 
-                logger.info(f"文件已保存 {file_path}")
+                logger.info(f"文件已保存到 {file_path}")
 
                 self._save_file_mapping(
                     {"file_id": file_id, "file_path": str(file_path)}, file, user.id, tm.session
@@ -77,33 +77,33 @@ class FileService:
             raise
         except Exception as e:
             logger.error(f"文件上传失败: {str(e)}")
-            raise BusinessException(ResponseCode.SERVER_ERROR, detail="文件上传失败") from e
+            raise BusinessException(50000, detail="文件上传失败") from e
 
     def _authenticate_user(self, session, user_id: int | None):
         if not user_id:
-            raise BusinessException(ResponseCode.UNAUTHORIZED, detail="Authentication Required")
+            raise BusinessException(40100, detail="Authentication Required")
 
         user = user_repository.get(user_id, session=session)
         if not user:
-            raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="用户不存在")
+            raise BusinessException(40401, detail="用户不存在")
 
         return user
 
     def _validate_file_security(self, file: UploadFile) -> None:
         if not file.filename:
-            raise BusinessException(ResponseCode.PARAM_ERROR, detail="文件名不能为空")
+            raise BusinessException(40000, detail="文件名不能为空")
 
         file_ext = Path(file.filename).suffix.lower()
 
         if file_ext in DANGEROUS_EXTENSIONS:
             raise BusinessException(
-                ResponseCode.PARAM_ERROR, detail=f"不允许上传的文件类型: {file_ext}"
+                40000, detail=f"不允许上传的文件类型: {file_ext}"
             )
 
         if file_ext and file_ext not in ALLOWED_EXTENSIONS:
             raise BusinessException(
-                ResponseCode.PARAM_ERROR,
-                detail=f"不支持的文件类型: {file_ext}，允许的类型: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
+                40000,
+                detail=f"不支持的文件类型: {file_ext},允许的类型: {', '.join(sorted(ALLOWED_EXTENSIONS))}",
             )
 
     def _generate_safe_filename(self, original_filename: str) -> str:
@@ -115,7 +115,7 @@ class FileService:
 
         if len(content) > MAX_FILE_SIZE:
             raise BusinessException(
-                ResponseCode.PARAM_ERROR,
+                40000,
                 detail=f"文件大小超过限制 {MAX_FILE_SIZE // (1024 * 1024)}MB",
             )
 
@@ -148,7 +148,7 @@ class FileService:
                 session=session,
             )
 
-            logger.info(f"已保存文件映射 {file_id} -> {file.filename}")
+            logger.info(f"已保存文件映射: {file_id} -> {file.filename}")
 
         except Exception as e:
             logger.warning(f"保存文件映射失败: {str(e)}")

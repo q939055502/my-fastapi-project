@@ -5,6 +5,7 @@
 """
 
 from sqlalchemy import select
+
 from src.core.constants import StatusConst
 from src.core.log import logger
 from src.core.storage import get_db
@@ -13,7 +14,6 @@ from src.core.storage import get_db
 def init_orgs():
     """
     初始化系统组织
-
     创建默认的平台级组织结构
     """
     logger.info("开始初始化系统组织...")
@@ -79,4 +79,5 @@ def init_orgs():
             session.commit()
             logger.info("系统组织初始化成功 - 组织数量: 6")
         else:
-            logger.info("系统组织已存在，跳过初始化")
+            logger.info("系统组织已存在,跳过初始化")
+        break

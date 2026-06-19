@@ -1,9 +1,7 @@
 from datetime import datetime
-from uuid import UUID
 
-from src.core.enums.response_code import ResponseCode
+from src.core.base.service_base import BaseService
 from src.core.exceptions import BusinessException
-from src.core.log import logger
 from src.core.storage import TransactionManager
 from src.foundation.order.enums import (
     OrderActionEnum,
@@ -18,10 +16,11 @@ from src.foundation.order.repository import (
 from src.foundation.order.schemas.order import OrderCreate, OrderUpdate
 
 
-class OrderService:
+class OrderService(BaseService):
     """订单服务"""
 
     def __init__(self):
+        super().__init__()
         self.repository = order_repository
         self.log_repository = order_log_repository
 
@@ -47,7 +46,7 @@ class OrderService:
                 after_order_status=new_order.order_status,
                 operator_id=operator_id,
                 operator_name=operator_name,
-                detail=f"创建订单：{order_no}",
+                detail=f"创建订单:{order_no}",
                 session=tm.session,
             )
 
@@ -55,12 +54,16 @@ class OrderService:
 
             return self._transform_order(new_order)
 
-    def get_order_detail(self, order_uuid: UUID) -> dict:
+    def get_order_detail(self, order_uuid: str) -> dict:
         """获取订单详情"""
         with TransactionManager() as tm:
-            order_obj = self.repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             return self._transform_order(order_obj)
 
@@ -100,12 +103,16 @@ class OrderService:
             data = [self._transform_order(item) for item in items]
             return total, data
 
-    def update_order(self, order_uuid: UUID, order_in: OrderUpdate) -> dict:
+    def update_order(self, order_uuid: str, order_in: OrderUpdate) -> dict:
         """更新订单"""
         with TransactionManager() as tm:
-            order_obj = self.repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             before_pay = order_obj.pay_status
             before_order = order_obj.order_status
@@ -133,15 +140,19 @@ class OrderService:
 
             return self._transform_order(order_obj)
 
-    def cancel_order(self, order_uuid: UUID, reason: str = None, operator_id: int = None, operator_name: str = None) -> None:
+    def cancel_order(self, order_uuid: str, reason: str = None, operator_id: int = None, operator_name: str = None) -> None:
         """取消订单"""
         with TransactionManager() as tm:
-            order_obj = self.repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             if order_obj.pay_status == PayStatusEnum.PAID.value:
-                raise BusinessException(ResponseCode.PARAM_ERROR, detail="已支付订单不能直接取消，请走退款流程")
+                raise BusinessException(40000, detail="已支付订单不能直接取消,请走退款流程")
 
             before_pay = order_obj.pay_status
             before_order = order_obj.order_status
@@ -159,18 +170,22 @@ class OrderService:
                 after_order_status=order_obj.order_status,
                 operator_id=operator_id,
                 operator_name=operator_name,
-                detail=f"取消订单：{reason or '无'}",
+                detail=f"取消订单:{reason or '无'}",
                 session=tm.session,
             )
 
             tm.commit()
 
-    def list_order_logs(self, order_uuid: UUID) -> list[dict]:
+    def list_order_logs(self, order_uuid: str) -> list[dict]:
         """获取订单操作日志"""
         with TransactionManager() as tm:
-            order_obj = self.repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             logs = self.log_repository.list_by_order_id(order_obj.id, session=tm.session)
             return [self._transform_log(log) for log in logs]
@@ -203,14 +218,6 @@ class OrderService:
             detail=detail,
         )
         session.add(log)
-
-    def _transform_order(self, obj) -> dict:
-        """转换订单为字典"""
-        result = {}
-        for column in obj.__table__.columns:
-            value = getattr(obj, column.name)
-            result[column.name] = value
-        return result
 
     def _transform_log(self, obj) -> dict:
         """转换日志为字典"""

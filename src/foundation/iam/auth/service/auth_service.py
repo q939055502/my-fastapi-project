@@ -1,24 +1,25 @@
 import re
-from typing import Any, List, Tuple
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
-from src.foundation.iam.auth import create_token_pair, token_manager, verify_token
+
 from src.core.config import settings
 from src.core.constants import RoleCodeConst
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
+from src.foundation.iam.auth import create_token_pair, token_manager, verify_token
 from src.foundation.iam.auth.repository.auth_repository import auth_repository
 from src.foundation.iam.auth.schemas.login import LoginByPasswordStep1Request
 from src.foundation.iam.auth.schemas.register import UserRegisterSchema
 from src.foundation.iam.auth.schemas.token import RefreshTokenRequest
-from src.foundation.iam.rbac.repository.role_repository import role_repository
+from src.foundation.system.repository.account_bind_repository import (
+    account_bind_repository,
+)
 from src.foundation.system.repository.user_repository import user_repository
 from src.foundation.system.schemas.user import UserCreate
-from src.foundation.system.repository.account_bind_repository import account_bind_repository
-from src.models.platform import Role, AccountBind
+from src.models.platform import AccountBind, Role
 
 
 class AuthService:
@@ -26,30 +27,30 @@ class AuthService:
         logger.info(f"用户注册尝试: username={register_in.username}")
 
         if not settings.ALLOW_USER_REGISTRATION:
-            raise BusinessException(ResponseCode.FORBIDDEN, "用户注册功能已关闭")
+            raise BusinessException(40300, "用户注册功能已关闭")
 
         with TransactionManager() as tm:
             existing_user_by_username = user_repository.get_by_username(register_in.username, session=tm.session)
             if existing_user_by_username:
                 raise BusinessException(
-                    ResponseCode.PARAM_ERROR,
-                    detail=f"用户名 '{register_in.username}' 已存在",
+                    40000,
+                    detail=f"用户'{register_in.username}' 已存在",
                 )
 
             if register_in.email:
                 email_bind_count = account_bind_repository.count_by_identifier(1, register_in.email, tm.session)
                 if email_bind_count >= 5:
                     raise BusinessException(
-                        ResponseCode.PARAM_ERROR,
-                        detail=f"该邮箱已绑定过多账号（最多绑定5个）",
+                        40000,
+                        detail="该邮箱已绑定过多账号(最多绑定5个)",
                     )
 
             if register_in.phone:
                 phone_bind_count = account_bind_repository.count_by_identifier(0, register_in.phone, tm.session)
                 if phone_bind_count >= 5:
                     raise BusinessException(
-                        ResponseCode.PARAM_ERROR,
-                        detail=f"该手机号已绑定过多账号（最多绑定5个）",
+                        40000,
+                        detail="该手机号已绑定过多账号(最多绑定5个)",
                     )
 
             user_create = UserCreate(
@@ -98,7 +99,7 @@ class AuthService:
         user_list = self._verify_credentials(account, req.password, login_type)
 
         if not user_list:
-            raise BusinessException(ResponseCode.LOGIN_FAILED, "账号或密码错误")
+            raise BusinessException(40104, "账号或密码错误")
 
         if len(user_list) == 1:
             return self._handle_single_account_login(user_list[0], client_ip)
@@ -113,9 +114,9 @@ class AuthService:
 
         selected_user = next((u for u in users if str(u["uuid"]) == user_uuid), None)
         if not selected_user:
-            raise BusinessException(ResponseCode.FORBIDDEN, "用户不在可选择列表中")
+            raise BusinessException(40300, "用户不在可选择列表中")
 
-        # 验证通过后立即删除临时令牌，防止重复使用
+        # 验证通过后立即删除临时令牌,防止重复使用
         token_manager.revoke_temp_login_token(temp_token)
 
         with TransactionManager() as tm:
@@ -126,9 +127,9 @@ class AuthService:
             db_user = result.scalars().first()
 
             if not db_user:
-                raise BusinessException(ResponseCode.NOT_FOUND, "用户不存在")
+                raise BusinessException(40400, "用户不存在")
             if not db_user.is_active:
-                raise BusinessException(ResponseCode.FORBIDDEN, "用户已被禁用")
+                raise BusinessException(40300, "用户已被禁用")
 
             user_repository.update_last_login(db_user.id, client_ip, session=tm.session)
             tm.commit()
@@ -138,7 +139,7 @@ class AuthService:
     def refresh_token(self, refresh_request: RefreshTokenRequest) -> dict[str, Any]:
         refresh_data = token_manager.get_refresh_token_data(refresh_request.refresh_token)
         if not refresh_data:
-            raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token")
+            raise BusinessException(40100, "无效的Token")
 
         payload = verify_token(refresh_request.refresh_token, token_type="refresh")
         user_id = payload["user_id"]
@@ -148,9 +149,9 @@ class AuthService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user:
-                raise BusinessException(ResponseCode.NOT_FOUND, "用户不存在")
+                raise BusinessException(40400, "用户不存在")
             if not user.is_active:
-                raise BusinessException(ResponseCode.FORBIDDEN, "用户已被禁用")
+                raise BusinessException(40300, "用户已被禁用")
 
         old_access_token = refresh_data.get("linked_access")
         if old_access_token:
@@ -192,7 +193,7 @@ class AuthService:
             return "email"
         return "username"
 
-    def _verify_credentials(self, account: str, password: str, login_type: str) -> List[dict]:
+    def _verify_credentials(self, account: str, password: str, login_type: str) -> list[dict]:
         with TransactionManager() as tm:
             if login_type == "username":
                 return auth_repository.login_by_username_and_password(account, password, session=tm.session)
@@ -217,7 +218,7 @@ class AuthService:
         token_manager.store_refresh_token(refresh_token, user_id, access_token, refresh_ttl)
         token_manager.add_user_token(user_id, access_token, refresh_token, refresh_ttl)
 
-    def _generate_temp_token(self, users: List[dict]) -> str:
+    def _generate_temp_token(self, users: list[dict]) -> str:
         return token_manager.store_temp_login_token(
             user_id=0,
             username="",
@@ -228,7 +229,7 @@ class AuthService:
     def _validate_temp_token(self, temp_token: str) -> dict:
         temp_data = token_manager.get_temp_login_token(temp_token)
         if not temp_data:
-            raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的临时登录凭证")
+            raise BusinessException(40100, "无效的临时登录凭证")
         return temp_data
 
     def _handle_single_account_login(self, user: dict, client_ip: str) -> dict[str, Any]:
@@ -244,15 +245,15 @@ class AuthService:
             user_repository.update_last_login(db_user.id, client_ip, session=tm.session)
             tm.commit()
 
-        logger.info(f"用户登录成功（单账号）: user_uuid={user_uuid}")
+        logger.info(f"用户登录成功(单账号): user_uuid={user_uuid}")
         return self._build_login_result(db_user, tm.session)
 
-    def _handle_multi_account_login(self, user_list: List[dict]) -> dict[str, Any]:
+    def _handle_multi_account_login(self, user_list: list[dict]) -> dict[str, Any]:
         temp_token = self._generate_temp_token(user_list)
         if not temp_token:
-            raise BusinessException(ResponseCode.SERVER_ERROR, "生成临时登录凭证失败")
+            raise BusinessException(50000, "生成临时登录凭证失败")
 
-        logger.info(f"用户登录成功（多账号）: user_count={len(user_list)}")
+        logger.info(f"用户登录成功(多账号): user_count={len(user_list)}")
         return {
             "temp_token": temp_token,
             "users": user_list,

@@ -1,12 +1,9 @@
 """
-认证上下文模块
-
-采用 FastAPI 原生方案：中间件 + 依赖注入
-同时支持 ContextVar，在任何地方都能获取上下文
-
-使用方式：
-1. 路由层: get_auth_context(request) 或 Depends(get_auth_context)
-2. 其他层: get_current_auth_context()  # 无需参数
+认证上下文模�?
+采用 FastAPI 原生方案:中间件 + 依赖注入
+同时支持 ContextVar,在任何地方都能获取上下�?
+使用方式�?1. 路由�? get_auth_context(request) �?Depends(get_auth_context)
+2. 其他�? get_current_auth_context()  # 无需参数
 """
 
 from contextvars import ContextVar

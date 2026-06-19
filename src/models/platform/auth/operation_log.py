@@ -27,7 +27,7 @@ class OperationLog(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
     request_params = Column(JSON, nullable=True, comment="请求参数")
 
     response_status = Column(Integer, nullable=True, comment="响应状态")
-    response_time = Column(Integer, nullable=True, comment="响应时间(ms）")
+    response_time = Column(Integer, nullable=True, comment="响应时间(ms)")
 
     ip = Column(String(50), nullable=True, comment="IP地址")
     location = Column(String(200), nullable=True, comment="操作地点")

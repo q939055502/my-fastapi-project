@@ -1,11 +1,11 @@
 """
 Redis令牌管理器
 
-实现基于Redis的令牌存储方案，支持以下5种Key模式：
-1. access:{access_token} - 访问令牌存储，Value为User ID
-2. refresh:{refresh_token} - 刷新令牌存储，Value为JSON(user_id, linked_access)
-3. user:tokens:{user_id} - 用户令牌集合，存储所有有效令牌
-4. user:device:{user_id}:{device_id} - 设备信息（可选）
+实现基于Redis的令牌存储方案,支持以下5种Key模式:
+1. access:{access_token} - 访问令牌存储,Value为User ID
+2. refresh:{refresh_token} - 刷新令牌存储,Value为JSON(user_id, linked_access)
+3. user:tokens:{user_id} - 用户令牌集合,存储所有有效令牌
+4. user:device:{user_id}:{device_id} - 设备信息(可选)
 5. user:perm:{user_id} - 权限/角色缓存
 """
 
@@ -14,6 +14,7 @@ import secrets
 from datetime import datetime
 
 import redis
+
 from src.core.config import settings
 from src.core.log import logger
 
@@ -53,7 +54,7 @@ class TokenManager:
                 self.redis.ping()
                 logger.info("TokenManager: Redis连接成功")
             except Exception as e:
-                logger.warning(f"TokenManager: Redis连接失败: {str(e)}，令牌管理功能将被禁用")
+                logger.warning(f"TokenManager: Redis连接失败: {str(e)},令牌管理功能将被禁用")
                 self.redis = None
 
     def disconnect(self):
@@ -84,7 +85,7 @@ class TokenManager:
         ttl_seconds: int
     ) -> bool:
         if not self._is_available():
-            logger.warning("TokenManager: Redis未连接，无法存储访问令牌")
+            logger.warning("TokenManager: Redis未连接,无法存储访问令牌")
             return False
 
         try:
@@ -104,7 +105,7 @@ class TokenManager:
         ttl_seconds: int
     ) -> bool:
         if not self._is_available():
-            logger.warning("TokenManager: Redis未连接，无法存储刷新令牌")
+            logger.warning("TokenManager: Redis未连接,无法存储刷新令牌")
             return False
 
         try:
@@ -128,7 +129,7 @@ class TokenManager:
         ttl_seconds: int
     ) -> bool:
         if not self._is_available():
-            logger.warning("TokenManager: Redis未连接，无法添加用户令牌")
+            logger.warning("TokenManager: Redis未连接,无法添加用户令牌")
             return False
 
         try:
@@ -345,7 +346,7 @@ class TokenManager:
         users: list[dict] = None
     ) -> str:
         if not self._is_available():
-            logger.warning("TokenManager: Redis未连接，无法存储临时凭证")
+            logger.warning("TokenManager: Redis未连接,无法存储临时凭证")
             return ""
 
         try:

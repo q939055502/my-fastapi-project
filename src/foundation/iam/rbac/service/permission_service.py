@@ -1,16 +1,17 @@
-from typing import Any, Dict, List
+from typing import Any
 
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
-from src.foundation.iam.rbac.repository.permission_repository import permission_repository
+from src.foundation.iam.rbac.repository.permission_repository import (
+    permission_repository,
+)
 
 
 class PermissionService:
-    def create_permission(self, resource: str, action: str, description: str = None, scope: str = None, session=None) -> Dict[str, Any]:
+    def create_permission(self, resource: str, action: str, description: str = None, scope: str = None, session=None) -> dict[str, Any]:
         if permission_repository.get_by_resource_and_action(resource, action, session=session):
-            raise BusinessException(ResponseCode.PARAM_ERROR, "权限已存在")
+            raise BusinessException(40000, "权限已存在")
 
         with TransactionManager(session=session) as tm:
             permission = permission_repository.create(
@@ -31,11 +32,11 @@ class PermissionService:
             "action": permission.action,
         }
 
-    def update_permission(self, permission_id: int, description: str = None, scope: str = None, session=None) -> Dict[str, Any]:
+    def update_permission(self, permission_id: int, description: str = None, scope: str = None, session=None) -> dict[str, Any]:
         with TransactionManager(session=session) as tm:
             permission = permission_repository.get(id=permission_id, session=tm.session)
             if not permission:
-                raise BusinessException(ResponseCode.NOT_FOUND, "权限不存在")
+                raise BusinessException(40400, "权限不存在")
 
             update_data = {}
             if description is not None:
@@ -60,14 +61,14 @@ class PermissionService:
         with TransactionManager(session=session) as tm:
             permission = permission_repository.get(id=permission_id, session=tm.session)
             if not permission:
-                raise BusinessException(ResponseCode.NOT_FOUND, "权限不存在")
+                raise BusinessException(40400, "权限不存在")
 
             permission_repository.remove(db_obj=permission, session=tm.session)
             tm.commit()
 
         logger.info(f"删除权限: permission_id={permission_id}")
 
-    def list_permissions(self, resource: str = None, scope: str = None, session=None) -> List[Dict[str, Any]]:
+    def list_permissions(self, resource: str = None, scope: str = None, session=None) -> list[dict[str, Any]]:
         if resource:
             permissions = permission_repository.get_by_resource(resource, session=session)
         elif scope:
@@ -86,10 +87,10 @@ class PermissionService:
             for perm in permissions
         ]
 
-    def get_permission(self, permission_id: int, session=None) -> Dict[str, Any]:
+    def get_permission(self, permission_id: int, session=None) -> dict[str, Any]:
         permission = permission_repository.get(id=permission_id, session=session)
         if not permission:
-            raise BusinessException(ResponseCode.NOT_FOUND, "权限不存在")
+            raise BusinessException(40400, "权限不存在")
 
         return {
             "id": permission.id,

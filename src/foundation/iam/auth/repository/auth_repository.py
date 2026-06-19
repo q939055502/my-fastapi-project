@@ -1,18 +1,18 @@
 """认证 Repository
 
-提供用户登录相关的数据访问方法
+提供用户登录相关的数据访问方法。
 """
 
 import time
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.foundation.iam.auth import verify_password
+
 from src.core.constants import AccountBindStatusConst
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import BaseRepository
+from src.foundation.iam.auth import verify_password
 from src.models.platform import User
 from src.models.platform.auth import AccountBind
 
@@ -35,7 +35,7 @@ class AuthRepository(BaseRepository[User, None, None]):
         if not user:
             logger.warning(f"用户名登录失败 - 用户不存在: username={username}")
             self._delay_for_security()
-            raise BusinessException(ResponseCode.LOGIN_FAILED, "用户名或密码错误")
+            raise BusinessException(40104, "用户名或密码错误")
 
         verified = verify_password(password, user.password)
         logger.info(f"密码验证 - username={username}, verified={verified}")
@@ -43,11 +43,11 @@ class AuthRepository(BaseRepository[User, None, None]):
         if not verified:
             logger.warning(f"用户名登录失败 - 密码错误: username={username}")
             self._delay_for_security()
-            raise BusinessException(ResponseCode.LOGIN_FAILED, "用户名或密码错误")
+            raise BusinessException(40104, "用户名或密码错误")
 
         if not user.is_active:
             logger.warning(f"用户名登录失败 - 用户被禁用: username={username}")
-            raise BusinessException(ResponseCode.FORBIDDEN, "用户已被禁用")
+            raise BusinessException(40300, "用户已被禁用")
 
         logger.info(f"用户名登录成功: username={username}, user_uuid={user.uuid}")
         return [{
@@ -91,7 +91,7 @@ class AuthRepository(BaseRepository[User, None, None]):
         if not matched_users:
             logger.warning(f"账号登录失败 - 密码不匹配: account={account}")
             self._delay_for_security()
-            raise BusinessException(ResponseCode.LOGIN_FAILED, "账号或密码错误")
+            raise BusinessException(40104, "账号或密码错误")
         return matched_users
 
 

@@ -3,14 +3,14 @@
 
 负责系统定时任务的初始化配置
 
-职责：
+职责:
 - 注册业务定时任务
-- 配置日志清理任务（访问日志、错误日志、业务日志等）
+- 配置日志清理任务(访问日志, 错误日志, 业务日志等)
 - 配置软删除数据清理任务
-- 设置任务执行时间（Cron表达式）
+- 设置任务执行时间(Cron表达式)
 
-幂等性保证：
-- 检查是否已存在定时任务配置，若存在则跳过创建
+幂等性保证:
+- 检查是否已存在定时任务配置,若存在则跳过创建
 - 重复执行不会产生重复数据
 """
 
@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import delete
+
 from src.core.config import settings
 from src.core.log import logger
 from src.core.scheduler import scheduler_manager
@@ -41,6 +42,7 @@ def clean_old_logs():
     """清理过期日志任务
 
     清理超过保留期的登录日志和操作日志
+    保留期:根据配置文件设置,默认保留 7 天
     """
     logger.info("开始执行清理过期日志任务")
     try:
@@ -60,7 +62,7 @@ def clean_old_logs():
 
                 session.commit()
                 logger.info(
-                    f"清理过期日志任务完成！登录日志删除: {login_deleted} 条，操作日志删除: {operation_deleted} 条"
+                    f"清理过期日志任务完成!登录日志删除 {login_deleted} 条,操作日志删除: {operation_deleted} 条"
                 )
                 break
             except Exception as e:
@@ -110,10 +112,10 @@ def clean_soft_deleted_data():
                     total_deleted += deleted
 
                     if deleted > 0:
-                        logger.info(f"{model.__tablename__} 删除了 {deleted} 条软删除数据")
+                        logger.info(f"{model.__tablename__} 删除 {deleted} 条软删除数据")
 
                 session.commit()
-                logger.info(f"清理软删除数据任务完成！共删除: {total_deleted} 条")
+                logger.info(f"清理软删除数据任务完成!共删除 {total_deleted} 条软删除数据")
                 break
             except Exception as e:
                 session.rollback()
@@ -127,14 +129,14 @@ def init_scheduler():
     """
     初始化系统定时任务
 
-    注册默认定时任务：
+    注册默认定时任务:
     1. 日志清理任务 - 根据配置的Cron表达式执行
-       - 清理过期的访问日志、错误日志、业务日志等
+       - 清理过期的访问日志, 错误日志, 业务日志等
     2. 软删除数据清理任务 - 根据配置的Cron表达式执行
        - 清理超过保留期的软删除数据
     """
     if not settings.SCHEDULER_ENABLED:
-        logger.info("调度器已禁用，跳过业务任务注册")
+        logger.info("调度器已禁用,跳过业务任务注册")
         return
 
     scheduler_manager.add_job(
@@ -143,7 +145,7 @@ def init_scheduler():
         job_id="clean_old_logs",
         name="清理过期日志",
     )
-    logger.info(f"已注册业务任务：清理过期日志（Cron: {settings.SCHEDULER_CLEAN_LOG_CRON}）")
+    logger.info(f"已注册业务任务:清理过期日志(Cron: {settings.SCHEDULER_CLEAN_LOG_CRON})")
 
     scheduler_manager.add_job(
         func=clean_soft_deleted_data,
@@ -151,7 +153,7 @@ def init_scheduler():
         job_id="clean_soft_deleted_data",
         name="清理软删除数据",
     )
-    logger.info(f"已注册业务任务：清理软删除数据（Cron: {settings.SCHEDULER_CLEAN_SOFT_DELETE_CRON}）")
+    logger.info(f"已注册业务任务:清理软删除数据(Cron: {settings.SCHEDULER_CLEAN_SOFT_DELETE_CRON})")
 
 
 __all__ = [

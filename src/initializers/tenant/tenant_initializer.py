@@ -5,6 +5,7 @@
 """
 
 from sqlalchemy import func, select
+
 from src.core.constants import StatusConst
 from src.core.log import logger
 from src.core.storage import get_db
@@ -14,11 +15,11 @@ def init_plans():
     """
     初始化租户套餐
 
-    创建默认的租户套餐：
-    - 免费版（自动通过，限5个用户）
-    - 基础版（自动通过，限20个用户）
-    - 专业版（人工审核，限100个用户）
-    - 企业版（人工审核，无用户限制）
+    创建默认的租户套餐:
+    - 免费版(自动通过,限5个用户)
+    - 基础版(自动通过,限20个用户)
+    - 专业版(人工审核,限100个用户)
+    - 企业版(人工审核,无用户限制)
     """
     logger.info("开始初始化租户套餐...")
     for session in get_db():
@@ -90,7 +91,7 @@ def init_plans():
         else:
             count_result = session.execute(select(func.count(TenantPlan.id)))
             plan_count = count_result.scalar()
-            logger.info(f"租户套餐已存在，跳过初始化 - 当前套餐数量: {plan_count}")
+            logger.info(f"租户套餐已存在,跳过初始化 - 当前套餐数量: {plan_count}")
         break
 
 
@@ -98,7 +99,7 @@ def init_default_tenant():
     """
     初始化默认租户
 
-    创建一个默认业务租户，并将 user1 设为其户主：
+    创建一个默认业务租户,并将 user1 设为其户主:
     - 租户名称: 默认租户
     - 租户编码: default
     - 套餐: 免费版
@@ -107,8 +108,8 @@ def init_default_tenant():
     logger.info("开始初始化默认租户...")
     for session in get_db():
         try:
-            from src.models.tenant import Tenant, Member
             from src.foundation.system.repository.user_repository import user_repository
+            from src.models.tenant import Member, Tenant
 
             result = session.execute(select(Tenant).where(Tenant.code == "default"))
             default_tenant = result.scalars().first()
@@ -140,9 +141,9 @@ def init_default_tenant():
                     session.commit()
                     logger.info(f"默认租户创建成功 - 租户ID: {default_tenant.id}, 户主: user1")
                 else:
-                    logger.warning("user1 用户不存在，跳过创建默认租户")
+                    logger.warning("user1 用户不存在,跳过创建默认租户")
             else:
-                logger.info("默认租户已存在，跳过创建")
+                logger.info("默认租户已存在,跳过创建")
         except Exception as e:
             session.rollback()
             logger.error(f"初始化默认租户失败: {str(e)}")

@@ -1,7 +1,7 @@
 """
 认证核心安全模块
 
-包含密码哈希、JWT令牌的生成与验证等核心认证功能。
+包含密码哈希, JWT令牌的生成与验证等核心认证功能。
 """
 
 import secrets
@@ -10,8 +10,8 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 from passlib.context import CryptContext
+
 from src.core.config import settings
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -70,14 +70,14 @@ def verify_token(token: str, token_type: str = "access") -> dict:
         )
 
         if payload.get("token_type") != token_type:
-            raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token")
+            raise BusinessException(40100, "无效的Token")
 
         return payload
 
     except jwt.ExpiredSignatureError:
-        raise BusinessException(ResponseCode.UNAUTHORIZED, "登录已过期") from None
+        raise BusinessException(40100, "登录已过期") from None
     except jwt.InvalidTokenError:
-        raise BusinessException(ResponseCode.UNAUTHORIZED, "无效的Token") from None
+        raise BusinessException(40100, "无效的Token") from None
 
 
 def parse_jwt_token(token: str) -> dict | None:

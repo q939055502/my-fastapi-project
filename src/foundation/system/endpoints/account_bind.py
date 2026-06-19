@@ -4,12 +4,16 @@ Account bind management endpoints
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from src.foundation.iam import AuthControl
-from src.core.response import success
+
+from src.core.response import ApiResponse
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
-from src.models.platform import User
-from src.foundation.system.schemas.account_bind import AccountBindCreate
+from src.foundation.iam import AuthControl
+from src.foundation.system.schemas.account_bind import (
+    AccountBindCreate,
+    AccountBindResponse,
+)
 from src.foundation.system.service.account_bind_service import account_bind_service
+from src.models.platform import User
 
 router = APIRouter(
     prefix="/binds",
@@ -19,33 +23,36 @@ router = APIRouter(
 
 
 @router.get("/", summary="Get user's bind list")
-def get_my_bindings(current_user: User = Depends(AuthControl.is_authed)):
+def get_my_bindings(current_user: User = Depends(AuthControl.is_authed)) -> ApiResponse[list[AccountBindResponse]]:
     bindings = account_bind_service.get_user_bindings(current_user.uuid)
-    return success(data=bindings)
+    binding_responses = [AccountBindResponse.model_validate(bind) for bind in bindings]
+    return ApiResponse(code=20000, data=binding_responses)
 
 
 @router.post("/", summary="Bind phone/email")
 def bind_value(
     bind_data: AccountBindCreate,
     current_user: User = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[AccountBindResponse]:
     bind = account_bind_service.create_bind(current_user.uuid, bind_data)
-    return success(data=bind, msg="Bind created successfully, please verify")
+    bind_response = AccountBindResponse.model_validate(bind)
+    return ApiResponse(code=20000, data=bind_response, msg="Bind created successfully, please verify")
 
 
 @router.post("/set_default", summary="Set default bind")
 def set_default_bind(
     bind_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[AccountBindResponse]:
     bind = account_bind_service.set_default_bind(current_user.uuid, bind_uuid)
-    return success(data=bind, msg="Set as default successfully")
+    bind_response = AccountBindResponse.model_validate(bind)
+    return ApiResponse(code=20000, data=bind_response, msg="Set as default successfully")
 
 
 @router.delete("/{bind_uuid}", summary="Unbind")
 def unbind_value(
     bind_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[None]:
     account_bind_service.delete_bind(current_user.uuid, bind_uuid)
-    return success(msg="Unbind successfully")
+    return ApiResponse(code=20000, msg="Unbind successfully")

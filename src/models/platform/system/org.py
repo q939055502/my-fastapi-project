@@ -26,7 +26,7 @@ class Org(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, En
 
 
 class OrgClosure(BaseModel, TimestampMixin, SoftDeleteMixin):
-    """组织闭包表（用于高效查询树形结构）"""
+    """组织闭包表(用于高效查询树形结构)"""
     __tablename__ = "sys_org_closure"
 
     __table_args__ = (

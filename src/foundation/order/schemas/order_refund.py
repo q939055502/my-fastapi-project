@@ -11,7 +11,7 @@ class OrderRefundCreate(BaseModel):
     order_id: int = Field(..., description="订单ID")
     order_payment_id: int | None = Field(None, description="支付记录ID")
     refund_method: str = Field(..., description="退款方式")
-    refund_amount: int = Field(..., description="退款金额（分）")
+    refund_amount: int = Field(..., description="退款金额(分)")
     reason: str | None = Field(None, description="退款原因")
     operator_type: str = Field(default="user", description="操作人类型")
     operator_id: int | None = Field(None, description="操作人ID")

@@ -9,12 +9,13 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
-from src.core.log import logger
-from src.core.storage import SessionLocal
-from src.models.platform import AuditLog
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
+
+from src.core.log import logger
+from src.core.storage import SessionLocal
+from src.models.platform import AuditLog
 
 
 class HttpAuditLogMiddleware(BaseHTTPMiddleware):
@@ -28,7 +29,7 @@ class HttpAuditLogMiddleware(BaseHTTPMiddleware):
         self.max_body_size = 1024 * 1024
 
     def _parse_user_agent(self, user_agent: str) -> tuple[str, str, str]:
-        """简单解析 User-Agent 获取浏览器、设备、系统信息"""
+        """简单解析 User-Agent 获取浏览器, 设备, 系统信息"""
         browser = "unknown"
         device = "unknown"
         os = "unknown"
@@ -214,7 +215,7 @@ class HttpAuditLogMiddleware(BaseHTTPMiddleware):
         data["device"] = device
         data["os_name"] = os
 
-        # location 暂时留空，后续可以接入 IP 地理位置解析
+        # location 暂时留空,后续可以接入 IP 地理位置解析
         data["location"] = None
 
         return data
@@ -225,7 +226,7 @@ class HttpAuditLogMiddleware(BaseHTTPMiddleware):
         """处理请求并记录审计日志"""
         start_time: datetime = datetime.now()
 
-        # 先获取请求体（需要在 call_next 之前，因为请求体只能读一次）
+        # 先获取请求体(需要在 call_next 之前,因为请求体只能读一次)
         request_body = await self.get_request_body(request)
 
         request_args = await self.get_request_args(request)
@@ -249,7 +250,7 @@ class HttpAuditLogMiddleware(BaseHTTPMiddleware):
                         break
 
                 if not excluded:
-                    # 获取响应（在异常情况下 response 可能不存在）
+                    # 获取响应(在异常情况下 response 可能不存在)
                     current_response = None
                     if "response" in locals():
                         current_response = response

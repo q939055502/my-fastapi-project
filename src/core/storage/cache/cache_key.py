@@ -1,16 +1,16 @@
-"""缓存键构建器（核心层）
+"""缓存键构建器(核心层)
 
-提供通用的缓存键构建功能，不依赖任何业务逻辑。
+提供通用的缓存键构建功能,不依赖任何业务逻辑。
 业务维度的注入由 foundation 层负责。
 
-缓存键分层设计：
+缓存键分层设计:
     - GLOBAL: global:{resource}:{key}
     - DATA: data:{tenant_id}:{resource}:{subject_type}:{subject_id}:{id}
     - LIST: list:{tenant_id}:{resource}:{action}:{scope}:{subject_type}:{subject_id}:{query_hash}
 """
 
 import hashlib
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class CacheType:
@@ -23,27 +23,27 @@ class CacheType:
 def build_cache_key(
     cache_type: str,
     resource: str,
-    key: Optional[str] = None,
-    action: Optional[str] = None,
-    scope: Optional[str] = None,
-    query_params: Optional[Dict[str, Any]] = None,
-    tenant_id: Optional[int] = None,
-    subject_type: Optional[int] = None,
-    subject_id: Optional[str] = None,
+    key: str | None = None,
+    action: str | None = None,
+    scope: str | None = None,
+    query_params: dict[str, Any] | None = None,
+    tenant_id: int | None = None,
+    subject_type: int | None = None,
+    subject_id: str | None = None,
 ) -> str:
     """
-    构建缓存键（显式参数版本）
+    构建缓存键(显式参数版本)
 
     Args:
-        cache_type: 缓存类型（GLOBAL/DATA/LIST）
+        cache_type: 缓存类型(GLOBAL/DATA/LIST)
         resource: 资源名称
-        key: 业务层传入的key（单条数据的ID）
-        action: 动作名称（列表查询时使用）
+        key: 业务层传入的key(单条数据的ID)
+        action: 动作名称(列表查询时使用)
         scope: 数据范围
-        query_params: 查询参数（列表查询时使用）
-        tenant_id: 租户ID（DATA/LIST类型需要）
-        subject_type: 主体类型（DATA/LIST类型需要）
-        subject_id: 主体ID（DATA/LIST类型需要）
+        query_params: 查询参数(列表查询时使用)
+        tenant_id: 租户ID(DATA/LIST类型需要)
+        subject_type: 主体类型(DATA/LIST类型需要)
+        subject_id: 主体ID(DATA/LIST类型需要)
 
     Returns:
         构建好的缓存键

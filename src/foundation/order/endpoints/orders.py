@@ -2,20 +2,26 @@
 订单管理接口
 """
 from datetime import datetime
+from typing import Annotated, TypeVar
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
-from src.core.enums.response_code import ResponseCode
+from pydantic import BaseModel, Field
+
 from src.core.plugins import apply_rate_limit
-from src.core.response import gen_swagger_response, success, success_page
+from src.core.response import ApiResponse, gen_swagger_response
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.foundation.iam import AuthControl, PermissionControl
 from src.foundation.order.schemas.order import (
     OrderCancelRequest,
     OrderCreate,
+    OrderListResponse,
+    OrderResponse,
     OrderUpdate,
 )
 from src.foundation.order.service import order_service
+
+T = TypeVar("T")
 
 router = APIRouter(
     tags=["订单管理"],
@@ -23,22 +29,26 @@ router = APIRouter(
 )
 
 
+class OrderListDataResponse(BaseModel):
+    """订单分页列表响应数据"""
+
+    list: Annotated[list[OrderListResponse], Field(description="订单列表")]
+    total: int = Field(description="总记录数")
+    page: int = Field(description="当前页码")
+    page_size: int = Field(description="每页数量")
+    total_pages: int = Field(description="总页数")
+
+
 @router.post(
     "/",
     summary="创建订单",
-    responses={
-        400: gen_swagger_response(
-            codes=[ResponseCode.PARAM_ERROR],
-            description="参数错误",
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
 def create_order(
     request: Request,
     order_in: OrderCreate,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[OrderResponse]:
     """
     创建订单
     """
@@ -47,7 +57,11 @@ def create_order(
         operator_id=current_user.id,
         operator_name=current_user.username,
     )
-    return success(data=order_data, msg="订单创建成功")
+    return ApiResponse(
+        code=20000,
+        msg="订单创建成功",
+        data=OrderResponse.model_validate(order_data),
+    )
 
 
 @router.get("/list", summary="获取订单列表")
@@ -56,18 +70,18 @@ def list_orders(
     request: Request,
     page: int = Query(1, description="页码"),
     page_size: int = Query(10, description="每页数量"),
-    buyer_type: str = Query(None, description="购买主体类型：tenant/user"),
+    buyer_type: str = Query(None, description="购买主体类型:tenant/user"),
     buyer_id: int = Query(None, description="购买主体ID"),
-    product_type: str = Query(None, description="商品类型：member/service"),
+    product_type: str = Query(None, description="商品类型:member/service"),
     product_id: int = Query(None, description="商品ID"),
-    order_type: str = Query(None, description="订单类型：new/renew/upgrade"),
+    order_type: str = Query(None, description="订单类型:new/renew/upgrade"),
     pay_status: str = Query(None, description="支付状态"),
     order_status: str = Query(None, description="订单状态"),
-    order_no: str = Query(None, description="订单号"),
+    order_no: str = Query(None, description="订单编号"),
     start_time: datetime = Query(None, description="开始时间"),
     end_time: datetime = Query(None, description="结束时间"),
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[OrderListDataResponse]:
     """
     获取订单列表
     """
@@ -85,7 +99,18 @@ def list_orders(
         start_time=start_time,
         end_time=end_time,
     )
-    return success_page(data=data, total=total, page=page, page_size=page_size)
+    total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+    return ApiResponse(
+        code=20000,
+        msg="操作成功",
+        data=OrderListDataResponse(
+            list=[OrderListResponse.model_validate(order) for order in data],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        ),
+    )
 
 
 @router.get(
@@ -93,7 +118,7 @@ def list_orders(
     summary="获取订单详情",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
+            codes=[40401],
             description="订单不存在",
         ),
     },
@@ -103,23 +128,21 @@ def get_order_detail(
     request: Request,
     order_uuid: UUID,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[OrderResponse]:
     """
     获取订单详情
     """
     order_data = order_service.get_order_detail(order_uuid)
-    return success(data=order_data)
+    return ApiResponse(
+        code=20000,
+        msg="操作成功",
+        data=OrderResponse.model_validate(order_data),
+    )
 
 
 @router.put(
     "/{order_uuid}",
     summary="更新订单",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
-            description="订单不存在",
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
 def update_order(
@@ -127,12 +150,16 @@ def update_order(
     order_uuid: UUID,
     order_in: OrderUpdate,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[OrderResponse]:
     """
     更新订单
     """
     order_data = order_service.update_order(order_uuid, order_in)
-    return success(data=order_data, msg="订单更新成功")
+    return ApiResponse(
+        code=20000,
+        msg="订单更新成功",
+        data=OrderResponse.model_validate(order_data),
+    )
 
 
 @router.post(
@@ -140,11 +167,11 @@ def update_order(
     summary="取消订单",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.ENTITY_NOT_FOUND],
+            codes=[40401],
             description="订单不存在",
         ),
         400: gen_swagger_response(
-            codes=[ResponseCode.PARAM_ERROR],
+            codes=[40000],
             description="已支付订单不能直接取消",
         ),
     },
@@ -155,7 +182,7 @@ def cancel_order(
     order_uuid: UUID,
     cancel_in: OrderCancelRequest = None,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[None]:
     """
     取消订单
     """
@@ -166,7 +193,11 @@ def cancel_order(
         operator_id=current_user.id,
         operator_name=current_user.username,
     )
-    return success(msg="订单已取消")
+    return ApiResponse(
+        code=20000,
+        msg="订单已取消",
+        data=None,
+    )
 
 
 @router.get(
@@ -178,12 +209,16 @@ def get_order_logs(
     request: Request,
     order_uuid: UUID,
     current_user = Depends(AuthControl.is_authed),
-):
+) -> ApiResponse[None]:
     """
     获取订单操作日志
     """
     logs = order_service.list_order_logs(order_uuid)
-    return success(data=logs)
+    return ApiResponse(
+        code=20000,
+        msg="操作成功",
+        data=logs,
+    )
 
 
 # 管理员接口 - 需要权限
@@ -204,7 +239,7 @@ def admin_list_orders(
     buyer_type: str = Query(None, description="购买主体类型"),
     pay_status: str = Query(None, description="支付状态"),
     order_status: str = Query(None, description="订单状态"),
-):
+) -> ApiResponse[OrderListDataResponse]:
     """
     管理员获取所有订单
     """
@@ -215,4 +250,15 @@ def admin_list_orders(
         pay_status=pay_status,
         order_status=order_status,
     )
-    return success_page(data=data, total=total, page=page, page_size=page_size)
+    total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+    return ApiResponse(
+        code=20000,
+        msg="操作成功",
+        data=OrderListDataResponse(
+            list=[OrderListResponse.model_validate(order) for order in data],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        ),
+    )

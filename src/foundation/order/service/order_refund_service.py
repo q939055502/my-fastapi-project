@@ -1,9 +1,8 @@
 import secrets
 import string
 from datetime import datetime
-from uuid import UUID
 
-from src.core.enums.response_code import ResponseCode
+from src.core.base.service_base import BaseService
 from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.foundation.order.enums import (
@@ -20,10 +19,11 @@ from src.foundation.order.repository import (
 from src.foundation.order.schemas.order_refund import OrderRefundCreate
 
 
-class OrderRefundService:
+class OrderRefundService(BaseService):
     """订单退款服务"""
 
     def __init__(self):
+        super().__init__()
         self.repository = order_refund_repository
         self.order_repository = order_repository
         self.log_repository = order_log_repository
@@ -35,19 +35,23 @@ class OrderRefundService:
 
     def create_refund(
         self,
-        order_uuid: UUID,
+        order_uuid: str,
         refund_in: OrderRefundCreate,
         operator_id: int = None,
         operator_name: str = None,
     ) -> dict:
         """创建退款单"""
         with TransactionManager() as tm:
-            order_obj = self.order_repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.order_repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             if order_obj.pay_status != PayStatusEnum.PAID.value:
-                raise BusinessException(ResponseCode.PARAM_ERROR, detail="只有已支付订单可申请退款")
+                raise BusinessException(40000, detail="只有已支付订单可申请退款")
 
             refund_data = refund_in.model_dump()
             refund_data["order_id"] = order_obj.id
@@ -64,7 +68,7 @@ class OrderRefundService:
                 action=OrderActionEnum.REFUND.value,
                 before_pay_status=order_obj.pay_status,
                 after_pay_status=order_obj.pay_status,
-                detail=f"申请退款，金额：{refund_in.refund_amount}分，原因：{refund_in.reason or '无'}",
+                detail=f"申请退款,金额:{refund_in.refund_amount}分,原因:{refund_in.reason or '无'}",
                 operator_id=operator_id,
                 operator_name=operator_name,
             )
@@ -74,12 +78,16 @@ class OrderRefundService:
 
             return self._transform_refund(new_refund)
 
-    def list_refunds(self, order_uuid: UUID) -> list[dict]:
+    def list_refunds(self, order_uuid: str) -> list[dict]:
         """获取订单退款记录"""
         with TransactionManager() as tm:
-            order_obj = self.order_repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.order_repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             refunds = self.repository.list_by_order_id(order_obj.id, session=tm.session)
             return [self._transform_refund(r) for r in refunds]

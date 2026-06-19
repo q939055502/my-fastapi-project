@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from sqlalchemy import func, select
+
 from src.core.storage import TransactionManager
 from src.models.platform import AuditLog
 
@@ -21,7 +22,7 @@ class AuditLogService:
         status: int = None,
         start_time: datetime = None,
         end_time: datetime = None,
-    ) -> tuple[int, list[dict]]:
+    ) -> tuple[int, list[AuditLog]]:
         """Get audit log list with filters"""
         filters = []
         if username:
@@ -56,8 +57,7 @@ class AuditLogService:
             result = tm.session.execute(query)
             audit_log_objs = result.scalars().all()
 
-            data = [audit_log.to_dict() for audit_log in audit_log_objs]
-            return total, data
+            return total, audit_log_objs
 
 
 audit_log_service = AuditLogService()

@@ -1,11 +1,10 @@
-from uuid import UUID
-
 from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
+
 from src.core.log import logger
 from src.core.storage import BaseRepository
-from src.models.platform import Org, OrgClosure
 from src.foundation.system.schemas.org import OrgCreate, OrgUpdate
+from src.models.platform import Org, OrgClosure
 
 
 class OrgRepository(BaseRepository[Org, OrgCreate, OrgUpdate]):
@@ -22,7 +21,7 @@ class OrgRepository(BaseRepository[Org, OrgCreate, OrgUpdate]):
         result = session.execute(query.order_by(Org.sort))
         all_orgs = result.scalars().all()
 
-        # 构建 parent_uuid 映射（通过 OrgClosure 查询父节点）
+        # 构建 parent_uuid 映射(通过 OrgClosure 查询父节点)
         parent_map = {}
         for org in all_orgs:
             if org.parent_id:
@@ -80,14 +79,16 @@ class OrgRepository(BaseRepository[Org, OrgCreate, OrgUpdate]):
 
     def create_org(self, obj_in: OrgCreate, session: Session):
         if obj_in.parent_uuid:
-            parent_org = self.get_by_uuid(uuid=obj_in.parent_uuid, session=session)
-            if parent_org:
-                obj_in.parent_id = parent_org.id
+            from src.core.storage.uuid_resolver import uuid_resolver
+
+            parent_id = uuid_resolver.resolve(session, "org", obj_in.parent_uuid)
+            if parent_id:
+                obj_in.parent_id = parent_id
         new_obj = self.create(obj_in=obj_in, session=session)
         self.update_org_closure(new_obj, session=session)
 
-    def update_org(self, org_uuid: UUID, obj_in: OrgUpdate, session: Session):
-        org_obj = self.get_by_uuid(uuid=org_uuid, session=session)
+    def update_org(self, org_id: int, obj_in: OrgUpdate, session: Session):
+        org_obj = self.get(id=org_id, session=session)
         if not org_obj:
             return
 
@@ -95,8 +96,10 @@ class OrgRepository(BaseRepository[Org, OrgCreate, OrgUpdate]):
         new_parent_id = None
 
         if obj_in.parent_uuid:
-            parent_org = self.get_by_uuid(uuid=obj_in.parent_uuid, session=session)
-            new_parent_id = parent_org.id if parent_org else None
+            from src.core.storage.uuid_resolver import uuid_resolver
+
+            parent_id = uuid_resolver.resolve(session, "org", obj_in.parent_uuid)
+            new_parent_id = parent_id if parent_id else None
 
         if old_parent_id != new_parent_id:
             session.execute(
@@ -112,8 +115,8 @@ class OrgRepository(BaseRepository[Org, OrgCreate, OrgUpdate]):
 
         self.update(id=org_obj.id, obj_in=obj_in, session=session)
 
-    def delete_org(self, org_uuid: UUID, session: Session):
-        org_obj = self.get_by_uuid(uuid=org_uuid, session=session)
+    def delete_org(self, org_id: int, session: Session):
+        org_obj = self.get(id=org_id, session=session)
         if org_obj:
             self.delete(org_obj.id, session=session)
             session.execute(

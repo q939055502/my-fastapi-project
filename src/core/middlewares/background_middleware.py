@@ -2,10 +2,11 @@
 后台任务中间件
 """
 
-from src.core.background_tasks import BgTasks
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
+
+from src.core.background_tasks import BgTasks
 
 
 class BackGroundTaskMiddleware(BaseHTTPMiddleware):

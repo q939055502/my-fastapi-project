@@ -1,7 +1,6 @@
 from datetime import datetime
-from uuid import UUID
 
-from src.core.enums.response_code import ResponseCode
+from src.core.base.service_base import BaseService
 from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
 from src.foundation.order.enums import OrderActionEnum, PayStatusEnum
@@ -13,26 +12,31 @@ from src.foundation.order.repository import (
 from src.foundation.order.schemas.order_payment import OrderPaymentCreate
 
 
-class OrderPaymentService:
+class OrderPaymentService(BaseService):
     """订单支付服务"""
 
     def __init__(self):
+        super().__init__()
         self.repository = order_payment_repository
         self.order_repository = order_repository
         self.log_repository = order_log_repository
 
     def create_payment(
         self,
-        order_uuid: UUID,
+        order_uuid: str,
         payment_in: OrderPaymentCreate,
         operator_id: int = None,
         operator_name: str = None,
     ) -> dict:
         """创建支付记录"""
         with TransactionManager() as tm:
-            order_obj = self.order_repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.order_repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             payment_data = payment_in.model_dump()
             payment_data["order_id"] = order_obj.id
@@ -59,7 +63,7 @@ class OrderPaymentService:
                 after_order_status=order_obj.order_status,
                 operator_id=operator_id,
                 operator_name=operator_name,
-                detail=f"支付成功，金额：{payment_in.amount}分，方式：{payment_in.payment_method}",
+                detail=f"支付成功,金额:{payment_in.amount}分,方式:{payment_in.payment_method}",
             )
             tm.add(log)
 
@@ -67,12 +71,16 @@ class OrderPaymentService:
 
             return self._transform_payment(new_payment)
 
-    def list_payments(self, order_uuid: UUID) -> list[dict]:
+    def list_payments(self, order_uuid: str) -> list[dict]:
         """获取订单支付记录"""
         with TransactionManager() as tm:
-            order_obj = self.order_repository.get_by_uuid(uuid=order_uuid, session=tm.session)
+            order_id = self.get_id_by_uuid("order_info", order_uuid, tm.session)
+            if not order_id:
+                raise BusinessException(40401, detail="订单不存在")
+
+            order_obj = self.order_repository.get(id=order_id, session=tm.session)
             if not order_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="订单不存在")
+                raise BusinessException(40401, detail="订单不存在")
 
             payments = self.repository.list_by_order_id(order_obj.id, session=tm.session)
             return [self._transform_payment(p) for p in payments]

@@ -2,24 +2,24 @@
 FastAPI 应用入口模块
 
 负责创建和配置 FastAPI 应用实例，包含：
-- 应用生命周期管理（startup/shutdown 事件）
+- 应用生命周期管理(startup/shutdown 事件)
 - 应用创建和路由注册
-- 文档访问控制（需要登录）
+- 文档访问控制(需要登录)
 
 启动命令：uvicorn src.main:app --reload
 """
+
 from __future__ import annotations
 
 from fastapi import Depends, FastAPI
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 
-from src.core.exceptions import SettingNotFound
-
 try:
     from src.core.config import settings
 except ImportError as e:
-    raise SettingNotFound("Can not import settings") from e
+    from src.core.exceptions import BusinessException
+    raise BusinessException(50000, detail="配置加载失败") from e
 
 
 def create_app():
@@ -27,11 +27,11 @@ def create_app():
     创建并配置 FastAPI 应用实例
 
     配置项：
-    - 标题、描述、版本（来自 settings）
-    - API 文档路径（/docs, /redoc, /openapi.json）
-    - 中间件（来自 app_setup）
-    - 异常处理器（来自 app_setup）
-    - 路由注册（来自 app_setup）
+    - 标题、描述、版本(来自 settings)
+    - API 文档路径(docs, /redoc, /openapi.json)
+    - 中间件(来自 app_setup)
+    - 异常处理器(来自 app_setup)
+    - 路由注册(来自 app_setup)
     - 启动/关闭事件
     """
     from src.app_setup import (
@@ -39,10 +39,10 @@ def create_app():
         register_exceptions,
         register_routers,
     )
-    from src.foundation.iam import get_current_username, token_manager
-    from src.initializers import run_all_initializers
     from src.core.scheduler import scheduler_manager
     from src.core.storage import close_db
+    from src.foundation.iam import get_current_username, token_manager
+    from src.initializers import run_all_initializers
 
     app = FastAPI(
         title=settings.APP_TITLE,
@@ -103,11 +103,12 @@ def create_app():
 
     register_exceptions(app)
     register_routers(app, prefix="/api")
+
     return app
 
 
 if __name__ == "__main__":
-    """直接运行模块时启动 uvicorn 服务"""
+    """直接运行模块时启用 uvicon 服务"""
     app = create_app()
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
@@ -117,7 +118,7 @@ app = None
 
 
 def get_app():
-    """获取或创建全局应用实例（单例模式）"""
+    """获取或创建全局应用实例(单例模式)"""
     global app
     if app is None:
         app = create_app()

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -21,7 +22,7 @@ class TenantMemberUpdate(BaseModel):
 
 
 class TenantMemberRoleUpdate(BaseModel):
-    role_uuids: list[UUID] = Field(..., description="角色UUID列表")
+    role_uuids: Annotated[list[UUID], Field(..., description="角色UUID列表")]
 
 
 class TenantMemberResponse(TenantMemberBase):
@@ -31,6 +32,6 @@ class TenantMemberResponse(TenantMemberBase):
     join_type: str | None = Field(None, description="加入方式")
     audit_status: int | None = Field(None, description="审核状态")
     user: dict | None = Field(None, description="用户信息")
-    roles: list[dict] | None = Field(default_factory=list, description="角色列表")
+    roles: Annotated[list[dict] | None, Field(default_factory=list, description="角色列表")]
 
     model_config = ConfigDict(from_attributes=True)

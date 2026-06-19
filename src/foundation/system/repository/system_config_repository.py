@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from src.core.storage import BaseRepository
 from src.models.platform import SystemConfig
 

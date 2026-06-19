@@ -1,13 +1,13 @@
-﻿"""
+"""
 响应配置模块
 
-包含响应消息、响应模型和路由响应配置
+包含响应消息, 响应模型和路由响应配置
 """
 
 from .response_model import (
     ApiResponse,
-    PaginationInfo,
-    fail,
+    PaginationResponse,
+    error_response,
     gen_swagger_response,
     success,
     success_page,
@@ -18,11 +18,11 @@ from .router_config import DEFAULT_ROUTER_RESPONSES
 __all__ = [
     # 响应模型
     "ApiResponse",
-    "PaginationInfo",
+    "PaginationResponse",
     # 响应工具函数
     "success",
     "success_page",
-    "fail",
+    "error_response",
     "gen_swagger_response",
     # 响应消息
     "RESPONSE_MSG",

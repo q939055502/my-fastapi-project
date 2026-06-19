@@ -1,6 +1,6 @@
 """用户服务 - 个人操作
 
-此服务包含用户对自己信息的操作：
+此服务包含用户对自己信息的操作:
 - 获取个人信息
 - 修改个人信息
 - 修改密码
@@ -9,13 +9,17 @@
 
 from typing import Any
 
-from src.foundation.iam.auth.security import get_password_hash, verify_password, create_access_token, create_refresh_token
 from src.core.config import settings
-from src.core.enums.response_code import ResponseCode
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage.cache.cache_manager import clear_user_cache
 from src.core.storage.transaction_manager import TransactionManager
+from src.foundation.iam import create_token_pair
+from src.foundation.iam.auth.security import (
+    get_password_hash,
+    verify_password,
+)
+from src.foundation.iam.auth.token import token_manager
 from src.foundation.system.repository.account_bind_repository import (
     account_bind_repository,
 )
@@ -27,13 +31,13 @@ class UserService:
     """用户服务 - 个人操作"""
 
     def get_my_profile(self, user_id: int) -> dict:
-        """获取个人信息（仅用户表基本信息 + 账号绑定）"""
+        """获取个人信息(仅用户表基本信息 + 账号绑定)"""
         with TransactionManager() as tm:
             user_obj = user_repository.get(id=user_id, session=tm.session)
             if not user_obj:
-                raise BusinessException(ResponseCode.NOT_FOUND, detail="用户不存在")
+                raise BusinessException(40400, detail="用户不存在")
 
-            # 只返回需要的字段，避免暴露不必要的信息
+            # 只返回需要的字段,避免暴露不必要的信息
             user_dict = {
                 "uuid": str(user_obj.uuid),
                 "username": user_obj.username,
@@ -47,7 +51,7 @@ class UserService:
                 "remark": user_obj.remark,
             }
 
-            # 添加 email 和 phone 字段，从 AccountBind 中获取
+            # 添加 email 和 phone 字段,从 AccountBind 中获取
             user_dict["email"] = account_bind_repository.get_email(user_id, tm.session)
             user_dict["phone"] = account_bind_repository.get_phone(user_id, tm.session)
 
@@ -58,8 +62,7 @@ class UserService:
 
         Args:
             user_id: 用户ID
-            update_data: 更新数据（只能修改允许的字段）
-
+            update_data: 更新数据(只能修改允许的字段)
         Returns:
             dict: 更新后的用户信息
         """
@@ -68,19 +71,19 @@ class UserService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user:
-                raise BusinessException(ResponseCode.NOT_FOUND, detail="用户不存在")
+                raise BusinessException(40400, detail="用户不存在")
 
-            # 个人信息只能修改特定字段（不允许修改用户名、角色等）
+            # 个人信息只能修改特定字段(不允许修改用户名, 角色等)
             allowed_fields = {"alias", "avatar", "gender", "remark"}
             filtered_data = {k: v for k, v in update_data.items() if k in allowed_fields}
 
             if filtered_data:
                 user_repository.update(id=user_id, obj_in=filtered_data, session=tm.session)
                 tm.commit()
-                # 重新获取用户对象（确保返回最新数据）
+                # 重新获取用户对象(确保返回最新数据)
                 user = user_repository.get(id=user_id, session=tm.session)
 
-            # 只返回需要的字段，避免暴露不必要的信息
+            # 只返回需要的字段,避免暴露不必要的信息
             user_dict = {
                 "uuid": str(user.uuid),
                 "username": user.username,
@@ -94,7 +97,7 @@ class UserService:
                 "remark": user.remark,
             }
 
-            # 添加 email 和 phone 字段，从 AccountBind 中获取
+            # 添加 email 和 phone 字段,从 AccountBind 中获取
             user_dict["email"] = account_bind_repository.get_email(user_id, tm.session)
             user_dict["phone"] = account_bind_repository.get_phone(user_id, tm.session)
 
@@ -103,12 +106,10 @@ class UserService:
 
     def change_my_password(self, user_id: int, old_password: str, new_password: str) -> bool:
         """修改自己的密码
-
         Args:
             user_id: 用户ID
             old_password: 旧密码
             new_password: 新密码
-
         Returns:
             bool: 是否修改成功
         """
@@ -117,10 +118,10 @@ class UserService:
         with TransactionManager() as tm:
             user = user_repository.get(id=user_id, session=tm.session)
             if not user:
-                raise BusinessException(ResponseCode.NOT_FOUND, detail="用户不存在")
+                raise BusinessException(40400, detail="用户不存在")
 
             if not verify_password(old_password, user.password):
-                logger.warning(f"用户密码修改失败: 旧密码错误, user_id={user_id}")
+                logger.warning(f"用户密码修改失败: 旧密码错误 user_id={user_id}")
                 return False
 
             user.password = get_password_hash(new_password)
@@ -156,7 +157,6 @@ class UserService:
 
     def switch_tenant(self, user_id: int, tenant_id: int) -> dict[str, Any]:
         """已登录用户切换租户
-
         Args:
             user_id: 用户ID
             tenant_id: 要切换的租户ID
@@ -175,7 +175,7 @@ class UserService:
             )
 
             if not selected_tenant:
-                raise BusinessException(ResponseCode.FORBIDDEN, "您不属于该租户")
+                raise BusinessException(40300, "您不属于该租户")
 
             user = user_repository.get(id=user_id, session=tm.session)
 

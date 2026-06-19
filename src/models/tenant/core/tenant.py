@@ -11,7 +11,7 @@ from src.models.mixins import (
 
 
 class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStatusMixin, UUIDModel):
-    """租户模型 - 独立存在，有专属户主"""
+    """租户模型 - 独立存在,有专属户主"""
     __tablename__ = "platform_tenant"
 
     name = Column(String(100), nullable=False, comment="租户名称")
@@ -19,7 +19,7 @@ class Tenant(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, TenantStat
     owner_user_id = Column(BigInteger, nullable=False, comment="户主用户ID")
 
     contact_name = Column(String(50), nullable=True, comment="联系人姓名")
-    contact_phone = Column(String(20), nullable=True, comment="联系人电话")
+    contact_phone = Column(String(20), nullable=True, comment="联系人手机号")
     contact_email = Column(String(100), nullable=True, comment="联系人邮箱")
 
     company_size = Column(String(50), nullable=True, comment="公司规模")

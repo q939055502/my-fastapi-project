@@ -6,11 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class RoleBase(BaseModel):
     name: str = Field(..., description="角色名称")
-    code: str | None = Field(None, description="角色编码（唯一）")
+    code: str | None = Field(None, description="角色编码(唯一)")
 
 
 class RoleCreate(RoleBase):
-    code: str = Field(..., description="角色编码（唯一）")
+    code: str = Field(..., description="角色编码(唯一)")
 
 
 class RoleUpdate(BaseModel):

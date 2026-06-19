@@ -13,6 +13,7 @@ from .cache import CacheManager, cache_manager
 from .database import Base, SessionLocal, close_db, engine, get_db, init_db
 from .repository_base import BaseRepository
 from .transaction_manager import TransactionManager, get_transaction_manager
+from .uuid_resolver import UuidResolver, uuid_resolver
 
 __all__ = [
     "Base",
@@ -20,10 +21,12 @@ __all__ = [
     "CacheManager",
     "SessionLocal",
     "TransactionManager",
+    "UuidResolver",
     "cache_manager",
     "close_db",
     "engine",
     "get_db",
     "get_transaction_manager",
     "init_db",
+    "uuid_resolver",
 ]

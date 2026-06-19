@@ -1,9 +1,11 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Query, Request
+
 from src.core.plugins import apply_rate_limit
-from src.core.response import success_page
+from src.core.response import ApiResponse
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.foundation.system.schemas.audit_log import AuditLogResponse
 from src.foundation.system.service.audit_log_service import audit_log_service
 
 router = APIRouter(
@@ -25,7 +27,7 @@ def get_audit_log_list(
     status: int = Query(None, description="状态码"),
     start_time: datetime = Query(None, description="开始时间"),
     end_time: datetime = Query(None, description="结束时间"),
-):
+) -> ApiResponse[list[AuditLogResponse]]:
     total, data = audit_log_service.get_list(
         page=page,
         page_size=page_size,
@@ -37,4 +39,9 @@ def get_audit_log_list(
         start_time=start_time,
         end_time=end_time,
     )
-    return success_page(data=data, total=total, page=page, page_size=page_size)
+    audit_log_list = [AuditLogResponse.model_validate(item) for item in data]
+    return ApiResponse(
+        code=20000,
+        msg="操作成功",
+        data=audit_log_list
+    )

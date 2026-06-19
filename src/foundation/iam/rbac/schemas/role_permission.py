@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -5,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class RolePermissionCreate(BaseModel):
     role_uuid: UUID = Field(..., description="角色UUID")
-    permission_uuids: list[UUID] = Field(..., description="权限UUID列表")
+    permission_uuids: Annotated[list[UUID], Field(..., description="权限UUID列表")]
 
 
 class RolePermissionResponse(BaseModel):

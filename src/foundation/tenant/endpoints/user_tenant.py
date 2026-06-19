@@ -3,16 +3,15 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from src.foundation.iam import AuthControl
-from src.core.enums.response_code import ResponseCode
 from src.core.plugins import apply_rate_limit
 from src.core.response import gen_swagger_response, success
 from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
-from src.models.platform import User
+from src.foundation.iam import AuthControl
 from src.foundation.tenant.schemas.tenant import (
     TenantCreate,
 )
 from src.foundation.tenant.service.member_service import user_tenant_service
+from src.models.platform import User
 
 router = APIRouter(
     prefix="/user-tenants",
@@ -26,14 +25,14 @@ router = APIRouter(
     summary="创建租户",
     responses={
         400: gen_swagger_response(
-            codes=[ResponseCode.DATA_ALREADY_EXIST],
+            codes=[40900],
             description="租户名称已存在"
         ),
     },
 )
 @apply_rate_limit("10/minute")
 def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User = Depends(AuthControl.is_authed)):
-    """创建新租户，当前用户自动成为户主"""
+    """创建新租户,当前用户自动成为户主"""
     tenant = user_tenant_service.create_tenant(tenant_in, current_user.uuid)
     return success(data=tenant, msg="租户创建成功")
 
@@ -41,12 +40,6 @@ def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User 
 @router.post(
     "/{tenant_uuid}/invite",
     summary="邀请用户加入租户",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
-            description="租户不存在"
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
 def invite_user_to_tenant(
@@ -55,7 +48,7 @@ def invite_user_to_tenant(
     user_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed)
 ):
-    """邀请用户加入租户（需要是租户成员）"""
+    """邀请用户加入租户(需要是租户成员)"""
     result = user_tenant_service.invite_user_to_tenant(tenant_uuid, user_uuid, current_user.uuid)
     return success(data=result, msg="邀请成功")
 
@@ -73,7 +66,7 @@ def get_my_tenants(request: Request, current_user: User = Depends(AuthControl.is
     summary="获取租户成员列表",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
+            codes=[40401],
             description="租户不存在"
         ),
     },
@@ -93,7 +86,7 @@ def get_tenant_members(request: Request, tenant_uuid: UUID, current_user: User =
     summary="获取用户在租户中的身份",
     responses={
         404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
+            codes=[40401],
             description="租户不存在"
         ),
     },
@@ -112,12 +105,6 @@ def get_user_tenant_relation(
 @router.delete(
     "/{tenant_uuid}/members/{user_uuid}",
     summary="移除租户成员",
-    responses={
-        404: gen_swagger_response(
-            codes=[ResponseCode.DATA_NOT_EXIST],
-            description="租户或成员不存在"
-        ),
-    },
 )
 @apply_rate_limit("30/minute")
 def remove_tenant_member(
@@ -126,6 +113,6 @@ def remove_tenant_member(
     user_uuid: UUID,
     current_user: User = Depends(AuthControl.is_authed)
 ):
-    """从租户移除成员（需要是户主）"""
+    """从租户移除成员(需要是户主)"""
     user_tenant_service.remove_user_from_tenant(tenant_uuid, user_uuid, current_user.uuid)
     return success(msg="成员移除成功")

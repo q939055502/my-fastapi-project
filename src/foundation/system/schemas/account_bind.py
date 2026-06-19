@@ -1,4 +1,4 @@
-﻿"""
+"""
 Account bind related schemas
 """
 from datetime import datetime

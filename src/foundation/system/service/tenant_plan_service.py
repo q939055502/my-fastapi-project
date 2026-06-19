@@ -1,8 +1,10 @@
 from sqlalchemy import asc
-from src.core.enums.response_code import ResponseCode
+
 from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
-from src.foundation.system.repository.tenant_plan_repository import tenant_plan_repository
+from src.foundation.system.repository.tenant_plan_repository import (
+    tenant_plan_repository,
+)
 from src.foundation.system.schemas.tenant_plan import TenantPlanCreate, TenantPlanUpdate
 
 
@@ -35,7 +37,7 @@ class TenantPlanService:
         with TransactionManager() as tm:
             plan_obj = tenant_plan_repository.get(id=plan_id, session=tm.session)
             if not plan_obj:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="套餐不存在")
+                raise BusinessException(40401, detail="套餐不存在")
 
             return self._transform_plan_detail(plan_obj)
 
@@ -44,7 +46,7 @@ class TenantPlanService:
             existing_plan = tenant_plan_repository.is_exist(plan_in.code, session=tm.session)
             if existing_plan:
                 raise BusinessException(
-                    ResponseCode.PARAM_ERROR,
+                    40000,
                     detail="The plan with this code already exists in the system.",
                 )
 
@@ -58,13 +60,13 @@ class TenantPlanService:
         with TransactionManager() as tm:
             existing_plan = tenant_plan_repository.get(id=plan_id, session=tm.session)
             if not existing_plan:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="套餐不存在")
+                raise BusinessException(40401, detail="套餐不存在")
 
             if plan_in.code and plan_in.code != existing_plan.code:
                 existing_by_code = tenant_plan_repository.is_exist(plan_in.code, session=tm.session)
                 if existing_by_code:
                     raise BusinessException(
-                        ResponseCode.PARAM_ERROR,
+                        40000,
                         detail="The plan code already exists in the system.",
                     )
 
@@ -75,7 +77,7 @@ class TenantPlanService:
         with TransactionManager() as tm:
             existing_plan = tenant_plan_repository.get(id=plan_id, session=tm.session)
             if not existing_plan:
-                raise BusinessException(ResponseCode.ENTITY_NOT_FOUND, detail="套餐不存在")
+                raise BusinessException(40401, detail="套餐不存在")
 
             tenant_plan_repository.delete(id=plan_id, session=tm.session)
 

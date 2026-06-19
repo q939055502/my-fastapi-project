@@ -15,7 +15,7 @@ class Config(BaseModel, TimestampMixin, RemarkMixin):
     login_title = Column(String(200), nullable=True, comment="登录页面标题")
     background_color = Column(String(20), nullable=True, comment="背景色")
     background_image = Column(String(500), nullable=True, comment="背景图片URL")
-    theme = Column(String(20), default="light", comment="主题：light/dark")
+    theme = Column(String(20), default="light", comment="主题:light/dark")
     primary_color = Column(String(20), nullable=True, comment="主题色")
 
     contact_name = Column(String(50), nullable=True, comment="联系人")

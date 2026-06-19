@@ -2,9 +2,9 @@ from datetime import datetime
 
 from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
-from src.models.platform import User, AccountBind
-from src.models.tenant import Tenant, Member
 from src.foundation.tenant.repository.base import TenantRepositoryBase
+from src.models.platform import AccountBind, User
+from src.models.tenant import Member, Tenant
 
 
 class MemberRepository(TenantRepositoryBase[Member, None, None]):
@@ -12,7 +12,7 @@ class MemberRepository(TenantRepositoryBase[Member, None, None]):
         super().__init__(model=Member)
 
     def get_user_tenants(self, user_id: int, session: Session) -> list[dict]:
-        """获取用户加入的所有租户（跨租户查询，不限制当前上下文租户）"""
+        """获取用户加入的所有租户(跨租户查询,不限制当前上下文租户)"""
         query = select(
             Tenant,
             Member.is_owner,

@@ -4,8 +4,9 @@
 统一管理后台任务。
 """
 
-from .bgtask_context import CTX_BG_TASKS
 from starlette.background import BackgroundTasks
+
+from .bgtask_context import CTX_BG_TASKS
 
 
 class BgTasks:
@@ -13,7 +14,7 @@ class BgTasks:
 
     @classmethod
     def init_bg_tasks_obj(cls):
-        """实例化后台任务，并设置到上下文"""
+        """实例化后台任务,并设置到上下文"""
         bg_tasks = BackgroundTasks()
         CTX_BG_TASKS.set(bg_tasks)
 
@@ -31,7 +32,7 @@ class BgTasks:
 
     @classmethod
     def execute_tasks(cls):
-        """执行后台任务，一般是请求结果返回之后执行"""
+        """执行后台任务,一般是请求结果返回之后执行"""
         bg_tasks = cls.get_bg_tasks_obj()
         if bg_tasks and bg_tasks.tasks:
             return bg_tasks()

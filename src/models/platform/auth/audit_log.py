@@ -5,7 +5,7 @@ from src.models.mixins import TimestampMixin
 
 
 class AuditLog(BaseModel, TimestampMixin):
-    """审计日志模型（全局操作审计）"""
+    """审计日志模型(全局操作审计)"""
     __tablename__ = "sys_audit_log"
     __table_args__ = (
         {"comment": "审计日志表"},

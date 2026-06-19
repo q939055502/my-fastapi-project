@@ -1,13 +1,14 @@
 """
 数据验证器模块
 
-提供通用的数据验证工具函数和可复用的 Pydantic 校验器
+提供通用的数据验证工具函数和可复用的 Pydantic 校验器。
 """
 
 import re
 from typing import Any
 
 from pydantic import ValidationInfo, field_validator
+
 from src.core.constants import RegexConst
 
 
@@ -15,10 +16,10 @@ def validate_phone(phone: str | None) -> str | None:
     """校验手机号格式
 
     Args:
-        phone: 手机号，可为空
+        phone: 手机号,可为空
 
     Returns:
-        str | None: 校验通过的手机号或 None
+        str | None: 校验通过的手机号或None
 
     Raises:
         ValueError: 手机号格式错误
@@ -77,7 +78,7 @@ def validate_username(username: str) -> str:
         ValueError: 用户名格式错误
     """
     if not re.match(RegexConst.USERNAME, username):
-        raise ValueError("用户名只能包含字母、数字和下划线")
+        raise ValueError("用户名只能包含字母, 数字和下划线")
     return username
 
 
@@ -86,8 +87,8 @@ def validate_password(password: str, min_len: int = 6, max_len: int = 25) -> str
 
     Args:
         password: 密码
-        min_len: 最小长度，默认6位
-        max_len: 最大长度，默认25位
+        min_len: 最小长度,默认6
+        max_len: 最大长度,默认25
 
     Returns:
         str: 校验通过的密码
@@ -108,7 +109,7 @@ def validate_password(password: str, min_len: int = 6, max_len: int = 25) -> str
 
 
 class ValidatorMixin:
-    """通用校验器 Mixin，可被所有 Schema 继承复用"""
+    """通用校验器 Mixin,可被所有 Schema 继承复用"""
 
     @field_validator("password")
     @classmethod
@@ -139,7 +140,7 @@ class ValidatorMixin:
     @field_validator("*", mode="before")
     @classmethod
     def empty_str_to_none(cls, v: Any, info: ValidationInfo) -> Any:
-        """空字符串转None，全局通用"""
+        """空字符串转None,全局通用"""
         if isinstance(v, str) and v.strip() == "":
             return None
         return v
