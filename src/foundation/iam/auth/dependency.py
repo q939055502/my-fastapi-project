@@ -9,7 +9,7 @@
 import secrets
 
 import jwt
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer
 
 from src.core.config import settings

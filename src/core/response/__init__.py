@@ -4,16 +4,15 @@
 包含响应消息, 响应模型和路由响应配置
 """
 
+from .openapi_custom import gen_swagger_response, swagger_responses
 from .response_model import (
     ApiResponse,
     PaginationResponse,
     error_response,
-    gen_swagger_response,
     success,
     success_page,
 )
 from .response_msg import RESPONSE_MSG, load_response_msg
-from .router_config import DEFAULT_ROUTER_RESPONSES
 
 __all__ = [
     # 响应模型
@@ -23,10 +22,10 @@ __all__ = [
     "success",
     "success_page",
     "error_response",
+    # OpenAPI 响应配置
+    "swagger_responses",
     "gen_swagger_response",
     # 响应消息
     "RESPONSE_MSG",
     "load_response_msg",
-    # 路由配置
-    "DEFAULT_ROUTER_RESPONSES",
 ]

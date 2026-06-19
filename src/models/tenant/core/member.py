@@ -20,11 +20,20 @@ from src.models.mixins import (
 )
 
 
-class Member(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, EnableStatusMixin, UUIDModel):
-    """租户成员模型 - 用户与租户的关联关系
+class Member(
+    BaseModel,
+    TimestampMixin,
+    SoftDeleteMixin,
+    RemarkMixin,
+    EnableStatusMixin,
+    UUIDModel,
+):
+    """
+    租户成员模型 - 用户与租户的关联关系
 
-    用于管理用户在不同租户中的成员资格
-    subject_id 用于统一RBAC体系中的主体标识"""
+    用于管理用户在不同租户中的成员资格。
+    subject_id用于统一RBAC体系中的主体标识。
+    """
     __tablename__ = "platform_member"
 
     user_id = Column(BigInteger, nullable=False, index=True, comment="用户ID")

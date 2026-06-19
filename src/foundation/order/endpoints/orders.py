@@ -9,8 +9,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.iam import AuthControl, PermissionControl
 from src.foundation.order.schemas.order import (
     OrderCancelRequest,
@@ -25,7 +24,6 @@ T = TypeVar("T")
 
 router = APIRouter(
     tags=["订单管理"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -116,12 +114,10 @@ def list_orders(
 @router.get(
     "/{order_uuid}",
     summary="获取订单详情",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="订单不存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="订单不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_order_detail(
@@ -165,16 +161,10 @@ def update_order(
 @router.post(
     "/{order_uuid}/cancel",
     summary="取消订单",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="订单不存在",
-        ),
-        400: gen_swagger_response(
-            codes=[40000],
-            description="已支付订单不能直接取消",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401, 40000],
+        success_msg="订单不存在",
+    ),
 )
 @apply_rate_limit("30/minute")
 def cancel_order(
@@ -224,7 +214,6 @@ def get_order_logs(
 # 管理员接口 - 需要权限
 admin_router = APIRouter(
     tags=["订单管理-管理员"],
-    responses=DEFAULT_ROUTER_RESPONSES,
     prefix="/admin",
     dependencies=[Depends(PermissionControl.has_permission)],
 )

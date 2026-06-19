@@ -19,7 +19,8 @@ class JWTPayload(BaseModel):
     token_type: str | None = None
 
 
-class JWTOut(BaseModel):
+class TokenRefreshResponse(BaseModel):
+    """刷新令牌响应"""
     access_token: str = Field(..., description="访问令牌")
     refresh_token: str = Field(..., description="刷新令牌")
     token_type: str = Field("bearer", description="令牌类型")
@@ -27,11 +28,5 @@ class JWTOut(BaseModel):
 
 
 class RefreshTokenRequest(BaseModel):
+    """刷新令牌请求"""
     refresh_token: str = Field(..., description="刷新令牌")
-
-
-class TokenRefreshOut(BaseModel):
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-    expires_in: int

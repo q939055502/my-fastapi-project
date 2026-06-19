@@ -8,8 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request
 from src.core.base.schema_base import PaginationResponse
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.core.storage import TransactionManager
 from src.core.storage.uuid_resolver import uuid_resolver
 from src.foundation.iam.rbac.schemas.role import RoleCreate, RoleUpdate
@@ -17,7 +16,6 @@ from src.foundation.iam.rbac.service.role_service import role_service
 
 router = APIRouter(
     tags=["租户管理-角色"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -52,20 +50,10 @@ def create_tenant_role(request: Request, tenant_uuid: UUID, role_in: RoleCreate)
 @router.put(
     "/{role_uuid}",
     summary="更新租户角色",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户角色不存在或租户不存在",
-        ),
-        400: gen_swagger_response(
-            codes=[40000],
-            description="角色名称或编码已存在"
-        ),
-        403: gen_swagger_response(
-            codes=[40300],
-            description="系统内置角色不可修改"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401, 40000, 40300],
+        success_msg="租户角色不存在或租户不存在",
+    ),
 )
 @apply_rate_limit("30/minute")
 def update_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID, role_in: RoleUpdate) -> ApiResponse[dict]:
@@ -85,16 +73,10 @@ def update_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID, rol
 @router.put(
     "/{role_uuid}/permissions",
     summary="更新租户角色权限",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户角色不存在或租户不存在",
-        ),
-        403: gen_swagger_response(
-            codes=[40300],
-            description="系统内置角色不可修改权限"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401, 40300],
+        success_msg="租户角色不存在或租户不存在",
+    ),
 )
 @apply_rate_limit("30/minute")
 def update_tenant_role_permissions(request: Request, tenant_uuid: UUID, role_uuid: UUID, role_in: RoleUpdate) -> ApiResponse[None]:
@@ -166,12 +148,10 @@ def get_tenant_role(request: Request, tenant_uuid: UUID, role_uuid: UUID) -> Api
 @router.get(
     "/{role_uuid}/permissions",
     summary="获取租户角色权限",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户角色不存在或租户不存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="租户角色不存在或租户不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_tenant_role_permissions(request: Request, tenant_uuid: UUID, role_uuid: UUID) -> ApiResponse[list]:

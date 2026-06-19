@@ -8,12 +8,12 @@ from src.foundation.order.enums import (
     OrderStatusEnum,
     PayStatusEnum,
 )
-from src.foundation.order.models import OrderLog
 from src.foundation.order.repository import (
     order_log_repository,
     order_repository,
 )
 from src.foundation.order.schemas.order import OrderCreate, OrderUpdate
+from src.models.order import OrderLog
 
 
 class OrderService(BaseService):

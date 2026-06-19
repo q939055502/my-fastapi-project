@@ -93,13 +93,12 @@ def create_app():
         username: str = Depends(get_current_username),
     ):
         """OpenAPI 规范 JSON，需要登录才能访问"""
-        openapi_schema = get_openapi(
+        return get_openapi(
             title=app.title,
             version=app.version,
             description=app.description,
             routes=app.routes,
         )
-        return openapi_schema
 
     register_exceptions(app)
     register_routers(app, prefix="/api")

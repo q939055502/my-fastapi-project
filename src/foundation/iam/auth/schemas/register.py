@@ -29,7 +29,7 @@ class UserRegisterSchema(BaseModel, ValidatorMixin):
     )
 
 
-class UserRegisterOut(BaseModel):
+class UserRegisterResponse(BaseModel):
     uuid: str = Field(..., description="用户UUID")
     username: str = Field(..., description="用户名")
     email: str | None = Field(None, description="邮箱")

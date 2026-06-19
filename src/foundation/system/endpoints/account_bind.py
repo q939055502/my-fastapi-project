@@ -6,7 +6,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 
 from src.core.response import ApiResponse
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.foundation.iam import AuthControl
 from src.foundation.system.schemas.account_bind import (
     AccountBindCreate,
@@ -18,7 +17,6 @@ from src.models.platform import User
 router = APIRouter(
     prefix="/binds",
     tags=["Account Bind"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 

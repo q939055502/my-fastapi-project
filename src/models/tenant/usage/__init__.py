@@ -1,5 +1,6 @@
 """
-租户使用量统计模�?"""
+租户使用量统计模型
+"""
 
 from .hourly_usage import HourlyUsage
 from .oper_log import OperLog

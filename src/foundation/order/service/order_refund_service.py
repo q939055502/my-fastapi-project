@@ -10,13 +10,13 @@ from src.foundation.order.enums import (
     PayStatusEnum,
     RefundStatusEnum,
 )
-from src.foundation.order.models import OrderLog
 from src.foundation.order.repository import (
     order_log_repository,
     order_refund_repository,
     order_repository,
 )
 from src.foundation.order.schemas.order_refund import OrderRefundCreate
+from src.models.order import OrderLog
 
 
 class OrderRefundService(BaseService):

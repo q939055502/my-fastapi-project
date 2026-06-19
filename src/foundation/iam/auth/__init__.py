@@ -4,7 +4,9 @@
 整合所有认证相关功能:
 - security: 密码哈希, JWT生成/验证
 - token: Redis令牌管理
-- context: 认证上下文管�?- dependency: 认证控制, 依赖注�?- annotations: 接口类型注解
+- context: 认证上下文管理
+- dependency: 认证控制, 依赖注入
+- annotations: 接口类型注解
 """
 
 from src.core.annotations import (

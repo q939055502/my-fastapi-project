@@ -98,7 +98,7 @@ class UpdateMyProfileIn(BaseModel):
     )
 
 
-class UserProfileOut(BaseModel):
+class UserProfileResponse(BaseModel):
     """用户个人信息输出"""
     uuid: UUID = Field(..., description="用户UUID")
     username: str = Field(..., description="用户名")

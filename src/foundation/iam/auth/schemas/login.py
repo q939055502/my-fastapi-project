@@ -16,7 +16,7 @@ class LoginByPasswordStep1Request(BaseModel):
     password: str = Field(..., description="密码")
 
 
-class LoginByPasswordOut(BaseModel):
+class LoginResponse(BaseModel):
     access_token: str = Field(..., description="访问令牌")
     refresh_token: str = Field(..., description="刷新令牌")
     token_type: str = Field("bearer", description="令牌类型")
@@ -24,6 +24,6 @@ class LoginByPasswordOut(BaseModel):
     user: UserInfoSchema = Field(..., description="用户信息")
 
 
-class LoginStep1MultiResponse(BaseModel):
+class LoginSelectUserResponse(BaseModel):
     temp_token: str = Field(..., description="临时登录凭证")
     users: Annotated[list[UserInfoSchema], Field(..., description="用户列表")]

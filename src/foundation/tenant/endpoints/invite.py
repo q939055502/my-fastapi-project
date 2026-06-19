@@ -7,12 +7,10 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request
 from src.core.plugins import apply_rate_limit
 from src.core.response import success, success_page
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.foundation.tenant.schemas.invite import InviteCreate
 
 router = APIRouter(
     tags=["租户邀请管理"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 

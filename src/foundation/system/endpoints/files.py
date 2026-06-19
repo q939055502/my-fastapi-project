@@ -2,8 +2,7 @@ from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.iam import AuthControl
 from src.foundation.system.service.file_service import file_service
 from src.models.platform import User
@@ -12,29 +11,16 @@ router = APIRouter(
 
     tags=["通用-文件管理"],
 
-    responses=DEFAULT_ROUTER_RESPONSES,
-
 )
 
 
 @router.post(
-
     "/upload",
-
     summary="文件上传",
-
-    responses={
-
-        400: gen_swagger_response(
-
-            codes=[40000],
-
-            description="文件类型或大小不符合要求"
-
-        ),
-
-    },
-
+    responses=swagger_responses(
+        codes=[40000],
+        success_msg="文件类型或大小不符合要求",
+    ),
 )
 
 @apply_rate_limit("20/minute")

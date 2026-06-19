@@ -10,20 +10,18 @@ from pydantic import BaseModel, Field
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.iam import AuthControl, token_manager
 from src.foundation.system.schemas.user import (
     UpdateMyProfileIn,
     UpdatePassword,
-    UserProfileOut,
+    UserProfileResponse,
 )
 from src.foundation.system.service.user_service import user_service
 from src.models.platform import User
 
 router = APIRouter(
     tags=["个人中心"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -41,22 +39,10 @@ class SwitchTenantRequest(BaseModel):
     "/switch_tenant",
     summary="切换租户",
     response_model=ApiResponse,
-    responses={
-        200: gen_swagger_response(
-            codes=[20000],
-            description="切换成功",
-            example_data={
-                "access_token": "xxx",
-                "refresh_token": "yyy",
-                "token_type": "bearer",
-                "expires_in": 3600
-            }
-        ),
-        403: gen_swagger_response(
-            codes=[40300],
-            description="您不属于该租户"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[20000, 40300],
+        success_msg="切换成功",
+    ),
 )
 @apply_rate_limit("10/minute")
 def switch_tenant(
@@ -134,34 +120,19 @@ def logout_all(request: Request, current_user: User = Depends(AuthControl.is_aut
 @router.put(
     "/profile",
     summary="更新个人信息",
-    response_model=ApiResponse[UserProfileOut],
-    responses={
-        200: gen_swagger_response(
-            codes=[20000],
-            description="更新成功",
-            example_data={
-                "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                "username": "superadmin",
-                "alias": None,
-                "avatar": None,
-                "gender": 0,
-                "is_active": True,
-                "last_login": "2026-06-07T10:00:00",
-                "last_login_ip": "127.0.0.1",
-                "created_at": "2024-01-01T00:00:00",
-                "email": "admin@example.com",
-                "phone": "13800138000",
-                "remark": None
-            }
-        ),
-    },
+    response_model=ApiResponse[UserProfileResponse],
+    responses=swagger_responses(
+        codes=[20000],
+        data_model=UserProfileResponse,
+        success_msg="更新成功",
+    ),
 )
 @apply_rate_limit("30/minute")
 def update_profile(
     request: Request,
     user_in: UpdateMyProfileIn,
     current_user: User = Depends(AuthControl.is_authed),
-) -> ApiResponse[UserProfileOut]:
+) -> ApiResponse[UserProfileResponse]:
     """
     更新当前登录用户的个人信息
     【类型】个人中心接口
@@ -171,16 +142,16 @@ def update_profile(
     """
     update_data = user_in.model_dump(exclude_unset=True, exclude_none=True)
     result = user_service.update_my_profile(current_user.uuid, update_data)
-    return ApiResponse(data=UserProfileOut.model_validate(result), msg="个人信息更新成功")
+    return ApiResponse(data=UserProfileResponse.model_validate(result), msg="个人信息更新成功")
 
 
 @router.get(
     "/profile",
     summary="获取个人信息",
-    response_model=ApiResponse[UserProfileOut],
+    response_model=ApiResponse[UserProfileResponse],
 )
 @apply_rate_limit("60/minute")
-def get_profile(request: Request, current_user: User = Depends(AuthControl.is_authed)) -> ApiResponse[UserProfileOut]:
+def get_profile(request: Request, current_user: User = Depends(AuthControl.is_authed)) -> ApiResponse[UserProfileResponse]:
     """
     获取当前登录用户的个人信息
     【类型】个人中心接口
@@ -189,4 +160,4 @@ def get_profile(request: Request, current_user: User = Depends(AuthControl.is_au
     【功能】返回当前用户的完整信息
     """
     user_profile = user_service.get_my_profile(current_user.uuid)
-    return ApiResponse(data=UserProfileOut.model_validate(user_profile), msg="获取成功")
+    return ApiResponse(data=UserProfileResponse.model_validate(user_profile), msg="获取成功")

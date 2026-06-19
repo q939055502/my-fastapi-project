@@ -2,11 +2,11 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from src.core.storage import BaseRepository
-from src.foundation.order.models import OrderRefund
 from src.foundation.order.schemas.order_refund import (
     OrderRefundCreate,
     OrderRefundResponse,
 )
+from src.models.order import OrderRefund
 
 
 class OrderRefundRepository(BaseRepository[OrderRefund, OrderRefundCreate, OrderRefundResponse]):

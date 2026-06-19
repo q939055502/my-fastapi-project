@@ -26,7 +26,7 @@ class SelectUserRequest(BaseModel):
     user_uuid: str = Field(..., description="选择的用户UUID")
 
 
-class SelectUserOut(BaseModel):
+class SelectUserResponse(BaseModel):
     access_token: str = Field(..., description="访问令牌")
     refresh_token: str = Field(..., description="刷新令牌")
     token_type: str = Field("bearer", description="令牌类型")

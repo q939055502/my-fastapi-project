@@ -52,7 +52,7 @@ class OrderPaymentService(BaseService):
                 order_obj.order_status = "processing"
 
             # 记录日志
-            from src.foundation.order.models import OrderLog
+            from src.models.order import OrderLog
 
             log = OrderLog(
                 order_id=order_obj.id,

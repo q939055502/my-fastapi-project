@@ -8,8 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.iam import PermissionControl
 from src.foundation.tenant.schemas.tenant import (
     TenantCreate,
@@ -20,7 +19,6 @@ from src.foundation.tenant.service.tenant_service import tenant_service
 
 router = APIRouter(
     tags=["平台管理-租户"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -36,12 +34,10 @@ class TenantListResponse(BaseModel):
 @router.post(
     "/",
     summary="创建租户",
-    responses={
-        400: gen_swagger_response(
-            codes=[40900],
-            description="租户名称已存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40900],
+        success_msg="租户名称已存在",
+    ),
 )
 @apply_rate_limit("10/minute")
 def create_tenant(

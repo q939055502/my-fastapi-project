@@ -5,14 +5,12 @@ from fastapi import APIRouter, Body, Query, Request
 from pydantic import BaseModel, Field
 
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.system.schemas.user import UserCreate, UserResponse, UserUpdate
 from src.foundation.system.service.user_admin_service import user_admin_service
 
 router = APIRouter(
     tags=["平台管理-用户"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -33,12 +31,10 @@ class UserListResponse(BaseModel):
 @router.post(
     "/",
     summary="创建用户",
-    responses={
-        400: gen_swagger_response(
-            codes=[40900],
-            description="用户名或邮箱已存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40900],
+        success_msg="用户名或邮箱已存在",
+    ),
 )
 @apply_rate_limit("30/minute")
 def create_user(request: Request, user_in: UserCreate) -> ApiResponse[UserResponse]:
@@ -110,12 +106,10 @@ def list_user(
 @router.get(
     "/{user_uuid}",
     summary="获取用户详情",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="用户不存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="用户不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_user(request: Request, user_uuid: UUID) -> ApiResponse[UserResponse]:
@@ -127,12 +121,10 @@ def get_user(request: Request, user_uuid: UUID) -> ApiResponse[UserResponse]:
 @router.delete(
     "/{user_uuid}",
     summary="删除用户",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="用户不存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="用户不存在",
+    ),
 )
 @apply_rate_limit("30/minute")
 def delete_user(request: Request, user_uuid: UUID) -> ApiResponse[None]:

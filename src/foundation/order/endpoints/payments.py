@@ -6,8 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.iam import AuthControl
 from src.foundation.order.schemas.order_payment import (
     OrderPaymentCreate,
@@ -24,19 +23,16 @@ from src.foundation.order.service import (
 
 router = APIRouter(
     tags=["订单管理-支付退款"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
 @router.post(
     "/{order_uuid}/payments",
     summary="创建支付记录",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="订单不存在",
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="订单不存在",
+    ),
 )
 @apply_rate_limit("30/minute")
 def create_payment(

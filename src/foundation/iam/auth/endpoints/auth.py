@@ -6,43 +6,41 @@ from fastapi import APIRouter, Request
 
 from src.core.exceptions import BusinessException
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response, success
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, success, swagger_responses
 from src.foundation.iam.auth.schemas.login import (
-    LoginByPasswordOut,
     LoginByPasswordStep1Request,
-    LoginStep1MultiResponse,
+    LoginResponse,
+    LoginSelectUserResponse,
 )
 from src.foundation.iam.auth.schemas.register import (
-    UserRegisterOut,
+    UserRegisterResponse,
     UserRegisterSchema,
 )
 from src.foundation.iam.auth.schemas.token import (
     RefreshTokenRequest,
-    TokenRefreshOut,
+    TokenRefreshResponse,
 )
 from src.foundation.iam.auth.schemas.user import (
-    SelectUserOut,
     SelectUserRequest,
+    SelectUserResponse,
 )
 from src.foundation.iam.auth.service.auth_service import auth_service
 
 router = APIRouter(
     tags=["认证"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
 @router.post(
     "/register",
     summary="用户注册",
-    response_model=ApiResponse[UserRegisterOut],
-    responses={
-        400: gen_swagger_response(
-            codes=[40900],
-            description="用户名或邮箱已存在",
-        ),
-    },
+    response_model=ApiResponse[UserRegisterResponse],
+    responses=swagger_responses(
+        codes=[20000, 40900],
+        data_model=UserRegisterResponse,
+        success_msg="注册成功",
+        is_public=True,
+    ),
 )
 @apply_rate_limit("10/minute")
 def user_register(request: Request, register_in: UserRegisterSchema):
@@ -55,17 +53,16 @@ def user_register(request: Request, register_in: UserRegisterSchema):
 @router.post(
     "/login_by_account_and_password",
     summary="第一步登录",
-    response_model=ApiResponse[LoginByPasswordOut] | ApiResponse[LoginStep1MultiResponse],
-    responses={
-        200: gen_swagger_response(
-            codes=[20000],
-            description="登录成功(单账号返回正式令牌,多账号返回临时凭证)",
-        ),
-        401: gen_swagger_response(
-            codes=[40100],
-            description="未授权",
-        ),
-    },
+    response_model=ApiResponse[LoginResponse] | ApiResponse[LoginSelectUserResponse],
+    responses=swagger_responses(
+        codes=[20000, 20007],
+        code_model_map={
+            20000: LoginResponse,
+            20007: LoginSelectUserResponse,
+        },
+        success_msg="登录成功(单账号返回正式令牌,多账号返回临时凭证)",
+        is_public=True,
+    ),
 )
 @apply_rate_limit()
 def login_by_account_and_password(request: Request, credentials: LoginByPasswordStep1Request):
@@ -76,50 +73,23 @@ def login_by_account_and_password(request: Request, credentials: LoginByPassword
         raise BusinessException(40100)
 
     if "access_token" in auth_data:
-        data = LoginByPasswordOut(**auth_data)
+        data = LoginResponse(**auth_data)
         return success(data=data.model_dump(), msg="登录成功")
     else:
-        data = LoginStep1MultiResponse(**auth_data)
+        data = LoginSelectUserResponse(**auth_data)
         return success(data=data.model_dump(), msg="请选择用户")
 
 
 @router.post(
     "/select-user",
     summary="第二步登录(选择用户)",
-    response_model=ApiResponse[SelectUserOut],
-    responses={
-        200: gen_swagger_response(
-            codes=[20000],
-            description="登录成功",
-            example_data={
-                "access_token": "xxx",
-                "refresh_token": "yyy",
-                "token_type": "bearer",
-                "expires_in": 3600,
-                "user": {
-                    "uuid": "550e8400-e29b-41d4-a716-446655440000",
-                    "username": "admin",
-                    "email": "admin@example.com",
-                    "phone": "13800138000",
-                    "alias": "管理员",
-                    "avatar": None,
-                    "gender": 1,
-                    "is_active": True,
-                    "created_at": "2024-01-01T00:00:00",
-                    "last_login": "2024-06-15T10:30:00",
-                    "last_login_ip": "192.168.1.100"
-                }
-            }
-        ),
-        401: gen_swagger_response(
-            codes=[40100],
-            description="无效的临时登录凭证",
-        ),
-        403: gen_swagger_response(
-            codes=[40300],
-            description="用户不在可选择列表中或已被禁用"
-        ),
-    },
+    response_model=ApiResponse[SelectUserResponse],
+    responses=swagger_responses(
+        codes=[20000],
+        data_model=SelectUserResponse,
+        success_msg="登录成功",
+        is_public=True,
+    ),
 )
 @apply_rate_limit()
 def select_user(request: Request, select_request: SelectUserRequest):
@@ -128,27 +98,27 @@ def select_user(request: Request, select_request: SelectUserRequest):
     auth_data = auth_service.select_user(select_request.temp_token, str(select_request.user_uuid), client_ip)
     if not auth_data:
         raise BusinessException(40100)
-    data = SelectUserOut(**auth_data)
+    data = SelectUserResponse(**auth_data)
     return success(data=data.model_dump(), msg="登录成功")
 
 
 @router.post(
     "/refresh",
     summary="刷新token",
-    response_model=ApiResponse[TokenRefreshOut],
-    responses={
-        401: gen_swagger_response(
-            codes=[40100, 40102, 40101],
-            description="Token已过期或无效"
-        ),
-    },
+    response_model=ApiResponse[TokenRefreshResponse],
+    responses=swagger_responses(
+        codes=[20000],
+        data_model=TokenRefreshResponse,
+        success_msg="刷新成功",
+        is_public=True,
+    ),
 )
 @apply_rate_limit("10/minute")
 def refresh_access_token(request: Request, refresh_request: RefreshTokenRequest):
     auth_data = auth_service.refresh_token(refresh_request)
     if not auth_data:
         raise BusinessException(40100)
-    data = TokenRefreshOut(**auth_data)
+    data = TokenRefreshResponse(**auth_data)
     return success(data=data.model_dump())
 
 

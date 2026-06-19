@@ -14,6 +14,7 @@ from .user import (
     UpdatePassword,
     UserCreate,
     UserListResponseItem,
+    UserProfileResponse,
     UserResponse,
     UserUpdate,
 )
@@ -24,6 +25,7 @@ __all__ = [
     "UserUpdate",
     "UserResponse",
     "UserListResponseItem",
+    "UserProfileResponse",
     "UpdatePassword",
     # Org
     "OrgCreate",

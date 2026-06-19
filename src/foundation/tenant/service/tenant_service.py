@@ -11,6 +11,7 @@ from src.foundation.tenant.schemas.tenant import (
     TenantQuota,
     TenantUpdate,
 )
+from src.models.platform.auth.account_bind import AccountBind
 from src.models.tenant import Tenant
 
 

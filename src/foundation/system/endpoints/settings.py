@@ -5,14 +5,12 @@ from fastapi import APIRouter, Depends, Request
 
 from src.core.plugins import apply_rate_limit
 from src.core.response import ApiResponse
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
 from src.foundation.iam import PermissionControl
 from src.foundation.system.schemas.system_config import SystemConfigUpdate
 from src.foundation.system.service.system_config_service import system_config_service
 
 router = APIRouter(
     tags=["平台管理-设置"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 

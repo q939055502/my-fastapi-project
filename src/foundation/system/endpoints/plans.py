@@ -8,8 +8,7 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from src.core.base.schema_base import PaginationResponse
 from src.core.plugins import apply_rate_limit
-from src.core.response import ApiResponse, gen_swagger_response
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import ApiResponse, swagger_responses
 from src.foundation.iam import PermissionControl
 from src.foundation.system.schemas.tenant_plan import (
     TenantPlanBase,
@@ -21,7 +20,6 @@ from src.foundation.system.service.tenant_plan_service import tenant_plan_servic
 
 router = APIRouter(
     tags=["平台管理-套餐"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -29,12 +27,10 @@ router = APIRouter(
     "/",
     summary="创建套餐",
     response_model=ApiResponse[TenantPlanBase],
-    responses={
-        400: gen_swagger_response(
-            codes=[40900],
-            description="套餐名称已存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40900],
+        success_msg="套餐名称已存在",
+    ),
 )
 @apply_rate_limit("10/minute")
 def create_plan(
@@ -96,12 +92,10 @@ def list_plans(
     "/{plan_uuid}",
     summary="获取套餐详情",
     response_model=ApiResponse[TenantPlanBase],
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="套餐不存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="套餐不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_plan(

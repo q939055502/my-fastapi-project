@@ -1,7 +1,7 @@
 """
 初始化器模块
 
-统一管理应用启动时的所有初始化操作
+统一管理应用启动时的所有初始化操作。
 
 使用方式:
 ```python
@@ -23,27 +23,19 @@ def run_all_initializers():
     """
     按顺序执行所有初始化器
 
-    所有初始化函数都保持幂等性,重复执行不会产生重复数据或错误
+    所有初始化函数都保持幂等性,重复执行不会产生重复数据或错误。
     """
     logger.info("========== 开始执行系统初始化 ==========")
 
-    # 数据库初始化(技术层)
     from src.core.storage.database import init_db
 
-    # 缓存预热(技术层)
     from .cache_warmup_initializer import init_cache_warmup
 
     try:
-        # 核心初始化
         init_db()
-
-        # 业务数据初始化
         run_all_business_initializers()
-
-        # 缓存预热(在业务数据初始化之后执行)
         # TODO: 暂时注释,待修复模型关系问题后再启用
         # init_cache_warmup()
-
         logger.info("========== 系统初始化完成 ==========")
     except Exception as e:
         logger.error(f"系统初始化失败: {str(e)}", exc_info=True)
@@ -51,9 +43,10 @@ def run_all_initializers():
 
 
 def run_all_business_initializers():
-    """按顺序执行所有业务数据初始化器
+    """
+    按顺序执行所有业务数据初始化器
 
-    所有初始化函数都保持幂等性,重复执行不会产生重复数据或错误
+    所有初始化函数都保持幂等性,重复执行不会产生重复数据或错误。
     """
     logger.info("========== 开始执行业务数据初始化 ==========")
 
@@ -70,7 +63,6 @@ def run_all_business_initializers():
     from .tenant.tenant_initializer import init_default_tenant, init_plans
 
     try:
-        # 核心初始化(已实现)
         init_superuser()
         init_plans()
         init_default_tenant()
@@ -80,14 +72,9 @@ def run_all_business_initializers():
         init_system_config()
         init_orgs()
         init_dict()
-
-        # 扩展初始化(预留,暂未实现具体逻辑)
         init_tenant_dict()
         init_regions()
-
-        # 定时任务初始化(在所有业务数据初始化完成后执行)
         init_scheduler()
-
         logger.info("========== 业务数据初始化完成 ==========")
     except Exception as e:
         logger.error(f"业务数据初始化失败: {str(e)}", exc_info=True)

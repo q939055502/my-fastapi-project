@@ -5,12 +5,12 @@ Auth 认证 Schema
 """
 
 from .login import (
-    LoginByPasswordOut,
     LoginByPasswordStep1Request,
-    LoginStep1MultiResponse,
+    LoginResponse,
+    LoginSelectUserResponse,
 )
 from .register import (
-    UserRegisterOut,
+    UserRegisterResponse,
     UserRegisterSchema,
 )
 from .tenant import (
@@ -18,30 +18,28 @@ from .tenant import (
     TenantInfoSchema,
 )
 from .token import (
-    JWTOut,
     JWTPayload,
     RefreshTokenRequest,
-    TokenRefreshOut,
+    TokenRefreshResponse,
 )
 from .user import (
-    SelectUserOut,
     SelectUserRequest,
+    SelectUserResponse,
     UserInfoSchema,
 )
 
 __all__ = [
-    "LoginByPasswordOut",
+    "LoginResponse",
     "LoginByPasswordStep1Request",
-    "LoginStep1MultiResponse",
-    "UserRegisterOut",
+    "LoginSelectUserResponse",
+    "UserRegisterResponse",
     "UserRegisterSchema",
     "SelectTenantRequest",
     "TenantInfoSchema",
-    "JWTOut",
     "JWTPayload",
     "RefreshTokenRequest",
-    "TokenRefreshOut",
-    "SelectUserOut",
+    "TokenRefreshResponse",
+    "SelectUserResponse",
     "SelectUserRequest",
     "UserInfoSchema",
 ]

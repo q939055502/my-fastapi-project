@@ -6,8 +6,8 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from src.core.storage import BaseRepository
-from src.foundation.order.models import OrderInfo
 from src.foundation.order.schemas.order import OrderCreate, OrderUpdate
+from src.models.order import OrderInfo
 
 
 class OrderRepository(BaseRepository[OrderInfo, OrderCreate, OrderUpdate]):

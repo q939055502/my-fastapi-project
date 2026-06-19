@@ -11,7 +11,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.core.base.schema_base import PaginationInfo, PaginationResponse
-from src.core.response.response_msg import RESPONSE_MSG
 
 T = TypeVar("T")
 
@@ -93,60 +92,3 @@ def error_response(
         ).model_dump(mode='json'),
         media_type="application/json; charset=utf-8"
     )
-
-
-def gen_swagger_response(
-    codes: list[int],
-    description: str = "业务响应结果",
-    example_data: dict | None = None,
-    is_pagination: bool = False
-) -> dict:
-    """
-    自动生成 Swagger 响应示例
-
-    :param codes: 业务码列表 [20000, 40401, ...]
-    :param description: Swagger 描述
-    :param example_data: 自定义示例数据(成功响应时使用)
-    :param is_pagination: 是否分页响应
-    :return: Swagger 标准响应格式
-    """
-    examples = {}
-
-    for code in codes:
-        msg = RESPONSE_MSG.get(code, "未知错误")
-        example_name = msg
-
-        if is_pagination and code == 20000:
-            data = {
-                "list": example_data or [],
-                "pagination": {
-                    "total": 100,
-                    "page": 1,
-                    "page_size": 10,
-                    "total_pages": 10
-                }
-            }
-        elif code == 20000:
-            data = example_data or None
-        else:
-            data = None
-
-        resp_data = {
-            "code": code,
-            "msg": msg,
-            "data": data,
-            "detail": None,
-            "request_id": "abc-123",
-            "timestamp": "2026-06-03T00:00:00Z"
-        }
-
-        examples[example_name] = {"value": resp_data}
-
-    return {
-        "description": description,
-        "content": {
-            "application/json": {
-                "examples": examples
-            }
-        }
-    }

@@ -15,7 +15,6 @@
 
 from dataclasses import dataclass
 
-
 # ========== 基础结构 ==========
 
 @dataclass(frozen=True)

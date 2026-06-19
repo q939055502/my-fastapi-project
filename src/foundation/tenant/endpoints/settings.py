@@ -6,13 +6,11 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from src.core.plugins import apply_rate_limit
-from src.core.response import gen_swagger_response, success
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import success, swagger_responses
 from src.foundation.iam import PermissionControl
 
 router = APIRouter(
     tags=["租户管理-设置"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
@@ -32,12 +30,10 @@ def update_tenant_config(
 @router.put(
     "/{tenant_uuid}/quota",
     summary="更新租户配额",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户不存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="租户不存在",
+    ),
 )
 @apply_rate_limit("10/minute")
 def update_tenant_quota(
@@ -51,12 +47,10 @@ def update_tenant_quota(
 @router.get(
     "/{tenant_uuid}/config",
     summary="获取租户配置",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户不存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="租户不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_tenant_config(

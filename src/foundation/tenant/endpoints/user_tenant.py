@@ -4,8 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 from src.core.plugins import apply_rate_limit
-from src.core.response import gen_swagger_response, success
-from src.core.response.router_config import DEFAULT_ROUTER_RESPONSES
+from src.core.response import success, swagger_responses
 from src.foundation.iam import AuthControl
 from src.foundation.tenant.schemas.tenant import (
     TenantCreate,
@@ -16,19 +15,16 @@ from src.models.platform import User
 router = APIRouter(
     prefix="/user-tenants",
     tags=["用户-租户关联"],
-    responses=DEFAULT_ROUTER_RESPONSES,
 )
 
 
 @router.post(
     "/create",
     summary="创建租户",
-    responses={
-        400: gen_swagger_response(
-            codes=[40900],
-            description="租户名称已存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40900],
+        success_msg="租户名称已存在",
+    ),
 )
 @apply_rate_limit("10/minute")
 def create_tenant(request: Request, tenant_in: TenantCreate, current_user: User = Depends(AuthControl.is_authed)):
@@ -64,12 +60,10 @@ def get_my_tenants(request: Request, current_user: User = Depends(AuthControl.is
 @router.get(
     "/{tenant_uuid}/members",
     summary="获取租户成员列表",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户不存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="租户不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_tenant_members(request: Request, tenant_uuid: UUID, current_user: User = Depends(AuthControl.is_authed)):
@@ -84,12 +78,10 @@ def get_tenant_members(request: Request, tenant_uuid: UUID, current_user: User =
 @router.get(
     "/{tenant_uuid}/relation",
     summary="获取用户在租户中的身份",
-    responses={
-        404: gen_swagger_response(
-            codes=[40401],
-            description="租户不存在"
-        ),
-    },
+    responses=swagger_responses(
+        codes=[40401],
+        success_msg="租户不存在",
+    ),
 )
 @apply_rate_limit("60/minute")
 def get_user_tenant_relation(
