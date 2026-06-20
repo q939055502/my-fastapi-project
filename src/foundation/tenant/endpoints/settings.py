@@ -4,10 +4,10 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from src.core.plugins import apply_rate_limit
 from src.core.response import success, swagger_responses
-from src.foundation.iam import PermissionControl
+from src.foundation.iam import require_auth, require_permission
 
 router = APIRouter(
     tags=["租户管理-设置"],
@@ -17,12 +17,12 @@ router = APIRouter(
 @router.put(
     "/{tenant_uuid}/config",
     summary="更新租户配置",
+    dependencies=[require_auth, require_permission("tenant:config:update")],
 )
 @apply_rate_limit("30/minute")
 def update_tenant_config(
     request: Request,
     tenant_uuid: UUID,
-    current_user = Depends(PermissionControl.has_permission),
 ):
     return success(msg="租户配置更新成功")
 
@@ -30,6 +30,7 @@ def update_tenant_config(
 @router.put(
     "/{tenant_uuid}/quota",
     summary="更新租户配额",
+    dependencies=[require_auth, require_permission("tenant:quota:update")],
     responses=swagger_responses(
         codes=[40401],
         success_msg="租户不存在",
@@ -39,7 +40,6 @@ def update_tenant_config(
 def update_tenant_quota(
     request: Request,
     tenant_uuid: UUID,
-    current_user = Depends(PermissionControl.has_permission),
 ):
     return success(msg="租户配额更新成功")
 
@@ -47,6 +47,7 @@ def update_tenant_quota(
 @router.get(
     "/{tenant_uuid}/config",
     summary="获取租户配置",
+    dependencies=[require_auth, require_permission("tenant:config:read")],
     responses=swagger_responses(
         codes=[40401],
         success_msg="租户不存在",
@@ -56,7 +57,6 @@ def update_tenant_quota(
 def get_tenant_config(
     request: Request,
     tenant_uuid: UUID,
-    current_user = Depends(PermissionControl.has_permission),
 ):
     return success(data={})
 
@@ -64,11 +64,11 @@ def get_tenant_config(
 @router.get(
     "/{tenant_uuid}/quota",
     summary="获取租户配额",
+    dependencies=[require_auth, require_permission("tenant:quota:read")],
 )
 @apply_rate_limit("60/minute")
 def get_tenant_quota(
     request: Request,
     tenant_uuid: UUID,
-    current_user = Depends(PermissionControl.has_permission),
 ):
     return success(data={})

@@ -20,6 +20,7 @@ from .auth import (
     token_manager,
     verify_token,
 )
+from .decorators import require_auth, require_permission
 from .rbac import (
     AuthMiddleware,
     PermissionControl,
@@ -59,4 +60,7 @@ __all__ = [
     "permission_repository",
     "role_permission_repository",
     "role_subject_repository",
+    # 鉴权依赖工厂
+    "require_auth",
+    "require_permission",
 ]

@@ -1,36 +1,62 @@
-def swagger_responses(
-    codes: list[int],
-    response_model: type[BaseModel] | None = None,
-    is_pagination: bool = False,
-    success_msg: str = "操作成功",
-) -> dict:
-    """
-    根据业务码生成 Swagger responses 配置
-    
-    :param codes: 业务码列表，如 [20000, 40001, 40104]
-    :param response_model: 成功响应的数据模型
-    :param is_pagination: 是否分页响应
-    :param success_msg: 成功响应的消息描述
-    """
-    responses = {}
-    
-    for code in codes:
-        http_status = int(str(code)[:3])  # 业务码 → HTTP 状态码
-        msg = RESPONSE_MSG.get(code, "未知错误")
-        
-        # 构建响应配置...
-        
-    return responses
+# ✅ 方式1：直接 Depends（当前项目用的）
+@router.post("/")
+def create_user(
+    current_user = Depends(AuthControl.is_authed),  # 显式注入
+    _: None = Depends(PermissionControl.has_permission),
+):
+    pass
+
+# ✅ 方式2：装饰器工厂 + Depends（语法更简洁）
+def require_auth():
+    return Depends(AuthControl.is_authed)
+
+def require_permission(code: str):
+    return Depends(lambda: PermissionControl.has_permission(permission_code=code))
+
+@router.post("/")
+@require_auth()
+@require_permission("user:create")
+def create_user():
+    pass
 
 
-auth_v1_router.post("/refresh")(public_api(refresh_access_token))
+# ❌ 错误
+dependencies=[Depends(require_auth), Depends(require_permission("user:create"))]
+
+# ✅ 正确（传函数/可调用对象）
+dependencies=[require_auth, require_permission("user:create")]
+dependencies=[require_auth, require_permission.has_permission()]
 
 
-# 步骤1：auth_v1_router.post("/refresh") 返回一个 APIRoute 对象
-route = auth_v1_router.post("/refresh")
-print(type(route))  # <class 'fastapi.routing.APIRoute'>
 
-# 步骤2：调用这个 route 对象，传入函数
-route(public_api(refresh_access_token))
+@router.post("/", dependencies=[require_auth, require_permission("user:create")])
+def create_user():
+    pass
+
+# 请求 → 全局中间件（基础鉴权/上下文注入）
+#      ↓
+# 接口 → 依赖注入（精确权限检查）
+#      ↓
+# 数据 → 数据层（数据权限过滤）
 
 
+
+
+
+
+
+
+
+
+
+
+@router.post("/", dependencies=[require_auth(), require_permission("user:create")])
+def create_user():
+    pass
+
+@router.post("/")
+def create_user(
+    current_user = Depends(AuthControl.is_authed),
+    _: None = Depends(PermissionControl.has_permission),
+):
+    pass

@@ -4,7 +4,6 @@
 包含响应消息, 响应模型和路由响应配置
 """
 
-from .openapi_custom import gen_swagger_response, swagger_responses
 from .response_model import (
     ApiResponse,
     PaginationResponse,
@@ -13,6 +12,7 @@ from .response_model import (
     success_page,
 )
 from .response_msg import RESPONSE_MSG, load_response_msg
+from .swagger_responses import gen_swagger_response, swagger_responses
 
 __all__ = [
     # 响应模型
