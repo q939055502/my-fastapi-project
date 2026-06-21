@@ -15,7 +15,7 @@ from ..endpoints.orgs import router as admin_orgs_router
 from ..endpoints.plans import router as admin_plans_router
 from ..endpoints.settings import router as admin_settings_router
 
-system_v1_router = APIRouter()
+system_v1_router = APIRouter(prefix="/system", tags=["系统"])
 
 # 平台管理员依赖
 platform_admin_deps = [require_permission("platform:admin:access")]

@@ -67,25 +67,39 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
     def _validate_tenant_scope(self, ctx):
         """校验租户上下文一致性
 
-        - TENANT 接口类型必须已选租户
-        - 已选租户与 URL path 中租户不一致 → 越权
-        - PUBLIC / PLATFORM / ALL 不强制要求 tenant_id
+        - TENANT 接口类型必须已选租户，且与 path_tenant_id 一致
+        - ALL 接口需要校验两者一致性
+        - PUBLIC / PLATFORM 不做校验
         """
         interface_type = ctx.interface_type
 
         if interface_type is None or interface_type == InterfaceType.PUBLIC:
             return None
 
-        if interface_type == InterfaceType.TENANT and ctx.tenant_id is None:
-            logger.warning("租户接口但未选择租户, path_tenant_id=%s", ctx.path_tenant_id)
-            raise BusinessException(40100, "未选择租户")
+        elif interface_type == InterfaceType.PLATFORM:
+            # 平台接口不做租户校验，允许已选租户的用户访问
+            return None
 
-        if ctx.tenant_id and ctx.path_tenant_id and ctx.tenant_id != ctx.path_tenant_id:
-            logger.warning(
-                "租户越权: tenant_id=%s, path_tenant_id=%s",
-                ctx.tenant_id, ctx.path_tenant_id,
-            )
-            raise BusinessException(40300, "无权访问该租户数据")
+        elif interface_type == InterfaceType.TENANT:
+            if ctx.tenant_id is None:
+                logger.warning("租户接口但未选择租户, path_tenant_id=%s", ctx.path_tenant_id)
+                raise BusinessException(40100, "未选择租户")
+            if ctx.path_tenant_id is None or ctx.tenant_id != ctx.path_tenant_id:
+                logger.warning(
+                    "租户越权: tenant_id=%s, path_tenant_id=%s",
+                    ctx.tenant_id, ctx.path_tenant_id,
+                )
+                raise BusinessException(40300, "无权访问该租户数据")
+
+        elif interface_type == InterfaceType.ALL:
+            if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
+                if ctx.tenant_id is None or ctx.tenant_id != ctx.path_tenant_id:
+                    logger.warning(
+                        "租户越权: tenant_id=%s, path_tenant_id=%s",
+                        ctx.tenant_id, ctx.path_tenant_id,
+                    )
+                    raise BusinessException(40300, "无权访问该租户数据")
+        
 
     def _resolve_interface_type(self, request):
         app = request.scope.get('app') or request.scope.get('starlette.app')
