@@ -13,15 +13,16 @@ subject_type 取值:
   0 = 平台用户, subject_id = user_id
   1 = 租户成员, subject_id = member.subject_id (member 表唯一)
 
-读流程:
+读流程(鉴权):
   权限缓存命中 -> 直接匹配
   权限缓存未命中 -> 角色缓存
     角色缓存未命中 -> 查数据库拿角色 -> 写角色缓存
   用角色查权限 -> 写权限缓存
   平台身份权限码 + 租户身份权限码 -> 并集去重
 
-写流程:
-  角色绑定/解绑、角色权限变更 -> 清除 rbac:role + rbac:perm 缓存
+缓存失效(供角色/权限管理模块调用):
+  角色绑定/解绑 -> invalidate_rbac_cache(subject_type, subject_id)
+  角色权限变更(增/删权限) -> invalidate_all_rbac_cache()
 """
 
 from fastapi import Request
@@ -116,7 +117,7 @@ class PermissionControl:
         return perm_codes
 
     @classmethod
-    def _check_permission_code(cls, request: Request, permission_code: str) -> None:
+    def check_permission_code(cls, request: Request, permission_code: str) -> None:
         """检查指定的权限编码
 
         同时查平台身份 + 租户身份, 权限码并集去重。

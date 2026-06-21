@@ -1,21 +1,24 @@
 """
-RBAC 角色权限管理模块
+RBAC ????????
 
-包含:
-- 角色管理(平台角色和租户角色)
-- 权限管理(菜单按钮/API权限)
-- 角色权限关联
-- 角色主体关联(用户成员与角色的关联)
-- 权限检查执行器(PermissionControl)
-- 权限校验中间件(AuthMiddleware)
+??:
+- PermissionControl: ???????
+- invalidate_rbac_cache / invalidate_all_rbac_cache: ????
+- middleware: ???????
+- repository: ??/??/?????????
+- service: ??/?????????????
+- tenant_isolation: ?????before_compile + before_flush?
+
+FastAPI ?????require_auth / require_permission????
+src.foundation.iam.decorators ???
 """
 
-from .dependency import (
+from .middleware import AuthMiddleware, auth_middleware
+from .permission_control import (
     PermissionControl,
     invalidate_all_rbac_cache,
     invalidate_rbac_cache,
 )
-from .middleware import AuthMiddleware, auth_middleware
 from .repository import (
     permission_repository,
     role_permission_repository,
@@ -23,6 +26,7 @@ from .repository import (
     role_subject_repository,
 )
 from .service import PermissionService, RoleService, permission_service, role_service
+from .tenant_isolation import apply_tenant_isolation
 
 __all__ = [
     "PermissionControl",
@@ -38,4 +42,5 @@ __all__ = [
     "role_subject_repository",
     "invalidate_rbac_cache",
     "invalidate_all_rbac_cache",
+    "apply_tenant_isolation",
 ]

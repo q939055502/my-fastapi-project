@@ -1,30 +1,29 @@
 ﻿"""
-认证依赖注入模块
+认证核心控制
 
-包含认证相关的依赖函数,用于FastAPI的依赖注入系统:
-- Swagger UI 认证
-- JWT 令牌认证
+只放纯认证逻辑，不含 FastAPI Depends 语法。
+FastAPI 依赖注入统一由 src.foundation.iam.decorators 提供。
 """
 
 import secrets
 
 import jwt
-from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer
 
 from src.core.config import settings
 from src.core.exceptions import BusinessException
 from src.core.log import get_ctx_logger
 from src.core.storage import TransactionManager
-from src.foundation.iam.auth.token import token_manager
+
 
 security = HTTPBasic()
-bearer_scheme = HTTPBearer()
 
 
 def get_current_username(
-    credentials: HTTPBasicCredentials = Depends(security),
+    credentials: HTTPBasicCredentials = None,
 ):
+    if credentials is None:
+        return None
     correct_username = secrets.compare_digest(
         credentials.username, settings.SWAGGER_UI_USERNAME
     )
@@ -32,6 +31,7 @@ def get_current_username(
         credentials.password, settings.SWAGGER_UI_PASSWORD
     )
     if not (correct_username and correct_password):
+        from fastapi import HTTPException
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials",
@@ -41,14 +41,24 @@ def get_current_username(
 
 
 class AuthControl:
-    @classmethod
-    def authenticate_token(cls, access_token_str: str, raise_exc: bool = True) -> object | None:
+    """认证控制类（纯逻辑，不含 Depends）
+
+    - authenticate_token: 验证 access token 并返回 User 对象
+    - 不带任何 FastAPI 依赖注入语法（如 Depends(...)）
+    - FastAPI 依赖入口统一由 src.foundation.iam.decorators 提供:
+        require_auth, require_permission(...)
+    """
+
+    @staticmethod
+    def authenticate_token(access_token_str: str, raise_exc: bool = True) -> object | None:
         try:
             if not access_token_str:
                 get_ctx_logger().debug("认证失败: 缺少token")
                 if raise_exc:
                     raise BusinessException(40100, "Missing authentication token")
                 return None
+
+            from src.foundation.iam.auth.token import token_manager
 
             is_valid = token_manager.validate_access_token(access_token_str)
             get_ctx_logger().debug(f"Redis验证令牌结果: {is_valid}")
@@ -69,7 +79,6 @@ class AuthControl:
 
             with TransactionManager() as tm:
                 from sqlalchemy import select
-
                 from src.models.platform import User
 
                 result = tm.session.execute(
@@ -106,15 +115,3 @@ class AuthControl:
             if raise_exc:
                 raise BusinessException(40100, "认证失败") from e
             return None
-
-    @classmethod
-    def is_authed(cls, token: HTTPBearer = Depends(bearer_scheme)) -> object | None:
-        get_ctx_logger().debug(f"is_authed 被调用,token credentials = {token.credentials[:50]}...")
-        result = cls.authenticate_token(token.credentials)
-        get_ctx_logger().debug(f"认证结果: {result}")
-        return result
-
-    @classmethod
-    def get_auth_info(cls, token: HTTPBearer = Depends(bearer_scheme)) -> tuple[object | None, str]:
-        user = cls.authenticate_token(token.credentials)
-        return user, token.credentials

@@ -3,9 +3,9 @@
 通用 CRUD 仓库基类,仅包含与租户无关的通用能力:
 - 软删除过滤与恢复
 - 系统内置对象保护(is_system)
-- 写入操作自动清理缓存
 
 不包含租户隔离逻辑.租户隔离由各业务模块的二层基类负责(如 tenant/repository/base.py).
+缓存清理由 service 层在写入后显式调用 cache_manager 完成.
 """
 import builtins
 from datetime import datetime
@@ -23,16 +23,24 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
-# 受保护字段:更新/创建时不可修改
-PROTECTED_SYSTEM_FIELDS = {
+CREATE_PROTECTED_FIELDS = {
     "id",
+    "tenant_id",
     "delete_time",
     "is_system",
+}
+
+UPDATE_PROTECTED_FIELDS = {
+    "id",
+    "tenant_id",
+    "delete_time",
+    "is_system",
+    "creator_id",
+    "creator_type",
+    "updater_id",
+    "updater_type",
     "created_at",
     "updated_at",
-    "create_user_id",
-    "update_user_id",
-    "tenant_id",
 }
 
 
@@ -43,7 +51,6 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     - list(): 查询未删除的数据
     - list_deleted(): 查询已删除的数据(回收站)
     - 系统字段保护:is_system 对象不可修改/删除
-    - 写入缓存清理:创建/更新/删除后调用缓存管理器清理该资源缓存
     """
 
     def __init__(self, model: type[ModelType], resource_name: str | None = None):
@@ -97,20 +104,6 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if self._has_soft_delete:
             return query.where(self.model.delete_time.isnot(None))
         return query
-
-    # ------------------------------------------------------------------
-    # 缓存清理
-    # ------------------------------------------------------------------
-    def _clear_resource_cache(self):
-        """写入操作后清理该资源的所有缓存"""
-        if not self.resource_name:
-            return
-        try:
-            from src.core.storage.cache import cache_manager
-
-            cache_manager.delete_by_resource(self.resource_name, include_scope=True)
-        except Exception:
-            pass
 
     # ------------------------------------------------------------------
     # 查询方法
@@ -254,20 +247,20 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ) -> ModelType:
         """创建对象(不提交事务)
 
-        注意:此方法仅做通用对象创建,不自动填充任何字段.
+        自动过滤 CREATE_PROTECTED_FIELDS(安全敏感字段,前端不可传).
         如需自动填充租户ID, 创建人等,请使用二层基类.
+        缓存清理由 service 层负责.
         """
         if isinstance(obj_in, dict):
-            obj_dict = dict(obj_in)
+            obj_dict = {k: v for k, v in obj_in.items() if k not in CREATE_PROTECTED_FIELDS}
         else:
-            obj_dict = obj_in.model_dump()
+            obj_dict = obj_in.model_dump(exclude=CREATE_PROTECTED_FIELDS)
 
         db_obj = self.model(**obj_dict)
         session.add(db_obj)
         session.flush()
         session.refresh(db_obj)
 
-        self._clear_resource_cache()
         return db_obj
 
     def update(
@@ -279,7 +272,8 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """更新对象(不提交事务)
 
         注意:系统内置对象(is_system=True)不可修改.
-        受保护字段(id/delete_time/is_system/tenant_id 等)会被自动过滤.
+        受保护字段会被自动过滤.
+        缓存清理由 service 层负责.
         """
         db_obj = self.get(id, session)
         if not db_obj:
@@ -294,7 +288,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             update_data = obj_in.model_dump(exclude_unset=True, exclude={"id"})
 
         for field, value in update_data.items():
-            if field in PROTECTED_SYSTEM_FIELDS:
+            if field in UPDATE_PROTECTED_FIELDS:
                 continue
             if hasattr(db_obj, field):
                 setattr(db_obj, field, value)
@@ -302,7 +296,6 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         session.flush()
         session.refresh(db_obj)
 
-        self._clear_resource_cache()
         return db_obj
 
     def delete(self, id: int, session: Session, hard: bool = False) -> bool:
@@ -312,6 +305,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         无软删除字段 → 执行物理删除
 
         系统内置对象(is_system=True)不可删除.
+        缓存清理由 service 层负责.
         """
         db_obj = self.get_by_id(id, session)
         if not db_obj:
@@ -326,8 +320,6 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             session.delete(db_obj)
 
         session.flush()
-
-        self._clear_resource_cache()
         return True
 
     def restore(self, id: int, session: Session) -> bool:

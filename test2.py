@@ -1,62 +1,13 @@
-# ✅ 方式1：直接 Depends（当前项目用的）
-@router.post("/")
-def create_user(
-    current_user = Depends(AuthControl.is_authed),  # 显式注入
-    _: None = Depends(PermissionControl.has_permission),
-):
-    pass
+# main.py
+app = FastAPI()
 
-# ✅ 方式2：装饰器工厂 + Depends（语法更简洁）
-def require_auth():
-    return Depends(AuthControl.is_authed)
-
-def require_permission(code: str):
-    return Depends(lambda: PermissionControl.has_permission(permission_code=code))
-
-@router.post("/")
-@require_auth()
-@require_permission("user:create")
-def create_user():
-    pass
-
-
-# ❌ 错误
-dependencies=[Depends(require_auth), Depends(require_permission("user:create"))]
-
-# ✅ 正确（传函数/可调用对象）
-dependencies=[require_auth, require_permission("user:create")]
-dependencies=[require_auth, require_permission.has_permission()]
-
-
-
-@router.post("/", dependencies=[require_auth, require_permission("user:create")])
-def create_user():
-    pass
-
-# 请求 → 全局中间件（基础鉴权/上下文注入）
-#      ↓
-# 接口 → 依赖注入（精确权限检查）
-#      ↓
-# 数据 → 数据层（数据权限过滤）
-
-
-
-
-
-
-
-
-
-
-
-
-@router.post("/", dependencies=[require_auth(), require_permission("user:create")])
-def create_user():
-    pass
-
-@router.post("/")
-def create_user(
-    current_user = Depends(AuthControl.is_authed),
-    _: None = Depends(PermissionControl.has_permission),
-):
-    pass
+@app.middleware("http")
+async def validation_middleware(request, call_next):
+    ctx = request.state.auth_context
+    if ctx and ctx.interface_type == InterfaceType.TENANT and ctx.tenant_id is None:
+        return JSONResponse(status_code=401, content={"detail": "未选择租户"})
+    if ctx and ctx.tenant_id and ctx.path_tenant_id and ctx.tenant_id != ctx.path_tenant_id:
+        return JSONResponse(status_code=403, content={"detail": "越权访问"})
+    
+    response = await call_next(request)
+    return response

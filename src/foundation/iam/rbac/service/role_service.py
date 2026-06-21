@@ -4,7 +4,7 @@ from src.core.constants import RoleCodeConst
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
-from src.foundation.iam.rbac.dependency import (
+from src.foundation.iam.rbac.permission_control import (
     invalidate_all_rbac_cache,
     invalidate_rbac_cache,
 )

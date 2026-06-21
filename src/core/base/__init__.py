@@ -10,7 +10,8 @@ from src.core.base.schema_base import (
     PaginationResponse,
 )
 from src.core.storage.repository_base import (
-    PROTECTED_SYSTEM_FIELDS,
+    CREATE_PROTECTED_FIELDS,
+    UPDATE_PROTECTED_FIELDS,
     BaseRepository,
     CreateSchemaType,
     ModelType,
@@ -27,5 +28,6 @@ __all__ = [
     "ModelType",
     "CreateSchemaType",
     "UpdateSchemaType",
-    "PROTECTED_SYSTEM_FIELDS",
+    "CREATE_PROTECTED_FIELDS",
+    "UPDATE_PROTECTED_FIELDS",
 ]

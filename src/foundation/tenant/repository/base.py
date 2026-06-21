@@ -216,7 +216,6 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
         session.flush()
         session.refresh(db_obj)
 
-        self._clear_resource_cache()
         return db_obj
 
     def exists(self, id: int, session: Session) -> bool:

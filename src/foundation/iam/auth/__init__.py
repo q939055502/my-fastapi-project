@@ -5,7 +5,7 @@
 - security: 密码哈希, JWT生成/验证
 - token: Redis令牌管理
 - context: 认证上下文管理
-- dependency: 认证控制, 依赖注入
+- auth_control: 认证控制, 依赖注入
 - annotations: 接口类型注解
 """
 
@@ -17,6 +17,7 @@ from src.core.annotations import (
     public_api,
 )
 
+from .auth_control import AuthControl, get_current_username
 from .context import (
     AuthContext,
     get_auth_context,
@@ -28,7 +29,6 @@ from .context import (
     get_current_user_id,
     set_auth_context,
 )
-from .dependency import AuthControl, get_current_username
 from .security import (
     check_perm_match,
     create_access_token,
@@ -57,7 +57,7 @@ __all__ = [
     "parse_jwt_token",
     "gen_perm_code",
     "check_perm_match",
-    # dependency
+    # auth_control
     "AuthControl",
     "get_current_username",
     # token

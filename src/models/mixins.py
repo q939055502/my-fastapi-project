@@ -87,7 +87,11 @@ class SystemMixin:
 class ResourceOwnerMixin:
     """资源归属 Mixin
 
-    适用于需要记录资源归属的模型,提供创建人用户ID/成员ID和租户ID
+    适用于需要记录资源归属的模型,提供创建人/修改人和租户ID.
+    creator_type 区分身份类型: 0=平台用户(user_id), 1=租户成员(member_id).
     """
-    creator_id = Column(BigInteger, nullable=False, comment="创建人ID(平台级为用户ID,租户级为成员ID)")
+    creator_id = Column(BigInteger, nullable=False, comment="创建人ID(平台用户ID或租户成员ID,由creator_type区分)")
+    creator_type = Column(SmallInteger, nullable=False, default=0, comment="创建人身份类型: 0=平台用户, 1=租户成员")
+    updater_id = Column(BigInteger, nullable=True, comment="最后修改人ID(平台用户ID或租户成员ID,由updater_type区分)")
+    updater_type = Column(SmallInteger, nullable=True, comment="最后修改人身份类型: 0=平台用户, 1=租户成员")
     tenant_id = Column(BigInteger, nullable=True, comment="租户ID(NULL为平台级数据)")
