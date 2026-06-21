@@ -9,9 +9,6 @@
   实体没有 tenant_id 字段 → 自动跳过（字典、平台表等不参与分租的资源）。
   Tenant 表自身不会参与过滤，因为它没有 tenant_id 字段。
 
-写入时自动填充 tenant_id / creator_id / updater_id 的 before_flush 事件
-已集中迁移到 session_events.py。
-
 过滤逻辑由 AuthContext.interface_type（接口类型）决定:
   PUBLIC:   path_tenant_id 有值 → 过滤 path_tenant_id；没有 → skip
   PLATFORM: 过滤 tenant_id IS NULL（只查平台数据）
@@ -68,7 +65,7 @@ def _resolve_filter_tenant_id(ctx):
 
     if itype == InterfaceType.TENANT:
         if ctx.tenant_id is None:
-            return None, 'is_null'
+            return None, 'skip'
         return ctx.tenant_id, 'eq'
 
     if ctx.path_tenant_id is not None:

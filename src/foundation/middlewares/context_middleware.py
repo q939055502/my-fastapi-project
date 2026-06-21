@@ -3,10 +3,10 @@ import uuid as uuid_module
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
 from starlette.routing import Match
 
 from src.core.annotations import InterfaceType
+from src.core.exceptions import BusinessException
 from src.core.log import create_log_context, set_log_context
 from src.core.storage import SessionLocal
 from src.core.storage.uuid_resolver import uuid_resolver
@@ -49,9 +49,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         request.state.auth_context = auth_context
         set_auth_context(auth_context)
 
-        violation = self._validate_tenant_scope(auth_context)
-        if violation:
-            return violation
+        self._validate_tenant_scope(auth_context)
 
         log_ctx = create_log_context(
             request_id=request_id,
@@ -80,16 +78,14 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         if interface_type == InterfaceType.TENANT and ctx.tenant_id is None:
             logger.warning("租户接口但未选择租户, path_tenant_id=%s", ctx.path_tenant_id)
-            return JSONResponse(status_code=401, content={"detail": "未选择租户"})
+            raise BusinessException(40100, "未选择租户")
 
         if ctx.tenant_id and ctx.path_tenant_id and ctx.tenant_id != ctx.path_tenant_id:
             logger.warning(
                 "租户越权: tenant_id=%s, path_tenant_id=%s",
                 ctx.tenant_id, ctx.path_tenant_id,
             )
-            return JSONResponse(status_code=403, content={"detail": "无权访问该租户数据"})
-
-        return None
+            raise BusinessException(40300, "无权访问该租户数据")
 
     def _resolve_interface_type(self, request):
         app = request.scope.get('app') or request.scope.get('starlette.app')
