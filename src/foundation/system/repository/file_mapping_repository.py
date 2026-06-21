@@ -1,4 +1,4 @@
-"""文件映射仓库 - 管理文件ID和文件信息的映射关系"""
+﻿"""文件映射仓库 - 管理文件ID和文件信息的映射关系"""
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session

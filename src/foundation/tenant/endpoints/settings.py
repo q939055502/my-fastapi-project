@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Request
 from src.core.plugins import apply_rate_limit
 from src.core.response import success, swagger_responses
-from src.foundation.iam import require_auth, require_permission
+from src.foundation.iam import require_permission
 
 router = APIRouter(
     tags=["租户管理-设置"],
@@ -17,7 +17,7 @@ router = APIRouter(
 @router.put(
     "/{tenant_uuid}/config",
     summary="更新租户配置",
-    dependencies=[require_auth, require_permission("tenant:config:update")],
+    dependencies=[require_permission("platform:tenant:config_update")],
 )
 @apply_rate_limit("30/minute")
 def update_tenant_config(
@@ -30,7 +30,7 @@ def update_tenant_config(
 @router.put(
     "/{tenant_uuid}/quota",
     summary="更新租户配额",
-    dependencies=[require_auth, require_permission("tenant:quota:update")],
+    dependencies=[require_permission("platform:tenant:quota_update")],
     responses=swagger_responses(
         codes=[40401],
         success_msg="租户不存在",
@@ -47,7 +47,7 @@ def update_tenant_quota(
 @router.get(
     "/{tenant_uuid}/config",
     summary="获取租户配置",
-    dependencies=[require_auth, require_permission("tenant:config:read")],
+    dependencies=[require_permission("platform:tenant:config_read")],
     responses=swagger_responses(
         codes=[40401],
         success_msg="租户不存在",
@@ -64,7 +64,7 @@ def get_tenant_config(
 @router.get(
     "/{tenant_uuid}/quota",
     summary="获取租户配额",
-    dependencies=[require_auth, require_permission("tenant:quota:read")],
+    dependencies=[require_permission("platform:tenant:quota_read")],
 )
 @apply_rate_limit("60/minute")
 def get_tenant_quota(

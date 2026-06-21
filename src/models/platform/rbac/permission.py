@@ -23,10 +23,10 @@ class Permission(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMi
     parent_id = Column(BigInteger, nullable=True, index=True, comment="父级权限ID")
 
     __table_args__ = (
-        UniqueConstraint('resource', 'action', name='uq_permission_resource_action'),
+        UniqueConstraint('applicable_scope', 'resource', 'action', name='uq_permission_scope_resource_action'),
     )
 
     @property
     def permission_code(self) -> str:
-        """生成权限编码:{resource}:{action}"""
-        return f"{self.resource}:{self.action}"
+        """生成权限编码:{applicable_scope}:{resource}:{action}"""
+        return f"{self.applicable_scope}:{self.resource}:{self.action}"

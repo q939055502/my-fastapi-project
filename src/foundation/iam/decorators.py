@@ -1,4 +1,4 @@
-"""
+﻿"""
 鉴权依赖工厂
 
 提供统一的鉴权依赖函数，用于 FastAPI dependencies 参数：
@@ -7,7 +7,7 @@
 
 使用示例：
     # 需要权限的接口（自动带认证）
-    @router.post("/users", dependencies=[require_permission("user:create")])
+    @router.post("/users", dependencies=[require_permission("platform:user:create")])
     def create_user():
         pass
 
@@ -37,7 +37,7 @@ def require_permission(permission_code: str):
     根据权限编码生成对应的权限校验依赖，**自动包含登录认证**。
 
     Args:
-        permission_code: 权限编码，格式 "资源:动作"，如 "user:create"
+        permission_code: 权限编码，格式 "适用范围:资源:动作"，如 "platform:user:create", "tenant:order:delete"
 
     Returns:
         Depends: 权限依赖，可直接用于 FastAPI dependencies

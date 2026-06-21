@@ -1,4 +1,4 @@
-import secrets
+﻿import secrets
 from datetime import datetime
 
 from sqlalchemy import and_, select, update

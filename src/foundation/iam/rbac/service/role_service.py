@@ -4,6 +4,10 @@ from src.core.constants import RoleCodeConst
 from src.core.exceptions import BusinessException
 from src.core.log import logger
 from src.core.storage import TransactionManager
+from src.foundation.iam.rbac.dependency import (
+    invalidate_all_rbac_cache,
+    invalidate_rbac_cache,
+)
 from src.foundation.iam.rbac.repository.permission_repository import (
     permission_repository,
 )
@@ -105,7 +109,8 @@ class RoleService:
             role_permission_repository.batch_create(role_id, permission_ids, session=tm.session)
             tm.commit()
 
-        logger.info(f"为角色分配权�? role_id={role_id}, permission_count={len(permission_ids)}")
+        invalidate_all_rbac_cache()
+        logger.info(f"为角色分配权限: role_id={role_id}, permission_count={len(permission_ids)}")
 
     def remove_permissions(self, role_id: int, permission_ids: list[int], session=None) -> None:
         with TransactionManager(session=session) as tm:
@@ -116,6 +121,7 @@ class RoleService:
             role_permission_repository.batch_remove(role_id, permission_ids, session=tm.session)
             tm.commit()
 
+        invalidate_all_rbac_cache()
         logger.info(f"移除角色权限: role_id={role_id}, permission_count={len(permission_ids)}")
 
     def assign_role_to_subject(self, role_id: int, subject_ids: list[int], subject_type: int, session=None) -> None:
@@ -127,6 +133,8 @@ class RoleService:
             role_subject_repository.batch_create(role_id, subject_ids, subject_type, session=tm.session)
             tm.commit()
 
+        for subject_id in subject_ids:
+            invalidate_rbac_cache(subject_type, subject_id)
         logger.info(f"为主体分配角色: role_id={role_id}, subject_type={subject_type}, subject_count={len(subject_ids)}")
 
     def remove_role_from_subject(self, role_id: int, subject_ids: list[int], subject_type: int, session=None) -> None:
@@ -138,6 +146,8 @@ class RoleService:
             role_subject_repository.batch_remove(role_id, subject_ids, subject_type, session=tm.session)
             tm.commit()
 
+        for subject_id in subject_ids:
+            invalidate_rbac_cache(subject_type, subject_id)
         logger.info(f"移除主体角色: role_id={role_id}, subject_type={subject_type}, subject_count={len(subject_ids)}")
 
     def get_role_permissions(self, role_id: int, session=None) -> list[dict[str, Any]]:

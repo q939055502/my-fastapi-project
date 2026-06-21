@@ -1,4 +1,4 @@
-from datetime import datetimefrom pydantic import BaseModel, ConfigDict, Fieldclass TenantDictTypeBase(BaseModel):
+﻿from datetime import datetimefrom pydantic import BaseModel, ConfigDict, Fieldclass TenantDictTypeBase(BaseModel):
     name: str = Field(..., description="�ֵ�����")
     code: str = Field(..., description="�ֵ����")
     status: int = Field(1, description="״̬��1���� 0����")

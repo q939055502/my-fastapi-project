@@ -51,11 +51,8 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
     # ------------------------------------------------------------------
     # 上下文辅助
     # ------------------------------------------------------------------
-    def _get_effective_tenant_id(self) -> int | None:
-        """获取当前上下文的生效租户 ID
-
-        路径租户(path_tenant_id)优先,其次是认证租户(tenant_id)
-        """
+    def _get_tenant_id(self) -> int | None:
+        """获取当前上下文的生效租户 ID（path_tenant_id 优先于 tenant_id）"""
         ctx = get_current_auth_context()
         if ctx is None:
             return None
@@ -63,7 +60,7 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
 
     def _ensure_tenant_id(self) -> int:
         """获取租户 ID,不存在时抛异常(用于必须有租户的场景)"""
-        tenant_id = self._get_effective_tenant_id()
+        tenant_id = self._get_tenant_id()
         if not tenant_id:
             raise BusinessException(40000, "未找到租户上下文")
         return tenant_id
@@ -73,7 +70,7 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
     # ------------------------------------------------------------------
     def _apply_tenant_filter(self, query):
         """给查询添加 tenant_id 过滤"""
-        tenant_id = self._get_effective_tenant_id()
+        tenant_id = self._get_tenant_id()
         if tenant_id is None:
             return query
         return query.where(self.model.tenant_id == tenant_id)
@@ -210,7 +207,7 @@ class TenantRepositoryBase(BaseRepository[ModelType, CreateSchemaType, UpdateSch
 
         # 自动填充 tenant_id
         if obj_dict.get("tenant_id") is None:
-            tenant_id = self._get_effective_tenant_id()
+            tenant_id = self._get_tenant_id()
             if tenant_id:
                 obj_dict["tenant_id"] = tenant_id
 

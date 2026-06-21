@@ -18,7 +18,7 @@ from ..endpoints.settings import router as admin_settings_router
 system_v1_router = APIRouter()
 
 # 平台管理员依赖
-platform_admin_deps = [require_auth, require_permission("platform:admin")]
+platform_admin_deps = [require_permission("platform:admin:access")]
 
 system_v1_router.include_router(public_info_router, prefix="/public")
 system_v1_router.include_router(me_router, prefix="/me", dependencies=[require_auth])

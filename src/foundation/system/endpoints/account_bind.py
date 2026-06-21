@@ -1,4 +1,4 @@
-"""
+﻿"""
 Account bind management endpoints
 """
 from uuid import UUID

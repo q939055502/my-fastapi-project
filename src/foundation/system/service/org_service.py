@@ -1,4 +1,4 @@
-from sqlalchemy import asc
+﻿from sqlalchemy import asc
 
 from src.core.base.service_base import BaseService
 from src.core.exceptions import BusinessException

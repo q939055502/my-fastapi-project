@@ -1,4 +1,4 @@
-"""
+﻿"""
 Account bind service - handle phone/email binding business logic
 """
 from typing import Any

@@ -1,4 +1,4 @@
-from sqlalchemy import and_, delete, select
+﻿from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
 
 from src.core.log import logger

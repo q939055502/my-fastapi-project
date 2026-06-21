@@ -5,6 +5,7 @@ FastAPI应用配置模块
 - 中间件配置
 - 异常处理注册
 - 路由注册
+- SQLAlchemy 事件监听器注册
 
 src/__init__.py create_app() 调用
 """
@@ -33,7 +34,7 @@ from src.core.middlewares import (
     SecurityHeadersMiddleware,
 )
 from src.core.plugins import limiter
-from src.foundation.iam import auth_middleware
+from src.foundation.iam import auth_middleware, data_permission  # noqa: F401
 from src.foundation.middlewares import (
     HttpAuditLogMiddleware,
     RequestContextMiddleware,

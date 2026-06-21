@@ -1,4 +1,4 @@
-from sqlalchemy import select
+﻿from sqlalchemy import select
 from sqlalchemy.orm import Session
 from src.core.storage import BaseRepository
 from src.foundation.tenant.schemas.tenant import TenantCreate, TenantUpdate

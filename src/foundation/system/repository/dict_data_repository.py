@@ -1,4 +1,4 @@
-from sqlalchemy import and_, select
+﻿from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 from src.core.storage import BaseRepository

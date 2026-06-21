@@ -1,4 +1,4 @@
-"""
+﻿"""
 订单管理接口
 """
 from datetime import datetime
@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from src.core.plugins import apply_rate_limit
 from src.core.response import ApiResponse, swagger_responses
-from src.foundation.iam import AuthControl, require_auth, require_permission
+from src.foundation.iam import AuthControl, require_permission
 from src.foundation.order.schemas.order import (
     OrderCancelRequest,
     OrderCreate,
@@ -218,7 +218,7 @@ admin_router = APIRouter(
 )
 
 
-@admin_router.get("/orders", summary="管理员获取所有订单", dependencies=[require_auth, require_permission("platform:order:list")])
+@admin_router.get("/orders", summary="管理员获取所有订单", dependencies=[require_permission("platform:order:list")])
 @apply_rate_limit("60/minute")
 def admin_list_orders(
     request: Request,

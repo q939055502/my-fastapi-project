@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+﻿from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 
 from src.core.plugins import apply_rate_limit

@@ -1,4 +1,4 @@
-"""
+﻿﻿﻿"""
 套餐管理接口(超级管理员专用)
 """
 
@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, Request
 from src.core.base.schema_base import PaginationResponse
 from src.core.plugins import apply_rate_limit
 from src.core.response import ApiResponse, swagger_responses
-from src.foundation.iam import require_auth, require_permission
+from src.foundation.iam import require_permission
 from src.foundation.system.schemas.tenant_plan import (
     TenantPlanBase,
     TenantPlanCreate,
@@ -25,7 +25,7 @@ router = APIRouter(
 @router.post(
     "/",
     summary="创建套餐",
-    dependencies=[require_auth, require_permission("plan:create")],
+    dependencies=[require_permission("platform:plan:create")],
     response_model=ApiResponse[TenantPlanBase],
     responses=swagger_responses(
         codes=[40900],
@@ -45,7 +45,7 @@ def create_plan(
 @router.put(
     "/{plan_uuid}",
     summary="更新套餐",
-    dependencies=[require_auth, require_permission("plan:update")],
+    dependencies=[require_permission("platform:plan:update")],
     response_model=ApiResponse,
 )
 @apply_rate_limit("30/minute")
@@ -61,7 +61,7 @@ def update_plan(
 @router.get(
     "/list",
     summary="获取套餐列表",
-    dependencies=[require_auth, require_permission("plan:list")],
+    dependencies=[require_permission("platform:plan:list")],
     response_model=ApiResponse[PaginationResponse[TenantPlanResponse]],
 )
 @apply_rate_limit("60/minute")
@@ -90,7 +90,7 @@ def list_plans(
 @router.get(
     "/{plan_uuid}",
     summary="获取套餐详情",
-    dependencies=[require_auth, require_permission("plan:read")],
+    dependencies=[require_permission("platform:plan:read")],
     response_model=ApiResponse[TenantPlanBase],
     responses=swagger_responses(
         codes=[40401],
@@ -110,7 +110,7 @@ def get_plan(
 @router.delete(
     "/{plan_uuid}",
     summary="删除套餐",
-    dependencies=[require_auth, require_permission("plan:delete")],
+    dependencies=[require_permission("platform:plan:delete")],
     response_model=ApiResponse,
 )
 @apply_rate_limit("10/minute")

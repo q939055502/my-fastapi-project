@@ -22,15 +22,10 @@ from .context import (
     get_auth_context,
     get_current_auth_context,
     get_current_client_ip,
-    get_current_effective_tenant_id,
     get_current_member_id,
     get_current_path_tenant_id,
-    get_current_subject_id,
-    get_current_subject_type,
     get_current_tenant_id,
     get_current_user_id,
-    is_platform_context,
-    is_tenant_context,
     set_auth_context,
 )
 from .dependency import AuthControl, get_current_username
@@ -82,10 +77,5 @@ __all__ = [
     "get_current_member_id",
     "get_current_tenant_id",
     "get_current_path_tenant_id",
-    "get_current_effective_tenant_id",
-    "get_current_subject_type",
-    "get_current_subject_id",
-    "is_platform_context",
-    "is_tenant_context",
     "get_current_client_ip",
 ]

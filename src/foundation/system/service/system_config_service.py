@@ -1,4 +1,4 @@
-from sqlalchemy import asc, select
+﻿from sqlalchemy import asc, select
 
 from src.core.exceptions import BusinessException
 from src.core.storage import TransactionManager
