@@ -1,4 +1,4 @@
-﻿"""
+"""
 鉴权依赖工厂
 
 提供统一的鉴权依赖函数，用于 FastAPI dependencies 参数:
@@ -26,6 +26,8 @@ from src.foundation.iam.auth.auth_control import AuthControl
 from src.foundation.iam.rbac.permission_control import PermissionControl
 
 bearer_scheme = HTTPBearer()
+
+REGISTERED_PERMISSIONS = set()
 
 
 def _auth_dep(token=Depends(bearer_scheme)):
@@ -55,6 +57,7 @@ def require_permission(permission_code: str):
     Returns:
         Depends: 权限依赖，可直接用于 FastAPI dependencies
     """
+    REGISTERED_PERMISSIONS.add(permission_code)
 
     def permission_check(
         request: Request,

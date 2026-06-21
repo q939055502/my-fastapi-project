@@ -1,13 +1,14 @@
 """
-权限初始化器
+Permission Initializer
 
-负责系统API权限资源的初始化：
-- 初始化平台级API权限(type=api)
-- 为后续角色权限分配提供基础数据
+Responsible for initializing system API permissions:
+- Scan all route modules, collect permission codes from require_permission calls
+- Automatically create or update permission records in database
+- Provide base data for subsequent role permission assignment
 
-幂等性保证:
-- 检查是否已存在API权限,若存在则跳过创建
-- 重复执行不会产生重复数据
+Idempotency guarantee:
+- Check if API permission already exists, skip creation if exists
+- Repeated execution will not produce duplicate data
 """
 
 from sqlalchemy import func, select
@@ -18,52 +19,82 @@ from src.core.storage import get_db
 
 def init_permissions():
     """
-    初始化系统API权限
+    Initialize system API permissions
 
-    创建平台级API权限:
-    - 用户管理,角色管理,部门管理,权限管理等
+    Scan all route modules, collect permission codes, and automatically
+    create database permission records.
     """
-    logger.info("开始初始化系统API权限...")
+    logger.info("Initializing system API permissions...")
+
+    _import_routes_for_scan()
+
+    from src.foundation.iam.decorators import REGISTERED_PERMISSIONS
+
+    logger.info(f"Found permission codes: {len(REGISTERED_PERMISSIONS)}")
 
     for session in get_db():
         from src.models.platform import Permission
 
-        result = session.execute(
-            select(Permission).where(Permission.type == "api")
-        )
-        permissions = result.scalars().first()
+        created_count = 0
 
-        if not permissions:
-            api_permissions = [
-                # 用户管理API
-                Permission(resource="user", action="list", name="用户列表", type="api", sort=1, is_system=True),
-                Permission(resource="user", action="create", name="创建用户", type="api", sort=2, is_system=True),
-                Permission(resource="user", action="update", name="更新用户", type="api", sort=3, is_system=True),
-                Permission(resource="user", action="delete", name="删除用户", type="api", sort=4, is_system=True),
-                # 角色管理API
-                Permission(resource="role", action="list", name="角色列表", type="api", sort=1, is_system=True),
-                Permission(resource="role", action="create", name="创建角色", type="api", sort=2, is_system=True),
-                Permission(resource="role", action="update", name="更新角色", type="api", sort=3, is_system=True),
-                Permission(resource="role", action="delete", name="删除角色", type="api", sort=4, is_system=True),
-                # 组织管理API
-                Permission(resource="org", action="list", name="组织列表", type="api", sort=1, is_system=True),
-                Permission(resource="org", action="create", name="创建组织", type="api", sort=2, is_system=True),
-                Permission(resource="org", action="update", name="更新组织", type="api", sort=3, is_system=True),
-                Permission(resource="org", action="delete", name="删除组织", type="api", sort=4, is_system=True),
-                # 权限管理API
-                Permission(resource="permission", action="list", name="权限列表", type="api", sort=1, is_system=True),
-                Permission(resource="permission", action="create", name="创建权限", type="api", sort=2, is_system=True),
-                Permission(resource="permission", action="update", name="更新权限", type="api", sort=3, is_system=True),
-                Permission(resource="permission", action="delete", name="删除权限", type="api", sort=4, is_system=True),
-            ]
+        for permission_code in REGISTERED_PERMISSIONS:
+            try:
+                scope, resource, action = permission_code.split(":")
+            except ValueError:
+                logger.warning(f"Invalid permission code format, skipping: {permission_code}")
+                continue
 
-            session.add_all(api_permissions)
+            existing = session.execute(
+                select(Permission).where(
+                    Permission.resource == resource,
+                    Permission.action == action,
+                    Permission.applicable_scope == scope,
+                    Permission.type == "api",
+                )
+            ).scalar_one_or_none()
+
+            if not existing:
+                permission = Permission(
+                    resource=resource,
+                    action=action,
+                    name=f"{resource}_{action}",
+                    type="api",
+                    applicable_scope=scope,
+                    is_system=True,
+                )
+                session.add(permission)
+                created_count += 1
+
+        if created_count > 0:
             session.commit()
-            logger.info(f"系统API权限初始化成功 - 权限数量: {len(api_permissions)}")
+            logger.info(f"System API permissions initialized successfully - created: {created_count}")
         else:
             count_result = session.execute(
                 select(func.count(Permission.id)).where(Permission.type == "api")
             )
             permission_count = count_result.scalar()
-            logger.info(f"系统API权限已存在,跳过初始化 - 当前权限数量: {permission_count}")
+            logger.info(f"System API permissions already exist, skipping - current count: {permission_count}")
         break
+
+
+def _import_routes_for_scan():
+    """
+    Import all route modules to trigger require_permission calls and register permission codes
+
+    Note: Import API modules, not individual endpoint files,
+    to ensure all route registrations are executed.
+    """
+    modules = [
+        ("src.foundation.system.api", "v1"),
+        ("src.foundation.tenant.api", "v1"),
+        ("src.foundation.order.api", "v1"),
+        ("src.foundation.iam.api", "v1"),
+        ("src.foundation.file.api", "v1"),
+    ]
+
+    for module_path, attr in modules:
+        try:
+            __import__(module_path, fromlist=[attr])
+            logger.debug(f"Imported route module: {module_path}.{attr}")
+        except Exception as e:
+            logger.warning(f"Failed to import route module {module_path}.{attr}: {e}")
