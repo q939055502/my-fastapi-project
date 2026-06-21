@@ -31,8 +31,14 @@ def _resolve_who(ctx, interface_type):
       TENANT 视图 → 存 member_id + IDENTITY_TYPE_TENANT(1)
       其他视图     → 存 user_id  + IDENTITY_TYPE_PLATFORM(0)
     """
-    if interface_type == InterfaceType.TENANT and ctx.member_id:
-        return ctx.member_id, IDENTITY_TYPE_TENANT
+    if interface_type == InterfaceType.TENANT :
+        if ctx.member_id:
+            return ctx.member_id, IDENTITY_TYPE_TENANT
+        else:
+            return ctx.user_id, IDENTITY_TYPE_PLATFORM
+    if interface_type == InterfaceType.ALL:
+        if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
+            return ctx.member_id, IDENTITY_TYPE_TENANT
     return ctx.user_id, IDENTITY_TYPE_PLATFORM
 
 
@@ -50,7 +56,13 @@ def _fill_tenant_id(instance, ctx, interface_type):
     elif interface_type == InterfaceType.TENANT:
         target_tenant_id = ctx.tenant_id if ctx else None
     else:
-        target_tenant_id = (ctx.path_tenant_id if ctx else None) or (ctx.tenant_id if ctx else None)
+        # ALL 接口：优先 path_tenant_id，path_tenant_id=0 表示平台，设为 None
+        if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
+            target_tenant_id = ctx.tenant_id
+        elif ctx.path_tenant_id == 0:
+            target_tenant_id = None
+        else:
+            target_tenant_id = ctx.tenant_id if ctx else None
 
     if target_tenant_id is None and interface_type != InterfaceType.PLATFORM:
         return False

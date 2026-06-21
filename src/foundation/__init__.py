@@ -11,7 +11,6 @@ from .iam import (
     create_token_pair,
     get_scope_for_resource,
     login_required,
-    public_api,
     token_manager,
     verify_token,
     require_auth,
@@ -37,7 +36,7 @@ from .iam.auth.security import (
 __all__ = [
     'AuthControl', 'AuthContext', 'get_current_auth_context', 'get_current_username',
     'AuthMiddleware', 'auth_middleware', 'apply_tenant_isolation', 'before_flush_common',
-    'apply_scope_filter', 'get_scope_for_resource', 'InterfaceType', 'public_api',
+    'apply_scope_filter', 'get_scope_for_resource', 'InterfaceType',
     'login_required', 'create_access_token', 'create_refresh_token', 'create_token_pair',
     'verify_token', 'parse_jwt_token', 'get_password_hash', 'verify_password',
     'generate_password', 'pwd_context', 'token_manager',

@@ -56,8 +56,10 @@ def _resolve_filter_tenant_id(ctx):
     itype = ctx.interface_type
 
     if itype == InterfaceType.PUBLIC:
-        if ctx.path_tenant_id is not None:
+        if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
             return ctx.path_tenant_id, 'eq'
+        if ctx.path_tenant_id == 0:
+            return None, 'is_null'
         return None, 'skip'
 
     if itype == InterfaceType.PLATFORM:
@@ -68,8 +70,10 @@ def _resolve_filter_tenant_id(ctx):
             return None, 'skip'
         return ctx.tenant_id, 'eq'
 
-    if ctx.path_tenant_id is not None:
+    if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
         return ctx.path_tenant_id, 'eq'
+    if ctx.path_tenant_id == 0:
+        return None, 'is_null'
     if ctx.tenant_id is not None:
         return ctx.tenant_id, 'eq'
     return None, 'is_null'

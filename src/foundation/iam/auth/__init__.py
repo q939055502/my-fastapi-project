@@ -14,7 +14,6 @@ from src.core.annotations import (
     disable_data_permission,
     interface_type,
     login_required,
-    public_api,
 )
 
 from .auth_control import AuthControl, get_current_username
@@ -65,7 +64,6 @@ __all__ = [
     # annotations
     "InterfaceType",
     "interface_type",
-    "public_api",
     "login_required",
     "disable_data_permission",
     # context

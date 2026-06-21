@@ -16,12 +16,6 @@ def interface_type(itype: InterfaceType) -> Callable:
     return decorator
 
 
-def public_api(func: Callable) -> Callable:
-    func.interface_type = InterfaceType.PUBLIC
-    func.is_public = True
-    return func
-
-
 def login_required(func: Callable) -> Callable:
     func.login_required = True
     return func

@@ -10,6 +10,7 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from src.core.annotations import InterfaceType
 from src.core.response.response_msg import RESPONSE_MSG
 
 T = TypeVar("T")
@@ -91,7 +92,7 @@ def swagger_responses(
     data_model: type[BaseModel] | None = None,
     is_pagination: bool = False,
     success_msg: str = "操作成功",
-    is_public: bool | None = False,
+    interface_type: InterfaceType = InterfaceType.TENANT,
     code_model_map: dict[int, type[BaseModel]] | None = None,
 ) -> dict:
     """
@@ -101,7 +102,7 @@ def swagger_responses(
     :param data_model: 成功响应的数据模型（用于生成示例数据，作为默认模型）
     :param is_pagination: 是否分页响应
     :param success_msg: 成功响应的消息描述
-    :param is_public: 是否为公开接口（True=无需登录，False=需要登录认证）
+    :param interface_type: 接口类型，PUBLIC 类型不显示 401/403 错误码
     :param code_model_map: 业务码到数据模型的映射，用于不同业务码返回不同数据结构
                           如 {20000: LoginResponse, 20007: LoginSelectUserResponse}
     :return: Swagger 标准响应格式
@@ -119,7 +120,7 @@ def swagger_responses(
     ]
 
     # 非公开接口需要认证和授权
-    if not is_public:
+    if interface_type != InterfaceType.PUBLIC:
         common_codes.extend([
             # 认证失败（401）
             40100, 40101, 40102, 40103, 40104,

@@ -81,22 +81,22 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             return None
 
         elif interface_type == InterfaceType.TENANT:
-            if ctx.tenant_id is None:
-                logger.warning("租户接口但未选择租户, path_tenant_id=%s", ctx.path_tenant_id)
+            if ctx.tenant_id is None or ctx.member_id is None or ctx.tenant_id < 1 or ctx.member_id < 1:
+                logger.warning("租户接口但未选择租户, path_tenant_id=%s, member_id=%s", ctx.path_tenant_id, ctx.member_id)
                 raise BusinessException(40100, "未选择租户")
             if ctx.path_tenant_id is None or ctx.tenant_id != ctx.path_tenant_id:
                 logger.warning(
-                    "租户越权: tenant_id=%s, path_tenant_id=%s",
-                    ctx.tenant_id, ctx.path_tenant_id,
+                    "租户越权: tenant_id=%s, path_tenant_id=%s, member_id=%s, username=%s",
+                    ctx.tenant_id, ctx.path_tenant_id, ctx.member_id, ctx.username,
                 )
                 raise BusinessException(40300, "无权访问该租户数据")
 
         elif interface_type == InterfaceType.ALL:
             if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
-                if ctx.tenant_id is None or ctx.tenant_id != ctx.path_tenant_id:
+                if ctx.tenant_id is None or ctx.member_id is None or ctx.tenant_id < 1 or ctx.member_id < 1 or ctx.tenant_id != ctx.path_tenant_id:
                     logger.warning(
-                        "租户越权: tenant_id=%s, path_tenant_id=%s",
-                        ctx.tenant_id, ctx.path_tenant_id,
+                        "租户越权: tenant_id=%s, path_tenant_id=%s, member_id=%s, username=%s",
+                        ctx.tenant_id, ctx.path_tenant_id, ctx.member_id, ctx.username,
                     )
                     raise BusinessException(40300, "无权访问该租户数据")
         
@@ -114,7 +114,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 itype = getattr(handler, 'interface_type', None)
                 if itype is not None:
                     return itype
-                return getattr(handler, 'is_public', False) and InterfaceType.PUBLIC
+                return None
         return None
 
     def _resolve_path_tenant(self, request):

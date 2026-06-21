@@ -1,4 +1,4 @@
-﻿"""
+"""
 认证接口(注册, 登录, Token刷新)
 """
 
@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request
 
 from src.core.exceptions import BusinessException
 from src.core.plugins import apply_rate_limit
+from src.core.annotations import InterfaceType, interface_type
 from src.core.response import ApiResponse, success, swagger_responses
 from src.foundation.iam.auth.schemas.login import (
     LoginByPasswordStep1Request,
@@ -39,10 +40,11 @@ router = APIRouter(
         codes=[20000, 40900],
         data_model=UserRegisterResponse,
         success_msg="注册成功",
-        is_public=True,
+        interface_type=InterfaceType.PUBLIC,
     ),
 )
 @apply_rate_limit("10/minute")
+@interface_type(InterfaceType.PUBLIC)
 def user_register(request: Request, register_in: UserRegisterSchema):
     result = auth_service.register(register_in)
     if not result:
@@ -61,10 +63,11 @@ def user_register(request: Request, register_in: UserRegisterSchema):
             20007: LoginSelectUserResponse,
         },
         success_msg="登录成功(单账号返回正式令牌,多账号返回临时凭证)",
-        is_public=True,
+        interface_type=InterfaceType.PUBLIC,
     ),
 )
 @apply_rate_limit()
+@interface_type(InterfaceType.PUBLIC)
 def login_by_account_and_password(request: Request, credentials: LoginByPasswordStep1Request):
     from src.foundation.iam.auth.context import get_current_client_ip
     client_ip = get_current_client_ip(request)
@@ -88,10 +91,11 @@ def login_by_account_and_password(request: Request, credentials: LoginByPassword
         codes=[20000],
         data_model=SelectUserResponse,
         success_msg="登录成功",
-        is_public=True,
+        interface_type=InterfaceType.PUBLIC,
     ),
 )
 @apply_rate_limit()
+@interface_type(InterfaceType.PUBLIC)
 def select_user(request: Request, select_request: SelectUserRequest):
     from src.foundation.iam.auth.context import get_current_client_ip
     client_ip = get_current_client_ip(request)
@@ -110,10 +114,11 @@ def select_user(request: Request, select_request: SelectUserRequest):
         codes=[20000],
         data_model=TokenRefreshResponse,
         success_msg="刷新成功",
-        is_public=True,
+        interface_type=InterfaceType.PUBLIC,
     ),
 )
 @apply_rate_limit("10/minute")
+@interface_type(InterfaceType.PUBLIC)
 def refresh_access_token(request: Request, refresh_request: RefreshTokenRequest):
     auth_data = auth_service.refresh_token(refresh_request)
     if not auth_data:

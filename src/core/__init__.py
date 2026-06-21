@@ -43,7 +43,6 @@ from .annotations import (
     disable_data_permission,
     interface_type,
     login_required,
-    public_api,
 )
 
 __all__ = [
@@ -62,7 +61,6 @@ __all__ = [
     "validators",
     "InterfaceType",
     "interface_type",
-    "public_api",
     "login_required",
     "disable_data_permission",
 ]
