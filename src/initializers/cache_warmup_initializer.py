@@ -17,10 +17,21 @@
 - role:{id} - 角色信息
 - role:{id}:permissions - 角色权限列表
 - role:all - 所有角色列表
+- role_subject:{subject_type}:{subject_id} - 主体的角色列表
+- role_subject:all - 所有角色主体关联
+- data_scope_rule:{role_id}:{permission_id} - 角色+权限对应的数据范围规则
+- data_scope_rule:all - 所有数据范围规则
+- org:{id} - 组织节点信息
+- org:all - 所有组织节点
+- org_closure:{org_id} - 组织闭包表(该节点所有后代)
+- org_subject:{subject_type}:{subject_id} - 主体归属的组织节点
+- org_subject:all - 所有组织主体关联
 - tenant:{id} - 租户信息
 - tenant:all - 所有租户列表
 - user:{id} - 用户信息
 - user:all - 所有用户列表
+- member:{id} - 租户成员信息
+- member:tenant:{tenant_id} - 租户下所有成员
 - account_bind:{user_id} - 账号绑定关系(按用户ID)
 - account_bind:all - 所有账号绑定关系列表
 """
@@ -232,6 +243,290 @@ def _warmup_role_data() -> int:
     return cache_count
 
 
+def _warmup_role_subject_data() -> int:
+    """预热角色-主体关联缓存
+
+    按主体维度分组,方便权限校验时直接取角色列表。
+    """
+    cache_count = 0
+    for session in get_db():
+        from src.models.platform import RoleSubject
+
+        query = select(RoleSubject)
+        result = session.execute(query)
+        role_subjects = result.scalars().all()
+
+        all_list = []
+        subject_map: dict[str, list[int]] = {}
+
+        for rs in role_subjects:
+            item = {
+                "id": rs.id,
+                "subject_id": rs.subject_id,
+                "subject_type": rs.subject_type,
+                "role_id": rs.role_id,
+                "tenant_id": rs.tenant_id,
+                "creator_id": rs.creator_id,
+                "creator_type": rs.creator_type,
+                "updater_id": rs.updater_id,
+                "updater_type": rs.updater_type,
+                "created_at": rs.created_at.isoformat() if rs.created_at else None,
+                "updated_at": rs.updated_at.isoformat() if rs.updated_at else None,
+            }
+            all_list.append(item)
+
+            key = f"{rs.subject_type}:{rs.subject_id}"
+            if key not in subject_map:
+                subject_map[key] = []
+            subject_map[key].append(rs.role_id)
+
+            cache_count += 1
+
+        cache_manager.set_global(
+            resource="role_subject",
+            key="all",
+            value=all_list,
+            l1_ttl=settings.L1_CACHE_TTL_LOW,
+            l2_ttl=settings.L2_CACHE_TTL_LOW
+        )
+        cache_count += 1
+
+        for key, role_ids in subject_map.items():
+            cache_manager.set_global(
+                resource="role_subject",
+                key=key,
+                value=role_ids,
+                l1_ttl=settings.L1_CACHE_TTL_LOW,
+                l2_ttl=settings.L2_CACHE_TTL_LOW
+            )
+            cache_count += 1
+
+        break
+    return cache_count
+
+
+def _warmup_data_scope_rule_data() -> int:
+    """预热数据范围规则缓存
+
+    按 role_id+permission_id 维度分组,方便数据范围过滤时直接取规则列表。
+    """
+    cache_count = 0
+    for session in get_db():
+        from src.models.platform import DataScopeRule
+
+        query = select(DataScopeRule)
+        result = session.execute(query)
+        rules = result.scalars().all()
+
+        all_list = []
+        perm_map: dict[str, list[dict]] = {}
+
+        for rule in rules:
+            item = {
+                "id": rule.id,
+                "role_id": rule.role_id,
+                "permission_id": rule.permission_id,
+                "dimension_type": rule.dimension_type,
+                "match_type": rule.match_type,
+                "dimension_value": rule.dimension_value,
+                "sort": rule.sort,
+                "remark": rule.remark,
+                "tenant_id": rule.tenant_id,
+                "created_at": rule.created_at.isoformat() if rule.created_at else None,
+                "updated_at": rule.updated_at.isoformat() if rule.updated_at else None,
+            }
+            all_list.append(item)
+
+            key = f"{rule.role_id}:{rule.permission_id}"
+            if key not in perm_map:
+                perm_map[key] = []
+            perm_map[key].append({
+                "dimension_type": rule.dimension_type,
+                "match_type": rule.match_type,
+                "dimension_value": rule.dimension_value,
+            })
+
+            cache_count += 1
+
+        cache_manager.set_global(
+            resource="data_scope_rule",
+            key="all",
+            value=all_list,
+            l1_ttl=settings.L1_CACHE_TTL_LOW,
+            l2_ttl=settings.L2_CACHE_TTL_LOW
+        )
+        cache_count += 1
+
+        for key, rule_list in perm_map.items():
+            cache_manager.set_global(
+                resource="data_scope_rule",
+                key=key,
+                value=rule_list,
+                l1_ttl=settings.L1_CACHE_TTL_LOW,
+                l2_ttl=settings.L2_CACHE_TTL_LOW
+            )
+            cache_count += 1
+
+        break
+    return cache_count
+
+
+def _warmup_org_data() -> int:
+    """预热组织节点缓存"""
+    cache_count = 0
+    for session in get_db():
+        from src.models.platform import Org
+
+        query = select(Org)
+        result = session.execute(query)
+        orgs = result.scalars().all()
+
+        org_list = []
+        for org in orgs:
+            org_cache = {
+                "id": org.id,
+                "name": org.name,
+                "code": org.code,
+                "parent_id": org.parent_id,
+                "level": org.level,
+                "leader": org.leader,
+                "phone": org.phone,
+                "email": org.email,
+                "status": org.status,
+                "sort": org.sort,
+                "remark": org.remark,
+                "tenant_id": org.tenant_id,
+            }
+            org_list.append(org_cache)
+
+            cache_manager.set_global(
+                resource="org",
+                key=str(org.id),
+                value=org_cache,
+                l1_ttl=settings.L1_CACHE_TTL_LOW,
+                l2_ttl=settings.L2_CACHE_TTL_LOW
+            )
+            cache_count += 1
+
+        cache_manager.set_global(
+            resource="org",
+            key="all",
+            value=org_list,
+            l1_ttl=settings.L1_CACHE_TTL_LOW,
+            l2_ttl=settings.L2_CACHE_TTL_LOW
+        )
+        cache_count += 1
+        break
+    return cache_count
+
+
+def _warmup_org_closure_data() -> int:
+    """预热组织闭包表缓存
+
+    按祖先节点维度分组,查某个节点所有后代时直接取列表。
+    """
+    cache_count = 0
+    for session in get_db():
+        from src.models.platform import OrgClosure
+
+        query = select(OrgClosure)
+        result = session.execute(query)
+        closures = result.scalars().all()
+
+        closure_map: dict[str, list[dict]] = {}
+
+        for cl in closures:
+            key = str(cl.ancestor)
+            if key not in closure_map:
+                closure_map[key] = []
+            closure_map[key].append({
+                "descendant": cl.descendant,
+                "level": cl.level,
+            })
+
+            cache_count += 1
+
+        for key, descendants in closure_map.items():
+            cache_manager.set_global(
+                resource="org_closure",
+                key=key,
+                value=descendants,
+                l1_ttl=settings.L1_CACHE_TTL_LOW,
+                l2_ttl=settings.L2_CACHE_TTL_LOW
+            )
+            cache_count += 1
+
+        cache_manager.set_global(
+            resource="org_closure",
+            key="all",
+            value=[
+                {"ancestor": cl.ancestor, "descendant": cl.descendant, "level": cl.level}
+                for cl in closures
+            ],
+            l1_ttl=settings.L1_CACHE_TTL_LOW,
+            l2_ttl=settings.L2_CACHE_TTL_LOW
+        )
+        cache_count += 1
+        break
+    return cache_count
+
+
+def _warmup_org_subject_data() -> int:
+    """预热成员-组织关联缓存
+
+    按成员维度分组,查某个成员归属的 org_id 列表。
+    """
+    cache_count = 0
+    for session in get_db():
+        from src.models.platform import OrgSubject
+
+        query = select(OrgSubject)
+        result = session.execute(query)
+        org_subjects = result.scalars().all()
+
+        all_list = []
+        subject_map: dict[str, list[int]] = {}
+
+        for os_obj in org_subjects:
+            item = {
+                "id": os_obj.id,
+                "member_id": os_obj.member_id,
+                "org_id": os_obj.org_id,
+                "created_at": os_obj.created_at.isoformat() if os_obj.created_at else None,
+                "updated_at": os_obj.updated_at.isoformat() if os_obj.updated_at else None,
+            }
+            all_list.append(item)
+
+            key = str(os_obj.member_id)
+            if key not in subject_map:
+                subject_map[key] = []
+            subject_map[key].append(os_obj.org_id)
+
+            cache_count += 1
+
+        cache_manager.set_global(
+            resource="org_subject",
+            key="all",
+            value=all_list,
+            l1_ttl=settings.L1_CACHE_TTL_LOW,
+            l2_ttl=settings.L2_CACHE_TTL_LOW
+        )
+        cache_count += 1
+
+        for key, org_ids in subject_map.items():
+            cache_manager.set_global(
+                resource="org_subject",
+                key=key,
+                value=org_ids,
+                l1_ttl=settings.L1_CACHE_TTL_LOW,
+                l2_ttl=settings.L2_CACHE_TTL_LOW
+            )
+            cache_count += 1
+
+        break
+    return cache_count
+
+
 def _warmup_tenant_data() -> int:
     """预热租户数据缓存"""
     cache_count = 0
@@ -325,6 +620,77 @@ def _warmup_user_data() -> int:
     return cache_count
 
 
+def _warmup_member_data() -> int:
+    """预热租户成员缓存
+
+    按成员ID和租户ID两个维度缓存:
+    - member:{id}          单个成员基本信息
+    - member:tenant:{tid}  某个租户下所有成员
+    """
+    cache_count = 0
+    for session in get_db():
+        from src.models.tenant import Member
+
+        query = select(Member).where(Member.delete_time.is_(None))
+        result = session.execute(query)
+        members = result.scalars().all()
+
+        member_list = []
+        tenant_map: dict[str, list[dict]] = {}
+
+        for member in members:
+            member_cache = {
+                "id": member.id,
+                "user_id": member.user_id,
+                "tenant_id": member.tenant_id,
+                "subject_id": member.subject_id,
+                "is_owner": member.is_owner,
+                "contact_info": member.contact_info,
+                "join_type": member.join_type,
+                "audit_status": member.audit_status,
+                "is_muted": member.is_muted,
+                "joined_at": member.joined_at.isoformat() if member.joined_at else None,
+                "last_login_at": member.last_login_at.isoformat() if member.last_login_at else None,
+            }
+            member_list.append(member_cache)
+
+            cache_manager.set_global(
+                resource="member",
+                key=str(member.id),
+                value=member_cache,
+                l1_ttl=settings.L1_CACHE_TTL_MEDIUM,
+                l2_ttl=settings.L2_CACHE_TTL_MEDIUM
+            )
+            cache_count += 1
+
+            tenant_key = str(member.tenant_id)
+            if tenant_key not in tenant_map:
+                tenant_map[tenant_key] = []
+            tenant_map[tenant_key].append(member_cache)
+
+        cache_manager.set_global(
+            resource="member",
+            key="all",
+            value=member_list,
+            l1_ttl=settings.L1_CACHE_TTL_LOW,
+            l2_ttl=settings.L2_CACHE_TTL_LOW
+        )
+        cache_count += 1
+
+        for tid, t_members in tenant_map.items():
+            cache_manager.set_global(
+                resource="member",
+                key=f"tenant:{tid}",
+                value=t_members,
+                l1_ttl=settings.L1_CACHE_TTL_LOW,
+                l2_ttl=settings.L2_CACHE_TTL_LOW
+            )
+            cache_count += 1
+
+        break
+    return cache_count
+
+
 def _warmup_account_bind_data() -> int:
     """预热账号绑定关系缓存"""
     cache_count = 0
@@ -386,10 +752,16 @@ def init_cache_warmup():
     1. 系统配置 - 全量加载
     2. 字典数据 - 按类型加载
     3. 权限数据 - 全量加载
-    4. 角色数据 - 全量加载
-    5. 租户数据 - 全量加载
-    6. 用户数据 - 全量加载
-    7. 账号绑定关系 - 全量加载
+    4. 角色数据 - 全量加载 + 每个角色的权限列表
+    5. 角色-主体关联 - 全量加载 + 按主体维度索引
+    6. 数据范围规则 - 全量加载 + 按角色+权限维度索引
+    7. 组织节点 - 全量加载
+    8. 组织闭包表 - 按祖先节点索引(树形查询用)
+    9. 组织-主体关联 - 全量加载 + 按主体维度索引
+    10. 租户数据 - 全量加载
+    11. 用户数据 - 全量加载
+    12. 租户成员 - 全量加载 + 按租户维度索引
+    13. 账号绑定关系 - 全量加载
 
     注意:缓存预热应在数据初始化完成后执行,确保数据已存在后再加载到缓存。
     """
@@ -399,39 +771,69 @@ def init_cache_warmup():
         total_count = 0
 
         logger.info("预热系统配置...")
-        config_count = _warmup_system_config()
-        logger.info(f"系统配置预热完成,共 {config_count} 条记录")
-        total_count += config_count
+        count = _warmup_system_config()
+        logger.info(f"系统配置预热完成,共 {count} 条记录")
+        total_count += count
 
         logger.info("预热字典数据...")
-        dict_count = _warmup_dict_data()
-        logger.info(f"字典数据预热完成,共 {dict_count} 条记录")
-        total_count += dict_count
+        count = _warmup_dict_data()
+        logger.info(f"字典数据预热完成,共 {count} 条记录")
+        total_count += count
 
         logger.info("预热权限数据...")
-        perm_count = _warmup_permission_data()
-        logger.info(f"权限数据预热完成,共 {perm_count} 条记录")
-        total_count += perm_count
+        count = _warmup_permission_data()
+        logger.info(f"权限数据预热完成,共 {count} 条记录")
+        total_count += count
 
         logger.info("预热角色数据...")
-        role_count = _warmup_role_data()
-        logger.info(f"角色数据预热完成,共 {role_count} 条记录")
-        total_count += role_count
+        count = _warmup_role_data()
+        logger.info(f"角色数据预热完成,共 {count} 条记录")
+        total_count += count
+
+        logger.info("预热角色-主体关联...")
+        count = _warmup_role_subject_data()
+        logger.info(f"角色-主体关联预热完成,共 {count} 条缓存项")
+        total_count += count
+
+        logger.info("预热数据范围规则...")
+        count = _warmup_data_scope_rule_data()
+        logger.info(f"数据范围规则预热完成,共 {count} 条缓存项")
+        total_count += count
+
+        logger.info("预热组织节点...")
+        count = _warmup_org_data()
+        logger.info(f"组织节点预热完成,共 {count} 条缓存项")
+        total_count += count
+
+        logger.info("预热组织闭包表...")
+        count = _warmup_org_closure_data()
+        logger.info(f"组织闭包表预热完成,共 {count} 条缓存项")
+        total_count += count
+
+        logger.info("预热组织-主体关联...")
+        count = _warmup_org_subject_data()
+        logger.info(f"组织-主体关联预热完成,共 {count} 条缓存项")
+        total_count += count
 
         logger.info("预热租户数据...")
-        tenant_count = _warmup_tenant_data()
-        logger.info(f"租户数据预热完成,共 {tenant_count} 条记录")
-        total_count += tenant_count
+        count = _warmup_tenant_data()
+        logger.info(f"租户数据预热完成,共 {count} 条记录")
+        total_count += count
 
         logger.info("预热用户数据...")
-        user_count = _warmup_user_data()
-        logger.info(f"用户数据预热完成,共 {user_count} 条记录")
-        total_count += user_count
+        count = _warmup_user_data()
+        logger.info(f"用户数据预热完成,共 {count} 条记录")
+        total_count += count
+
+        logger.info("预热租户成员...")
+        count = _warmup_member_data()
+        logger.info(f"租户成员预热完成,共 {count} 条缓存项")
+        total_count += count
 
         logger.info("预热账号绑定关系...")
-        account_bind_count = _warmup_account_bind_data()
-        logger.info(f"账号绑定关系预热完成,共 {account_bind_count} 条记录")
-        total_count += account_bind_count
+        count = _warmup_account_bind_data()
+        logger.info(f"账号绑定关系预热完成,共 {count} 条记录")
+        total_count += count
 
         logger.info(f"缓存预热完成,共加载 {total_count} 条缓存记录")
 

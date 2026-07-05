@@ -49,8 +49,3 @@ def is_skip_tenant() -> bool:
 def is_skip_data_permission() -> bool:
     """是否跳过所有数据权限过滤"""
     return get_query_context().get("skip_data_permission", False)
-
-
-def is_skip_soft_delete() -> bool:
-    """是否跳过软删除过滤"""
-    return get_query_context().get("skip_soft_delete", False)

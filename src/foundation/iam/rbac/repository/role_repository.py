@@ -1,4 +1,4 @@
-﻿
+
 from sqlalchemy import and_, func, select
 
 from src.core.storage import BaseRepository
@@ -9,10 +9,19 @@ class RoleRepository(BaseRepository):
     model = Role
 
     def get_by_code(self, code: str, session=None) -> Role | None:
+        cached = self._cache_get("code", code)
+        if cached is not None:
+            return cached
+
         query = select(self.model).where(self.model.code == code)
         query = self._apply_soft_delete_filter(query)
         result = self._get_session(session).execute(query)
-        return result.scalars().first()
+        role = result.scalars().first()
+
+        if role:
+            self._cache_set("code", code, role)
+
+        return role
 
     def get_by_tenant_id(self, tenant_id: int, session=None) -> list[Role]:
         query = select(self.model).where(self.model.tenant_id == tenant_id)

@@ -2,10 +2,16 @@ from sqlalchemy import JSON, BigInteger, Column, DateTime, ForeignKey, Integer, 
 from sqlalchemy.orm import relationship
 
 from src.models.base import BaseModel
-from src.models.mixins import RemarkMixin, SoftDeleteMixin, TimestampMixin
+from src.models.mixins import (
+    RemarkMixin,
+    ResourceOrgMixin,
+    ResourceOwnerMixin,
+    SoftDeleteMixin,
+    TimestampMixin,
+)
 
 
-class OrderPayment(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin):
+class OrderPayment(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, ResourceOwnerMixin, ResourceOrgMixin):
     """订单支付记录模型"""
     __tablename__ = "order_payment"
 

@@ -4,13 +4,15 @@ from sqlalchemy.orm import relationship
 from src.models.base import BaseModel
 from src.models.mixins import (
     RemarkMixin,
+    ResourceOrgMixin,
+    ResourceOwnerMixin,
     SoftDeleteMixin,
     SortMixin,
     TimestampMixin,
 )
 
 
-class OrderInfo(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin):
+class OrderInfo(BaseModel, TimestampMixin, SoftDeleteMixin, RemarkMixin, SortMixin, ResourceOwnerMixin, ResourceOrgMixin):
     """订单模型"""
     __tablename__ = "order_info"
 

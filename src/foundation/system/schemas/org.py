@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,6 +9,7 @@ class OrgBase(BaseModel):
     remark: str = Field("", description="备注")
     sort: int = Field(0, description="排序")
     parent_uuid: UUID | None = Field(None, description="父组织UUID")
+    is_display: bool = Field(True, description="是否显示:True=显示,False=隐藏")
 
 
 class OrgCreate(OrgBase):
@@ -20,6 +21,7 @@ class OrgUpdate(BaseModel):
     remark: str | None = Field(None, description="备注")
     sort: int | None = Field(None, description="排序")
     parent_uuid: UUID | None = Field(None, description="父组织UUID")
+    is_display: bool | None = Field(None, description="是否显示:True=显示,False=隐藏")
 
 
 class OrgResponse(OrgBase):

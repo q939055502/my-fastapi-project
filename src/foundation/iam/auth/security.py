@@ -1,4 +1,4 @@
-﻿"""
+"""
 认证核心安全模块
 
 包含密码哈希, JWT令牌的生成与验证等核心认证功能。
@@ -45,7 +45,15 @@ def create_access_token(*, data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-def create_refresh_token(user_id: int, user_uuid: str, username: str, tenant_id: int | None = None, member_id: int | None = None) -> str:
+def create_refresh_token(
+    user_id: int,
+    user_uuid: str,
+    username: str,
+    tenant_id: int | None = None,
+    member_id: int | None = None,
+    active_org_root_id: int | None = None,
+    active_org_ids: list[int] | None = None,
+) -> str:
     expire = datetime.now(UTC) + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)
 
     payload = {
@@ -54,6 +62,8 @@ def create_refresh_token(user_id: int, user_uuid: str, username: str, tenant_id:
         "username": username,
         "tenant_id": tenant_id,
         "member_id": member_id,
+        "active_org_root_id": active_org_root_id,
+        "active_org_ids": active_org_ids,
         "exp": expire,
         "token_type": "refresh",
     }
@@ -88,17 +98,30 @@ def parse_jwt_token(token: str) -> dict | None:
         return None
 
 
-def create_token_pair(user_id: int, user_uuid: str, username: str, tenant_id: int | None = None, member_id: int | None = None) -> tuple[str, str]:
+def create_token_pair(
+    user_id: int,
+    user_uuid: str,
+    username: str,
+    tenant_id: int | None = None,
+    member_id: int | None = None,
+    active_org_root_id: int | None = None,
+    active_org_ids: list[int] | None = None,
+) -> tuple[str, str]:
     access_payload = {
         "user_id": user_id,
         "user_uuid": user_uuid,
         "username": username,
         "tenant_id": tenant_id,
         "member_id": member_id,
+        "active_org_root_id": active_org_root_id,
+        "active_org_ids": active_org_ids,
     }
     access_token = create_access_token(data=access_payload)
 
-    refresh_token = create_refresh_token(user_id, user_uuid, username, tenant_id, member_id)
+    refresh_token = create_refresh_token(
+        user_id, user_uuid, username, tenant_id, member_id,
+        active_org_root_id, active_org_ids,
+    )
 
     return access_token, refresh_token
 

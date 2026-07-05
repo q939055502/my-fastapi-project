@@ -1,17 +1,16 @@
-from sqlalchemy import BigInteger, Column, Integer, String, UniqueConstraint
+from sqlalchemy import Column, Integer, String, UniqueConstraint
 
 from src.models.base import BaseModel
-from src.models.mixins import TimestampMixin
+from src.models.mixins import ResourceOrgMixin, ResourceOwnerMixin, TimestampMixin
 
 
-class HourlyUsage(BaseModel, TimestampMixin):
+class HourlyUsage(BaseModel, TimestampMixin, ResourceOwnerMixin, ResourceOrgMixin):
     """
     租户每小时用量明细(仅用于前端图表展示、数据分析)
     不参与核心配额校验，核心校验platform_usage(月度表)
     """
     __tablename__ = "platform_hourly_usage"
 
-    tenant_id = Column(BigInteger, nullable=False, comment="租户ID")
     usage_hour = Column(String(13), nullable=False, comment="统计小时:YYYY-MM-DD HH")
 
     storage_delta = Column(BigInteger, default=0, comment="存储变更新增/ -删除")

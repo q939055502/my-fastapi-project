@@ -1,14 +1,13 @@
-from sqlalchemy import BigInteger, Column, Integer, String, UniqueConstraint
+from sqlalchemy import Column, Integer, String, UniqueConstraint
 
 from src.models.base import BaseModel
-from src.models.mixins import SoftDeleteMixin, TimestampMixin
+from src.models.mixins import ResourceOrgMixin, ResourceOwnerMixin, SoftDeleteMixin, TimestampMixin
 
 
-class Usage(BaseModel, TimestampMixin, SoftDeleteMixin):
+class Usage(BaseModel, TimestampMixin, SoftDeleteMixin, ResourceOwnerMixin, ResourceOrgMixin):
     """租户月度用量记录"""
     __tablename__ = "platform_usage"
 
-    tenant_id = Column(BigInteger, nullable=False, index=True, comment="租户ID")
     usage_month = Column(String(7), nullable=False, index=True, comment="自然月:YYYY-MM")
 
     current_users = Column(Integer, default=0, comment="当前用户数")

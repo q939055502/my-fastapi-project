@@ -95,3 +95,17 @@ class ResourceOwnerMixin:
     updater_id = Column(BigInteger, nullable=True, comment="最后修改人ID(平台用户ID或租户成员ID,由updater_type区分)")
     updater_type = Column(SmallInteger, nullable=True, comment="最后修改人身份类型: 0=平台用户, 1=租户成员")
     tenant_id = Column(BigInteger, nullable=True, comment="租户ID(NULL为平台级数据)")
+
+
+class ResourceOrgMixin:
+    """资源组织归属 Mixin
+
+    适用于租户业务资源(产生于某个组织上下文的业务数据).
+    org_id  记录资源归属的组织叶子节点ID(配合 OrgClosure 闭包表做树范围查询).
+    org_root_id  记录所属组织树的根节点ID(快速判定是否属于某租户根树下).
+
+    平台基础表(User/LoginLog/Tenant等)、IAM元数据表(Role/Permission)、平台系统表
+    (DictType/DictData/SystemConfig/TenantPlan) 不挂组织树, 不需要本 Mixin.
+    """
+    org_id = Column(BigInteger, nullable=True, index=True, comment="归属组织叶子节点ID")
+    org_root_id = Column(BigInteger, nullable=True, index=True, comment="所属组织树根节点ID")

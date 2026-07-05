@@ -1,15 +1,14 @@
 from sqlalchemy import JSON, BigInteger, Column, Integer, String, Text
 
 from src.models.base import BaseModel
-from src.models.mixins import TimestampMixin
+from src.models.mixins import ResourceOrgMixin, ResourceOwnerMixin, TimestampMixin
 
 
-class OperLog(BaseModel, TimestampMixin):
+class OperLog(BaseModel, TimestampMixin, ResourceOwnerMixin, ResourceOrgMixin):
     """租户操作日志模型 - 记录租户内部成员操作"""
 
     __tablename__ = "platform_oper_log"
 
-    tenant_id = Column(BigInteger, nullable=False, index=True, comment="租户ID")
     member_id = Column(BigInteger, nullable=False, index=True, comment="租户成员ID")
 
     perm_code = Column(String(100), nullable=True, comment="权限编码(资源:操作)")

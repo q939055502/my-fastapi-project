@@ -1,4 +1,4 @@
-﻿"""
+"""
 JWT令牌相关 Schema
 
 包含:JWT载荷, 令牌输出, 刷新令牌请求等
@@ -15,6 +15,8 @@ class JWTPayload(BaseModel):
     username: str
     tenant_id: int | None = None
     member_id: int | None = None
+    active_org_root_id: int | None = None
+    active_org_ids: list[int] | None = None
     exp: datetime | None = None
     token_type: str | None = None
 

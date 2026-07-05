@@ -26,7 +26,7 @@ def _is_valid_uuid(s):
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
-    PUBLIC_PATH_PREFIXES = ('/v1/platform', '/docs', '/openapi.json', '/redoc')
+    PUBLIC_PATH_PREFIXES = ('/docs', '/openapi.json', '/redoc')
 
     async def dispatch(self, request, call_next):
         request_id = request.headers.get('X-Request-ID') or str(uuid_module.uuid4())
@@ -42,6 +42,8 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             tenant_id=auth_info.get('tenant_id'),
             path_tenant_id=path_tenant_id,
             member_id=auth_info.get('member_id'),
+            active_org_root_id=auth_info.get('active_org_root_id'),
+            active_org_ids=auth_info.get('active_org_ids'),
             client_ip=client_ip,
             interface_type=interface_type,
         )
@@ -138,6 +140,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
     async def _parse_auth_info(self, request):
         tenant_id = None; user_id = None; member_id = None; username = ''
+        active_org_root_id = None; active_org_ids = None
         try:
             h = request.headers.get('Authorization', '')
             if h.startswith('Bearer '):
@@ -147,6 +150,15 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                     username = payload.get('username', '')
                     tenant_id = payload.get('tenant_id')
                     member_id = payload.get('member_id')
+                    active_org_root_id = payload.get('active_org_root_id')
+                    active_org_ids = payload.get('active_org_ids')
         except Exception as e:
             logger.debug("JWT 解析失败: %s", e)
-        return {'tenant_id': tenant_id, 'user_id': user_id, 'member_id': member_id, 'username': username}
+        return {
+            'tenant_id': tenant_id,
+            'user_id': user_id,
+            'member_id': member_id,
+            'username': username,
+            'active_org_root_id': active_org_root_id,
+            'active_org_ids': active_org_ids,
+        }

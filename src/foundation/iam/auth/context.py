@@ -1,4 +1,4 @@
-﻿from contextvars import ContextVar
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Optional
 
@@ -17,6 +17,8 @@ class AuthContext:
     tenant_id: Optional[int] = None
     path_tenant_id: Optional[int] = None
     member_id: Optional[int] = None
+    active_org_root_id: Optional[int] = None
+    active_org_ids: Optional[list[int]] = None
     client_ip: str = 'unknown'
     interface_type: Optional[InterfaceType] = None
 

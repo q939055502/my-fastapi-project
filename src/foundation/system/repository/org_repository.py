@@ -1,4 +1,4 @@
-﻿from sqlalchemy import and_, delete, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
 
 from src.core.log import logger
@@ -37,6 +37,7 @@ class OrgRepository(BaseRepository[Org, OrgCreate, OrgUpdate]):
                     "name": org.name,
                     "remark": org.remark,
                     "sort": org.sort,
+                    "is_display": org.is_display,
                     "parent_uuid": parent_map.get(org.uuid),
                     "children": build_tree(org.uuid),
                 }

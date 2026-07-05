@@ -1,4 +1,4 @@
-﻿import re
+import re
 from typing import Any
 from uuid import UUID
 
@@ -200,13 +200,22 @@ class AuthService:
             else:
                 return auth_repository.login_by_account_and_password(account, password, session=tm.session)
 
-    def _generate_tokens(self, user, tenant_id: int = None, member_id: int = None) -> dict[str, str]:
+    def _generate_tokens(
+        self,
+        user,
+        tenant_id: int = None,
+        member_id: int = None,
+        active_org_root_id: int = None,
+        active_org_ids: list[int] = None,
+    ) -> dict[str, str]:
         access_token, refresh_token = create_token_pair(
             user_id=user.id,
             user_uuid=str(user.uuid),
             username=user.username,
             tenant_id=tenant_id,
             member_id=member_id,
+            active_org_root_id=active_org_root_id,
+            active_org_ids=active_org_ids,
         )
         return {"access_token": access_token, "refresh_token": refresh_token}
 

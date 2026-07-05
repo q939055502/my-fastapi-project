@@ -15,33 +15,13 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
+from src.core.base.protected_fields import CREATE_PROTECTED_FIELDS, UPDATE_PROTECTED_FIELDS
 from src.core.exceptions import BusinessException
 from src.core.storage.database import SessionLocal
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
-
-
-CREATE_PROTECTED_FIELDS = {
-    "id",
-    "tenant_id",
-    "delete_time",
-    "is_system",
-}
-
-UPDATE_PROTECTED_FIELDS = {
-    "id",
-    "tenant_id",
-    "delete_time",
-    "is_system",
-    "creator_id",
-    "creator_type",
-    "updater_id",
-    "updater_type",
-    "created_at",
-    "updated_at",
-}
 
 
 class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):

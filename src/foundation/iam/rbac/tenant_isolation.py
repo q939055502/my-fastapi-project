@@ -1,5 +1,4 @@
-"""
-租户隔离模块
+"""租户隔离模块
 
 通过 SQLAlchemy 事件监听，自动对所有 ORM 查询施加租户隔离。
 
@@ -25,7 +24,7 @@
 from sqlalchemy import event
 from sqlalchemy.orm import Query
 
-from src.core.annotations import InterfaceType
+from src.foundation.iam.rbac.tenant_scope import get_tenant_scope_for_read
 
 
 def _get_entity_classes(query):
@@ -39,77 +38,25 @@ def _get_entity_classes(query):
 
 
 def _has_column(entity, column_name):
-    """判断实体类是否有指定 ORM 映射字段（允许是模型实例或类本身）"""
+    """判断实体类是否有指定 ORM 映射字段"""
     return hasattr(entity, column_name)
-
-
-def _resolve_filter_tenant_id(ctx):
-    """按接口类型确定最终过滤条件
-
-    返回 (filter_value, filter_mode):
-      filter_value: int 或 None（int=具体租户id；None 值代表平台数据 tenant_id IS NULL）
-      filter_mode:  'eq' | 'is_null' | 'skip'
-                    eq      → WHERE tenant_id = filter_value
-                    is_null → WHERE tenant_id IS NULL
-                    skip    → 不加租户过滤（公开接口无租户上下文时等）
-    """
-    itype = ctx.interface_type
-
-    if itype == InterfaceType.PUBLIC:
-        if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
-            return ctx.path_tenant_id, 'eq'
-        if ctx.path_tenant_id == 0:
-            return None, 'is_null'
-        return None, 'skip'
-
-    if itype == InterfaceType.PLATFORM:
-        return None, 'is_null'
-
-    if itype == InterfaceType.TENANT:
-        if ctx.tenant_id is None:
-            return None, 'skip'
-        return ctx.tenant_id, 'eq'
-
-    if ctx.path_tenant_id is not None and ctx.path_tenant_id > 0:
-        return ctx.path_tenant_id, 'eq'
-    if ctx.path_tenant_id == 0:
-        return None, 'is_null'
-    if ctx.tenant_id is not None:
-        return ctx.tenant_id, 'eq'
-    return None, 'is_null'
 
 
 @event.listens_for(Query, 'before_compile', retval=True)
 def apply_tenant_isolation(query):
     """SQLAlchemy 查询编译前拦截，自动追加租户隔离条件"""
-    from src.foundation.iam.auth.context import get_current_auth_context
-    from src.foundation.iam.query_context import is_skip_data_permission, is_skip_tenant
+    tenant_scope = get_tenant_scope_for_read()
 
-    try:
-        if is_skip_data_permission():
-            return query
-
-        ctx = get_current_auth_context()
-        if ctx is None:
-            return query
-
-        if is_skip_tenant():
-            return query
-
-        filter_value, filter_mode = _resolve_filter_tenant_id(ctx)
-        if filter_mode == 'skip':
-            return query
-
-        for entity in _get_entity_classes(query):
-            if not _has_column(entity, 'tenant_id'):
-                continue
-
-            if filter_mode == 'eq':
-                query = query.filter(entity.tenant_id == filter_value)
-            elif filter_mode == 'is_null':
-                query = query.filter(entity.tenant_id.is_(None))
-
+    if tenant_scope.skip or tenant_scope.filter_mode == 'skip':
         return query
 
-    except Exception:
-        return query
+    for entity in _get_entity_classes(query):
+        if not _has_column(entity, 'tenant_id'):
+            continue
+
+        if tenant_scope.filter_mode == 'eq':
+            query = query.filter(entity.tenant_id == tenant_scope.filter_value)
+        elif tenant_scope.filter_mode == 'is_null':
+            query = query.filter(entity.tenant_id.is_(None))
+
+    return query

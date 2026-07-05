@@ -38,3 +38,5 @@ class DataScopeRule(
     dimension_type = Column(String(32), nullable=False, comment="维度类型:tenant/org/creator等,可扩展")
     match_type = Column(String(32), nullable=False, comment="匹配方式:eq/all/tree/in")
     dimension_value = Column(String(255), nullable=False, comment="维度值:*全部/self当前用户/current当前组织/具体ID/多ID逗号分隔")
+
+

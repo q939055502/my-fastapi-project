@@ -6,12 +6,14 @@
 from .dict_data import DictData
 from .dict_type import DictType
 from .org import Org, OrgClosure
+from .org_subject import OrgSubject
 from .system_config import SystemConfig
 from .tenant_plan import TenantPlan
 
 __all__ = [
     "Org",
     "OrgClosure",
+    "OrgSubject",
     "DictType",
     "DictData",
     "SystemConfig",
