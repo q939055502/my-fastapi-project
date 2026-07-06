@@ -133,12 +133,12 @@ def l2_delete(key: str) -> None:
         pass
 
 
-def l2_get_version(version_key: str) -> int:
-    """从 Redis 获取版本号"""
+def l2_get_int(key: str) -> int:
+    """从 Redis 读取整数值"""
     if not _l2_available:
         return 0
     try:
-        raw = l2_region.backend.writer_client.get(version_key)
+        raw = l2_region.backend.writer_client.get(key)
         if raw is not None:
             return int(raw)
     except Exception:
@@ -146,8 +146,23 @@ def l2_get_version(version_key: str) -> int:
     return 0
 
 
+def l2_incr(key: str) -> int:
+    """Redis 原子递增，返回递增后的值"""
+    if not _l2_available:
+        return 0
+    try:
+        return l2_region.backend.writer_client.incr(key)
+    except Exception:
+        return 0
+
+
+def l2_get_version(version_key: str) -> int:
+    """[废弃] 从 Redis 获取版本号，使用 l2_get_int 替代"""
+    return l2_get_int(version_key)
+
+
 def l2_set_version(version_key: str, version: int) -> None:
-    """设置 Redis 版本号"""
+    """[废弃] 设置 Redis 版本号，使用 l2_incr 替代"""
     if not _l2_available:
         return
     try:

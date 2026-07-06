@@ -2,13 +2,13 @@
 
 提供通用的缓存键构建功能,不依赖任何业务逻辑。
 
-缓存键分层设计(版本号嵌入,失效即全换):
-    - GLOBAL: global:{version}:{resource}:{key}
-    - DATA:   data:{version}:{tenant_id}:{resource}:{key}
-    - LIST:   list:{version}:{tenant_id}:{resource}:{query_hash}
+缓存键分层设计(tag_hash 嵌入,标签版本变化即全换):
+    - GLOBAL: global:{tag_hash}:{resource}:{key}
+    - DATA:   data:{tag_hash}:{tenant_id}:{resource}:{key}
+    - LIST:   list:{tag_hash}:{tenant_id}:{resource}:{query_hash}
 
-version 由 CacheManager 统一维护,每次 increment_version 后
-下一次 build_cache_key 会拿到新的 version,旧键自然过期。
+tag_hash 由 TagStore.calc_tag_hash 计算,任一标签版本变化后
+下一次 build_cache_key 会拿到新的 tag_hash,旧键自然过期。
 
 注意:
     - tenant_id 保留用于租户隔离(不同租户数据物理隔离)
@@ -32,10 +32,9 @@ def build_cache_key(
     key: str | None = None,
     query_params: dict[str, Any] | None = None,
     tenant_id: int | None = None,
-    version: int = 0,
+    tag_hash: str = "v0",
 ) -> str:
-    """
-    构建缓存键(显式参数版本)
+    """构建缓存键
 
     Args:
         cache_type: 缓存类型(GLOBAL/DATA/LIST)
@@ -43,12 +42,12 @@ def build_cache_key(
         key: 数据主键或业务key(单条数据使用)
         query_params: 查询参数(列表查询时使用)
         tenant_id: 租户ID(DATA/LIST类型需要)
-        version: 缓存版本号,递增后旧键全部失效
+        tag_hash: 标签版本哈希,由 TagStore.calc_tag_hash 计算
 
     Returns:
         构建好的缓存键
     """
-    parts = [cache_type, f"v{version}"]
+    parts = [cache_type, tag_hash]
 
     if cache_type == CacheType.GLOBAL:
         parts.append(resource)
@@ -77,6 +76,6 @@ def build_cache_key(
 
     if len(full_key) > 250:
         key_hash = hashlib.md5(full_key.encode()).hexdigest()
-        full_key = f"{cache_type}:v{version}:{resource}:{key_hash}"
+        full_key = f"{cache_type}:{tag_hash}:{resource}:{key_hash}"
 
     return full_key
